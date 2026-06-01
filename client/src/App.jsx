@@ -36,40 +36,6 @@ export default function App() {
     localStorage.setItem('isu_dark_mode', newTheme);
   };
 
-  // TAT Auto-Accept: scan disputes where admin review is pending and aging >= 3 days
-  const tatAutoAccept = useCallback(async (disputes) => {
-    const expired = disputes.filter(cb =>
-      cb.merchantAction === 'rejected' &&
-      cb.adminAction === null &&
-      cb.aging >= 3
-    );
-    for (const cb of expired) {
-      try {
-        const entry = {
-          by: 'system-auto',
-          time: new Date().toLocaleString(),
-          title: 'TAT Expired — Auto-Accepted & Pushed to Visa',
-          remarks: `TAT of ${cb.aging} days exceeded. System auto-accepted and escalated to Visa for review.`,
-          file: null
-        };
-        await fetch(`${API_URL}/disputes/${cb.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            adminAction: 'auto-accepted',
-            mSubStatus: 'Chargeback Won',
-            visaPending: true,
-            timelineEntry: entry
-          })
-        });
-      } catch (e) { console.warn('TAT auto-accept failed for', cb.id); }
-    }
-    if (expired.length > 0) {
-      showToast(`TAT expired: ${expired.length} dispute(s) auto-accepted → Visa`, 'warning');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const refreshAllData = useCallback(async () => {
     try {
       const resUsers = await fetch(`${API_URL}/users`);
@@ -79,9 +45,6 @@ export default function App() {
       const resDisputes = await fetch(`${API_URL}/disputes`);
       const dataDisputes = await resDisputes.json();
       setChargebacks(dataDisputes);
-
-      // TAT auto-accept check
-      await tatAutoAccept(dataDisputes);
 
       const resLedger = await fetch(`${API_URL}/ledger`);
       const dataLedger = await resLedger.json();
@@ -97,7 +60,8 @@ export default function App() {
     } catch (err) {
       console.error("Sync failed:", err);
     }
-  }, [currentUser, tatAutoAccept]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
 
   // Seed and fetch data on launch
   useEffect(() => {
