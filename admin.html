@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iServeU – Admin Dispute & Chargeback Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app" id="adminApp">
+  <header class="app-header">
+    <button class="hdr-hamburger" onclick="toggleSidebar()">☰</button>
+    <div class="hdr-logo"><div class="hl-text">iServeU<sup>®</sup></div></div>
+    <span class="admin-badge">ADMIN</span>
+    <div class="hdr-space"></div>
+    <div class="hdr-wallet"><span class="wi">💳</span><span class="wl">Wallet:</span><span class="wa" id="aWalletAmt">₹ 2,45,800</span></div>
+    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <button class="hdr-bell">🔔<span class="notif-dot"></span></button>
+    <div class="hdr-user" onclick="doLogout()">
+      <div class="avatar" style="background:#1e293b; color: white;">KD</div>
+      <div><div class="hdr-uname">Krishna Das</div><div class="hdr-urole">Admin / FRM</div></div>
+      <span style="font-size:12px;color:var(--text-muted)">▾</span>
+    </div>
+  </header>
+  <div class="app-body">
+    <nav class="sidebar" id="aSidebar">
+      <div class="sb-welcome">Welcome, Krishna Das</div>
+      <div class="sb-section">
+        <div class="sb-item active" id="aNavDash" onclick="showAPage('a-dashboard')"><span class="si">⊞</span> Dashboard</div>
+        <div class="sb-item open" id="aNavDM" onclick="toggleSbMenu('aDMSub','aNavDM')"><span class="si">📋</span> Dispute Management <span class="arr">▾</span></div>
+        <div class="sb-sub open" id="aDMSub">
+          <div class="sb-sub-item" id="aNavCb" onclick="showAPage('a-chargeback')"><span class="ssi">⚖️</span> Chargeback</div>
+          <div class="sb-sub-item" id="aNavLein" onclick="showAPage('a-lein')"><span class="ssi">🔒</span> LEIN Amount</div>
+          <div class="sb-sub-item" id="aNavCredit" onclick="showAPage('a-credit')"><span class="ssi">💳</span> Credit Adjustment</div>
+        </div>
+      </div>
+    </nav>
+    <main class="main">
+
+      <!-- Admin Dashboard -->
+      <div class="page active" id="a-dashboard">
+        <div class="page-inner">
+          <div class="welcome-bar">
+            <div><div class="wb-title">Welcome, Admin (FRM Team) 👋</div><div class="wb-sub">Manage and review all chargeback disputes across merchants</div></div>
+            <div class="wb-date" id="aDashDate"></div>
+          </div>
+          <div class="stats-grid" id="adminDashStats">
+            <!-- Dynamic Stats Cards -->
+          </div>
+          <div class="qa-grid">
+            <div class="qa-card">
+              <h4>Chargeback TAT Status</h4>
+              <div class="tat-row"><span>Chargeback (10 days iSU)</span><span class="tat-ok">6 within TAT</span></div>
+              <div class="tat-row"><span>Deferred CB (10 days iSU)</span><span class="tat-ok">4 within TAT</span></div>
+              <div class="tat-row"><span>Fraud CB (25 days iSU)</span><span class="tat-warn">2 near expiry</span></div>
+              <div class="tat-row"><span>Pre-Arbitration (4 days)</span><span class="tat-over">1 overdue</span></div>
+              <div class="tat-row"><span>Arbitration (10 days iSU)</span><span class="tat-ok">2 within TAT</span></div>
+            </div>
+            <div class="qa-card">
+              <h4>Quick Actions</h4>
+              <button class="btn btn-primary qa-btn" onclick="showAPage('a-raise-cb')" style="display: block; width: 100%;">📤 Raise New Chargeback (Bulk Upload)</button>
+              <button class="btn btn-secondary qa-btn" onclick="showAPage('a-view-cb')" style="display: block; width: 100%; margin-top: 8px;">📋 View All Chargebacks</button>
+              <button class="btn btn-secondary qa-btn" onclick="showAPage('a-lein')" style="display: block; width: 100%; margin-top: 8px;">🔒 Manage LEIN Amounts</button>
+            </div>
+          </div>
+          <div class="tbl-card">
+            <div class="tbl-toolbar"><span style="font-size:14px;font-weight:700;">Pending Merchant Responses</span><div class="tbl-space"></div><span id="pendingCount" style="color:var(--brand);font-weight:600;font-size:13px;"></span></div>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>RRN</th><th>Merchant</th><th>Txn Amount</th><th>Adj Type</th><th>Status</th><th>Sub Status</th><th>Raised Date</th><th>Aging</th><th>Action</th></tr></thead>
+              <tbody id="adminPendingBody"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Chargeback Menu (Raise / View) -->
+      <div class="page" id="a-chargeback">
+        <div class="view-chargeback-header">
+          <span class="vc-breadcrumb">Dispute Management / <span>Chargeback</span></span>
+        </div>
+        <div class="page-inner">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:700px;margin:40px auto 24px;">
+            <div style="border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:40px 20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--card);" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'" onclick="showAPage('a-raise-cb')">
+              <div style="font-size:40px;margin-bottom:12px;">📤</div>
+              <div style="font-size:15px;font-weight:600;">Raise Chargeback</div>
+              <p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Upload bulk excel/CSV disputes</p>
+            </div>
+            <div style="border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:40px 20px;text-align:center;cursor:pointer;transition:all .15s;background:var(--card);" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'" onclick="showAPage('a-view-cb')">
+              <div style="font-size:40px;margin-bottom:12px;">👁</div>
+              <div style="font-size:15px;font-weight:600;">View Chargeback</div>
+              <p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Search, expand details and take actions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Raise Chargeback -->
+      <div class="page" id="a-raise-cb">
+        <div class="view-chargeback-header">
+          <span class="vc-breadcrumb">Dispute Management / Chargeback / <span>Raise Chargeback</span></span>
+        </div>
+        <div class="page-inner">
+          <div class="upload-hero">
+            <button class="back-btn" onclick="showAPage('a-chargeback')">←</button>
+            <h2>Chargeback Upload</h2>
+          </div>
+          <!-- Step 1: Provider selection -->
+          <div id="providerStep">
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">Select Card Scheme / Payment System:</div>
+            <div class="provider-cards">
+                            <div class="provider-card" id="pVISA" onclick="selectProvider('VISA')">VISA</div>
+              <div class="provider-card" id="pMC" onclick="selectProvider('Mastercard')">Mastercard</div>
+              <div class="provider-card" id="pRupay" onclick="selectProvider('Rupay')">Rupay</div>
+            </div>
+          </div>
+          <!-- Step 2: File upload -->
+          <div id="uploadStep" style="display:none;">
+            <div class="upload-section">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <div style="font-size:14px;font-weight:600;">Selected Provider: <span id="selectedProviderLabel" style="color:var(--brand)"></span></div>
+                <button class="btn btn-secondary btn-sm" onclick="changeProvider()">Change Provider</button>
+              </div>
+              <div id="uploadZoneWrap">
+                <div class="upload-box" onclick="document.getElementById('cbFile').click()">
+                  <div class="ub-icon">📊</div>
+                  <h3>Upload Chargeback Excel/CSV File</h3>
+                  <p>Click to browse or drag & drop here</p>
+                  <p style="font-size:11px;color:var(--text-light);margin-top:6px;">Max 100MB · Up to 5000 records · .csv only</p>
+                </div>
+                <input type="file" id="cbFile" accept=".csv" style="display:none;" onchange="fileSelected(this)">
+                <div id="fileInfo" style="display:none;" class="uploaded-file">📄 <span id="fileName"></span><button style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--brand);" onclick="clearFile()">✕</button></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">
+                  <a onclick="downloadSample()" style="color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">⬇ Download Sample File</a>
+                  <div style="display:flex;gap:10px;">
+                    <button class="btn btn-secondary" onclick="clearFile()">Cancel</button>
+                    <button class="btn btn-primary" id="uploadBtn" style="display:none;" onclick="processUpload()">Upload</button>
+                  </div>
+                </div>
+              </div>
+              <div id="uploadResult" style="display:none;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);">
+                  <span style="font-size:32px;">✅</span>
+                  <div><div style="font-size:16px;font-weight:700;color:#15803d;">File Uploaded Successfully!</div><div style="font-size:13px;color:var(--text-muted);">Chargeback file processed and entries created.</div></div>
+                </div>
+                <div class="upload-result-grid">
+                  <div class="url-item total"><div class="urv">50</div><div class="url">Total Records</div></div>
+                  <div class="url-item success"><div class="urv">48</div><div class="url">Successfully Processed</div></div>
+                  <div class="url-item fail"><div class="urv">2</div><div class="url">Failed</div></div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:16px;">
+                  <button class="btn btn-primary" onclick="downloadOutput()">⬇ Download Output File</button>
+                  <button class="btn btn-secondary" onclick="resetUpload()">Upload Another File</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin View Chargeback -->
+      <div class="page" id="a-view-cb">
+        <div class="view-chargeback-header">
+          <span class="vc-breadcrumb">Dispute Management / Dispute List / <span>View Dispute</span></span>
+        </div>
+        <div class="page-inner">
+          <div class="filter-card">
+            <div class="filter-row">
+              <div class="filter-group"><label>From Date</label><input type="date" class="fi-date" id="aVcFrom"></div>
+              <div class="filter-group"><label>To Date</label><input type="date" class="fi-date" id="aVcTo"></div>
+              <div class="filter-group"><label>Enter RRN</label><input type="text" class="fi-text" id="aVcRrn" placeholder="RRN Number"></div>
+              <div class="filter-group"><label>Merchant ID</label><input type="text" class="fi-text" id="aVcMid" placeholder="Merchant ID"></div>
+              <div class="filter-group"><label>Status</label>
+                <select class="fi-sel" id="aVcStatus">
+                  <option value="">All Status</option>
+                  <option>Chargeback Raise</option>
+                  <option>Pre-Arbitration Raise</option>
+                  <option>Arbitration Raise</option>
+                  <option>Fraud Chargeback Raise</option>
+                  <option>Differed Chargeback Raise</option>
+                  <option>VROL Inquiry</option>
+                  <option>VROL Chargeback</option>
+                  <option>VROL Pre-Arbitration</option>
+                  <option>VROL Arbitration</option>
+                </select>
+              </div>
+              <div class="filter-group"><label>Sub Status</label>
+                <select class="fi-sel" id="aVcSubStatus">
+                  <option value="">All Sub Status</option>
+                  <option>Chargeback New</option>
+                  <option>Chargeback in Progress</option>
+                  <option>Chargeback Resubmit</option>
+                  <option>Chargeback Won</option>
+                  <option>Chargeback Lost</option>
+                  <option>Refund Success</option>
+                  <option>Refund On Hold</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="filterAdminCb()">Search</button>
+              <button class="btn btn-secondary" onclick="resetAdminCb()">Reset</button>
+            </div>
+          </div>
+          <div class="tbl-card">
+            <div class="tbl-toolbar">
+              <div class="search-wrap"><span class="si">🔍</span><input type="text" class="tbl-search" placeholder="Search here..." id="aVcSearch" oninput="searchAdminCb()"></div>
+              <div class="tbl-space"></div>
+              <span id="aVcCount" style="font-size:12px;color:var(--text-muted); font-weight: 600; margin-right: 12px;"></span>
+              <button class="btn btn-outline btn-sm" onclick="exportExcel('admin')">⬇ Download CSV</button>
+            </div>
+            <div class="tbl-wrap"><table>
+              <thead><tr>
+                <th>Merchant</th><th>User ID</th><th>RRN</th><th>Txn ID</th><th>GL No.</th><th>TXN Date</th><th>Status</th><th>Sub Status</th><th>Adj Date</th><th>Adj Type</th><th>Remitter</th><th>Beneficiary</th><th>Terminal ID</th><th>Bene Mobile</th><th>Txn Amount</th><th>Adj Amount</th><th>LEIN Amount</th><th>Aging</th><th>Action</th>
+              </tr></thead>
+              <tbody id="aVcBody"></tbody>
+            </table></div>
+            <div class="tbl-footer">
+              <div class="rpp">Rows per page: <select id="aVcRppSelect" onchange="resetAdminPageAndRender()"><option value="5">5</option><option value="10">10</option><option value="25">25</option></select></div>
+              <div class="pagination" id="aVcPagination"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin LEIN Amount -->
+      <div class="page" id="a-lein">
+        <div class="page-inner">
+          <div class="page-hdr"><div><h1>LEIN Amount</h1><p>Manage hold amounts on merchant wallets</p></div></div>
+          <div class="filter-card">
+            <div class="filter-row">
+              <div class="filter-group"><label>From Date</label><input type="date" class="fi-date"></div>
+              <div class="filter-group"><label>To Date</label><input type="date" class="fi-date"></div>
+              <div class="filter-group"><label>Merchant ID</label><input type="text" class="fi-text" placeholder="Enter Merchant ID"></div>
+              <button class="btn btn-primary">Search</button>
+            </div>
+          </div>
+          <div class="tbl-card">
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>Merchant ID</th><th>Merchant Name</th><th>LEIN Amount</th><th>Hold Since</th><th>Chargeback RRN</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">2222257001642755</td><td>masteruser</td><td><strong>₹100</strong></td><td>2026-04-03</td><td class="mono">609315655333</td><td><span class="badge badge-progress">Hold Active</span></td><td><button class="btn btn-sm btn-secondary" onclick="toast('Viewing hold transaction details', 'warning')">View</button></td></tr>
+                <tr><td class="mono">2222257001642755</td><td>masteruser</td><td><strong>₹100</strong></td><td>2026-04-06</td><td class="mono">609315298417</td><td><span class="badge badge-progress">Hold Active</span></td><td><button class="btn btn-sm btn-secondary" onclick="toast('Viewing hold transaction details', 'warning')">View</button></td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Credit Adjustment -->
+      <div class="page" id="a-credit">
+        <div class="page-inner">
+          <div class="page-hdr">
+            <div>
+              <h1>Credit Adjustment Portal</h1>
+              <p>Adjust merchant wallet balances and review adjustment ledgers</p>
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; align-items: start;">
+            <!-- Adjustment Form Card -->
+            <div class="filter-card" style="margin-bottom: 0;">
+              <h3 style="margin-bottom: 16px; font-size: 15px; font-weight: 700; color: var(--text);">New Wallet Adjustment</h3>
+              
+              <div class="mf">
+                <label>Target Merchant <span class="req">*</span></label>
+                <select class="mfi" id="adjMerchant" style="height: 38px;"></select>
+              </div>
+              
+              <div class="mf">
+                <label>Adjustment Type <span class="req">*</span></label>
+                <div class="radio-opts" style="margin-top: 8px; margin-bottom: 8px;">
+                  <label class="radio-opt"><input type="radio" name="adjType" value="Credit" checked> Credit (+)</label>
+                  <label class="radio-opt"><input type="radio" name="adjType" value="Debit"> Debit (-)</label>
+                </div>
+              </div>
+              
+              <div class="mf">
+                <label>Amount (INR) <span class="req">*</span></label>
+                <input type="number" class="mfi" id="adjAmount" placeholder="Enter amount" min="1" step="any">
+              </div>
+              
+              <div class="mf">
+                <label>Remarks / Purpose <span class="req">*</span></label>
+                <textarea class="mfi mfi-area" id="adjRemarks" placeholder="Reason for adjustment..."></textarea>
+              </div>
+              
+              <button class="btn btn-primary" style="width: 100%; margin-top: 8px; height: 40px;" onclick="submitAdjustment()">Submit Adjustment</button>
+            </div>
+            
+            <!-- Ledger History Card -->
+            <div class="tbl-card">
+              <div class="tbl-toolbar">
+                <span style="font-size: 14px; font-weight: 700;">Adjustment Ledger History</span>
+              </div>
+              <div class="tbl-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Merchant</th>
+                      <th>Type</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ledgerBody">
+                    <!-- Dynamic Ledger Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- Admin Remarks / Consider-Decline Modal -->
+<div class="overlay" id="adminRemarksModal">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Remarks &amp; Evidence Review</h3><button class="modal-close" onclick="closeModal('adminRemarksModal')">✕</button></div>
+    <div class="modal-body" id="adminRemarksBody"></div>
+    <div class="modal-footer" id="adminRemarksFooter">
+      <button class="btn btn-success" style="flex:1" onclick="doAdminConsider()">Consider</button>
+      <button class="btn btn-danger" style="flex:1" onclick="doAdminDecline()">Decline</button>
+    </div>
+  </div>
+</div>
+
+<!-- Arbitration Modal -->
+<div class="overlay" id="arbitrationModal">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Arbitration Decision (NPCI)</h3><button class="modal-close" onclick="closeModal('arbitrationModal')">✕</button></div>
+    <div class="modal-body" id="arbitrationBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-success" style="flex:1" onclick="doArbitrationWon()">Won</button>
+      <button class="btn btn-danger" style="flex:1" onclick="doArbitrationLost()">Lost</button>
+    </div>
+  </div>
+</div>
+
+<!-- Refund Modal -->
+<div class="overlay" id="refundModal">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Refund Action</h3><button class="modal-close" onclick="closeModal('refundModal')">✕</button></div>
+    <div class="modal-body" id="refundBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-success" style="flex:1" onclick="doAcceptRefund()">Accept Refund</button>
+      <button class="btn btn-warning" style="flex:1;background:#ca8a04;color:#fff;" onclick="doHoldRefund()">Hold Refund</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span id="toastIcon">✅</span><span id="toastMsg"></span></div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA & STATE PERSISTENCE (SHARED VIA LOCALSTORAGE)
+// ═══════════════════════════════════════════
+const TODAY = new Date();
+const fmtDate = d => d.toISOString().split('T')[0];
+const daysAgo = n => { let d=new Date(TODAY); d.setDate(d.getDate()-n); return fmtDate(d); };
+const fmtDisp = s => { if(!s)return ''; let d=new Date(s); return d.getDate().toString().padStart(2,'0')+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getFullYear(); };
+
+const DEFAULT_USERS = {
+  'Test@isu':  {pass:'Test@2026', role:'merchant', name:'masteruser', wallet:'₹ 964.35'},
+  'masteruser':{pass:'Test@2026', role:'merchant', name:'masteruser', wallet:'₹ 964.35'},
+  'Test@Ad':   {pass:'Test@2027', role:'admin',    name:'Krishna Das', wallet:'₹ 2,45,800'},
+};
+
+let USERS = JSON.parse(localStorage.getItem('isu_users')) || DEFAULT_USERS;
+
+const DEFAULT_CHARGEBACKS = [
+  {
+    id:'CB001', caseId:'CASE000001', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789089', txnId:'8768987', terminalId:'5683583',
+    beneMobile:'9348909106', remMobile:'7845695654',
+    createdDate: daysAgo(1), txnDate: daysAgo(5), adjDate: daysAgo(1),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+86400000)),
+    mStatus:'Chargeback Raise', mSubStatus:'Chargeback New',
+    adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:1000, adjAmt:1000, leinAmt:0, glNo:'354422',
+    currency:'Rupees', reasonCode:'4808', pan:'832927*****',
+    walletStatus:'Debited', product:'VISA', aging:1,
+    merchantAction:null, adminAction:null,
+    timeline:[
+      {by:'iServeU', time: daysAgo(1)+' 10:30 AM', title:'Dispute Raised', remarks:'', file:null},
+      {by:'iServeU', time: daysAgo(1)+' 5:30 PM', title:'Remarks Updated by iServeU', remarks:'Done', file:'disputesamplefile.pdf'},
+    ]
+  },
+  {
+    id:'CB002', caseId:'CASE000002', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789090', txnId:'8768988', terminalId:'5688584',
+    beneMobile:'9348909107', remMobile:'7845695653',
+    createdDate: daysAgo(2), txnDate: daysAgo(6), adjDate: daysAgo(2),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+2*86400000)),
+    mStatus:'Chargeback Raise', mSubStatus:'Chargeback New',
+    adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:3000, adjAmt:3000, leinAmt:0, glNo:'354422',
+    currency:'Rupees', reasonCode:'4808', pan:'832927*****',
+    walletStatus:'Debited', product:'VISA', aging:2,
+    merchantAction:null, adminAction:null,
+    timeline:[{by:'iServeU', time: daysAgo(2)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null}]
+  },
+  {
+    id:'CB003', caseId:'CASE000003', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789091', txnId:'8768989', terminalId:'5678585',
+    beneMobile:'9398909108', remMobile:'7845665652',
+    createdDate: daysAgo(3), txnDate: daysAgo(7), adjDate: daysAgo(3),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+86400000)),
+    mStatus:'Chargeback Raise', mSubStatus:'Chargeback Lost',
+    adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:1500, adjAmt:1500, leinAmt:100, glNo:'354422',
+    currency:'Rupees', reasonCode:'4808', pan:'397927*****',
+    walletStatus:'Debited', product:'VISA', aging:3,
+    merchantAction:'rejected', adminAction:'declined',
+    chargbackId:'CommonVISA17268', adminName:'nsdladmin',
+    rejectReason:'Based on internal investigation and transaction monitoring, this case exhibits patterns consistent with suspicious or unauthorized activity.',
+    timeline:[
+      {by:'iServeU', time: daysAgo(3)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null},
+      {by:'masteruser', time: daysAgo(2)+' 10:00 AM', title:'Remarks Updated by masteruser', remarks:'Done', file:'Evidencefile.pdf'},
+      {by:'iServeU', time: daysAgo(1)+' 03:00 PM', title:'Remarks Updated by iServeU', remarks:'Done', file:'disputesamplefile.pdf'},
+    ]
+  },
+  {
+    id:'CB004', caseId:'CASE000004', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789092', txnId:'8768990', terminalId:'5688585',
+    beneMobile:'9348909108', remMobile:'7845695652',
+    createdDate: daysAgo(4), txnDate: daysAgo(8), adjDate: daysAgo(4),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+3*86400000)),
+    mStatus:'Pre-Arbitration Raise', mSubStatus:'Chargeback New',
+    adjType:'Pre-Arbitration Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:2500, adjAmt:2500, leinAmt:0, glNo:'354422',
+    currency:'USD', reasonCode:'4808', pan:'832927*****',
+    walletStatus:'Debited', product:'VISA', aging:4,
+    merchantAction:null, adminAction:null,
+    timeline:[{by:'iServeU', time: daysAgo(4)+' 08:30 AM', title:'Dispute Raised', remarks:'', file:null}]
+  },
+  {
+    id:'CB005', caseId:'CASE000005', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789093', txnId:'8768991', terminalId:'5683583',
+    beneMobile:'9348909106', remMobile:'7845695654',
+    createdDate: daysAgo(5), txnDate: daysAgo(9), adjDate: daysAgo(5),
+    respondByDate: daysAgo(0),
+    mStatus:'Chargeback Raise', mSubStatus:'Chargeback in Progress',
+    adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:500, adjAmt:500, leinAmt:500, glNo:'354422',
+    currency:'Rupees', reasonCode:'1', pan:'832927*****',
+    walletStatus:'Hold', product:'VISA', aging:5,
+    merchantAction:'accepted', adminAction:null,
+    timeline:[
+      {by:'iServeU', time: daysAgo(5)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null},
+      {by:'masteruser', time: daysAgo(4)+' 11:45 AM', title:'Merchant Accepted', remarks:'Done', file:null},
+    ]
+  },
+  {
+    id:'CB006', caseId:'CASE000006', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789094', txnId:'8768992', terminalId:'5688584',
+    beneMobile:'9348909107', remMobile:'7845695653',
+    createdDate: daysAgo(5), txnDate: daysAgo(10), adjDate: daysAgo(5),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+4*86400000)),
+    mStatus:'Arbitration Raise', mSubStatus:'Chargeback New',
+    adjType:'Arbitration Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:3000, adjAmt:3000, leinAmt:0, glNo:'354422',
+    currency:'USD', reasonCode:'4808', pan:'832927*****',
+    walletStatus:'Debited', product:'VISA', aging:5,
+    merchantAction:null, adminAction:null,
+    timeline:[{by:'iServeU', time: daysAgo(5)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null}]
+  }    ,{
+      id: 'CB_VROL_01', caseId: 'CASE_VROL_01', userName: 'masteruser', userId: '2575789089',
+      rrn: '1231231231', txnId: '9898989', terminalId: '5690015',
+      beneMobile: '9999999999', remMobile: '8888888888',
+      createdDate: daysAgo(2), txnDate: daysAgo(5), adjDate: daysAgo(2), respondByDate: fmtDate(new Date(TODAY.getTime() + 5 * 86400000)),
+      mStatus: 'VROL Inquiry', mSubStatus: 'Chargeback New',
+      adjType: 'Chargeback Raise', remitter: 'HDFC', beneficiary: 'FIP',
+      txnAmt: 5000, adjAmt: 5000, leinAmt: 5000, glNo: '354435',
+      currency: 'Rupees', reasonCode: '10.4', pan: '416001*****',
+      walletStatus: 'Hold', product: 'VISA', aging: 2,
+      merchantAction: null, adminAction: null, visaPending: true,
+      timeline: [
+        { by: 'iServeU', time: daysAgo(2) + ' 10:00 AM', title: 'VROL Inquiry Initiated', remarks: 'Visa raised inquiry for potential fraud.', file: null }
+      ]
+    },
+    {
+      id: 'CB_VROL_02', caseId: 'CASE_VROL_02', userName: 'masteruser', userId: '2575789089',
+      rrn: '1231231232', txnId: '9898990', terminalId: '5690016',
+      beneMobile: '9999999998', remMobile: '8888888887',
+      createdDate: daysAgo(5), txnDate: daysAgo(10), adjDate: daysAgo(5), respondByDate: daysAgo(1),
+      mStatus: 'VROL Chargeback', mSubStatus: 'Chargeback in Progress',
+      adjType: 'Chargeback Raise', remitter: 'SBI', beneficiary: 'FIP',
+      txnAmt: 3500, adjAmt: 3500, leinAmt: 3500, glNo: '354436',
+      currency: 'Rupees', reasonCode: '13.1', pan: '426001*****',
+      walletStatus: 'Hold', product: 'VISA', aging: 5,
+      merchantAction: 'evidence', adminAction: null, visaPending: true,
+      timeline: [
+        { by: 'iServeU', time: daysAgo(5) + ' 11:00 AM', title: 'VROL Chargeback Received', remarks: 'First chargeback initiated by issuer.', file: null }
+      ]
+    },
+    {
+      id: 'CB_VROL_03', caseId: 'CASE_VROL_03', userName: 'masteruser', userId: '2575789089',
+      rrn: '1231231233', txnId: '9898991', terminalId: '5690017',
+      beneMobile: '9999999997', remMobile: '8888888886',
+      createdDate: daysAgo(15), txnDate: daysAgo(20), adjDate: daysAgo(15), respondByDate: daysAgo(2),
+      mStatus: 'VROL Pre-Arbitration', mSubStatus: 'Chargeback in Progress',
+      adjType: 'Pre-Arbitration Raise', remitter: 'AXIS', beneficiary: 'FIP',
+      txnAmt: 7500, adjAmt: 7500, leinAmt: 7500, glNo: '354437',
+      currency: 'Rupees', reasonCode: '10.4', pan: '436001*****',
+      walletStatus: 'Hold', product: 'VISA', aging: 15,
+      merchantAction: 'evidence', adminAction: 'considered', visaPending: true,
+      timeline: [
+        { by: 'iServeU', time: daysAgo(15) + ' 12:00 PM', title: 'VROL Pre-Arbitration Raised', remarks: 'Issuer declined evidence, pushed to pre-arb.', file: null }
+      ]
+    },
+    {
+      id: 'CB_VROL_04', caseId: 'CASE_VROL_04', userName: 'masteruser', userId: '2575789089',
+      rrn: '1231231234', txnId: '9898992', terminalId: '5690018',
+      beneMobile: '9999999996', remMobile: '8888888885',
+      createdDate: daysAgo(30), txnDate: daysAgo(40), adjDate: daysAgo(30), respondByDate: daysAgo(5),
+      mStatus: 'VROL Arbitration', mSubStatus: 'Chargeback Lost',
+      adjType: 'Arbitration Raise', remitter: 'ICICI', beneficiary: 'FIP',
+      txnAmt: 10000, adjAmt: 10000, leinAmt: 0, glNo: '354438',
+      currency: 'Rupees', reasonCode: '10.5', pan: '446001*****',
+      walletStatus: 'Debited', product: 'VISA', aging: 30,
+      merchantAction: 'evidence', adminAction: 'declined', visaPending: false,
+      timeline: [
+        { by: 'iServeU', time: daysAgo(30) + ' 01:00 PM', title: 'VROL Arbitration Lost', remarks: 'Visa Arbitration panel ruled in favor of cardholder.', file: null }
+      ]
+    }
+];
+
+let chargebacks = JSON.parse(localStorage.getItem('isu_chargebacks')) || DEFAULT_CHARGEBACKS;
+
+const DEFAULT_LEDGER = [
+  { id: 'ADJ001', merchant: 'masteruser', type: 'Credit', amount: 500, date: daysAgo(5), remarks: 'Reversal of erroneous chargeback debit' },
+  { id: 'ADJ002', merchant: 'masteruser', type: 'Debit', amount: 200, date: daysAgo(3), remarks: 'Processing fee adjustment' }
+];
+let ledger = JSON.parse(localStorage.getItem('isu_ledger')) || DEFAULT_LEDGER;
+
+// AUTO-SET ACTIVE ADMIN SESSION FOR admin.html
+let currentUser = { username: 'Test@Ad', ...USERS['Test@Ad'] };
+localStorage.setItem('isu_session', JSON.stringify(currentUser));
+
+let currentActionId = null;
+let filteredAdmin = [...chargebacks];
+
+// Pagination state variables
+let paginationState = {
+  admin: { currentPage: 1, limit: 5 }
+};
+
+function paginateData(data, type) {
+  const state = paginationState[type];
+  const total = data.length;
+  const totalPages = Math.ceil(total / state.limit) || 1;
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
+  if (state.currentPage < 1) state.currentPage = 1;
+  const start = (state.currentPage - 1) * state.limit;
+  const end = Math.min(start + state.limit, total);
+  const paginated = data.slice(start, end);
+  return { paginated, start, end, total, totalPages };
+}
+
+function updateHeaderWallet() {
+  const user = USERS[currentUser.username];
+  if (user) {
+    currentUser.wallet = user.wallet;
+    const aWallet = document.getElementById('aWalletAmt');
+    if (aWallet) aWallet.textContent = user.wallet;
+  }
+}
+
+function renderPaginationControls(containerId, type, totalCount) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const state = paginationState[type];
+  const totalPages = Math.ceil(totalCount / state.limit) || 1;
+  
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
+  if (state.currentPage < 1) state.currentPage = 1;
+  const startRecord = totalCount === 0 ? 0 : (state.currentPage - 1) * state.limit + 1;
+  const endRecord = Math.min(state.currentPage * state.limit, totalCount);
+  
+  let html = `<span style="margin-right:8px;color:var(--text-muted);font-size:12px;">${startRecord}–${endRecord} of ${totalCount} records</span>`;
+  
+  html += `<button class="pg-btn" ${state.currentPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} onclick="changePage('${type}', ${state.currentPage - 1})">‹</button>`;
+  
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= state.currentPage - 1 && i <= state.currentPage + 1)) {
+      html += `<button class="pg-btn ${state.currentPage === i ? 'active' : ''}" onclick="changePage('${type}', ${i})">${i}</button>`;
+    } else if (i === 2 && state.currentPage > 3) {
+      html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+      i = state.currentPage - 2;
+    } else if (i === state.currentPage + 1 && state.currentPage < totalPages - 2) {
+      html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+      i = totalPages - 1;
+    }
+  }
+  
+  html += `<button class="pg-btn" ${state.currentPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} onclick="changePage('${type}', ${state.currentPage + 1})">›</button>`;
+  
+  container.innerHTML = html;
+}
+
+function changePage(type, page) {
+  paginationState[type].currentPage = page;
+  if (type === 'admin') renderAdminCb();
+}
+
+function resetAdminPageAndRender() {
+  paginationState.admin.currentPage = 1;
+  paginationState.admin.limit = parseInt(document.getElementById('aVcRppSelect').value);
+  renderAdminCb();
+}
+
+function saveState() {
+  localStorage.setItem('isu_chargebacks', JSON.stringify(chargebacks));
+  localStorage.setItem('isu_users', JSON.stringify(USERS));
+  localStorage.setItem('isu_ledger', JSON.stringify(ledger));
+  updateHeaderWallet();
+}
+
+if (!localStorage.getItem('isu_chargebacks')) {
+  saveState();
+}
+
+// ═══════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════
+function toggleTheme(){
+  document.body.classList.toggle('dark-mode');
+  const isDark = document.body.classList.contains('dark-mode');
+  localStorage.setItem('isu_dark_mode', isDark);
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.textContent = isDark ? '☀️' : '🌙';
+  });
+}
+
+function doLogout(){
+  if(confirm('Are you sure you want to reset session? (You will remain on the admin portal, but localStorage data resets to default)')){
+    localStorage.removeItem('isu_chargebacks');
+    localStorage.removeItem('isu_users');
+    localStorage.removeItem('isu_ledger');
+    location.reload();
+  }
+}
+
+// ═══════════════════════════════════════════
+// ADMIN INIT
+// ═══════════════════════════════════════════
+function initAdmin(){
+  setDefaultDates();
+  filteredAdmin = [...chargebacks];
+  updateHeaderWallet();
+  loadAdminDashboard();
+  renderAdminPending();
+  renderAdminCb();
+  document.getElementById('aDashDate').textContent = new Date().toLocaleDateString('en-IN');
+  showAPage('a-dashboard');
+}
+
+function showAPage(p){
+  document.querySelectorAll('#adminApp .page').forEach(x=>x.classList.remove('active'));
+  document.getElementById(p)?.classList.add('active');
+  ['aNavDash','aNavCb','aNavLein','aNavCredit'].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  
+  const map={'a-dashboard':'aNavDash','a-chargeback':'aNavCb','a-raise-cb':'aNavCb','a-view-cb':'aNavCb','a-lein':'aNavLein','a-credit':'aNavCredit'};
+  if(map[p]) document.getElementById(map[p])?.classList.add('active');
+  if(p==='a-credit') initCreditAdjustment();
+}
+
+function setDefaultDates(){
+  const t=fmtDate(TODAY);
+  const m=new Date(TODAY); m.setDate(m.getDate()-30);
+  const from=fmtDate(m);
+  ['aVcFrom','aVcTo'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value=id.includes('From')?from:t;
+  });
+}
+
+function loadAdminDashboard() {
+  const totalCount = chargebacks.length;
+  const totalAmt = chargebacks.reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const openCount = chargebacks.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold')).length;
+  const wonCount = chargebacks.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).length;
+  const lostCount = chargebacks.filter(cb => cb.mSubStatus.includes('Lost')).length;
+  
+  const openAmt = chargebacks.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const wonAmt = chargebacks.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const lostAmt = chargebacks.filter(cb => cb.mSubStatus.includes('Lost')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+
+  const statsHtml = `
+    <div class="stat-card received"><div class="stat-icon">📥</div><div><div class="stat-val">₹${totalAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Total Disputes</div><div class="stat-cnt">Count: ${totalCount}</div></div></div>
+    <div class="stat-card open"><div class="stat-icon">🔄</div><div><div class="stat-val">₹${openAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Open / Pending</div><div class="stat-cnt">Count: ${openCount}</div></div></div>
+    <div class="stat-card lost"><div class="stat-icon">❌</div><div><div class="stat-val">₹${lostAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Disputes Lost</div><div class="stat-cnt">Count: ${lostCount}</div></div></div>
+    <div class="stat-card won"><div class="stat-icon">✅</div><div><div class="stat-val">₹${wonAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Disputes Won</div><div class="stat-cnt">Count: ${wonCount}</div></div></div>
+  `;
+  
+  const statsGrid = document.getElementById('adminDashStats');
+  if (statsGrid) statsGrid.innerHTML = statsHtml;
+}
+
+function renderAdminPending(){
+  const tbody=document.getElementById('adminPendingBody');
+  if(!tbody) return;
+  const pending=chargebacks.filter(cb=>cb.merchantAction==='rejected'&&cb.adminAction===null);
+  const cnt=document.getElementById('pendingCount');
+  if(cnt) cnt.textContent=pending.length+' awaiting review';
+  tbody.innerHTML=pending.length?pending.map(cb=>`
+    <tr>
+      <td class="mono">${cb.rrn}</td>
+      <td>${cb.beneficiary}</td>
+      <td><strong>₹${cb.txnAmt.toLocaleString()}</strong></td>
+      <td>${cb.adjType}</td>
+      <td>${statusBadge(cb.mStatus)}</td>
+      <td>${subBadge(cb.mSubStatus)}</td>
+      <td>${fmtDisp(cb.createdDate)}</td>
+      <td><span style="color:${cb.aging>5?'var(--red)':'var(--yellow)'}; font-weight:600;">${cb.aging}d</span></td>
+      <td><button class="btn btn-sm btn-primary" onclick="openAdminRemarks('${cb.id}')">Review</button></td>
+    </tr>
+  `).join(''):`<tr><td colspan="9"><div class="no-data" style="padding:24px;"><div style="font-size:30px;margin-bottom:8px;">✅</div><p>No pending merchant representation reviews</p></div></td></tr>`;
+}
+
+function renderAdminCb(){
+  const tbody=document.getElementById('aVcBody');
+  if(!tbody) return;
+  const cnt=document.getElementById('aVcCount');
+  const { paginated, total } = paginateData(filteredAdmin, 'admin');
+  if(cnt) cnt.textContent=total+' records';
+  tbody.innerHTML=paginated.length?paginated.map(cb=>`
+    <tr>
+      <td>${cb.userName}</td>
+      <td class="mono" style="font-size:11px;">${cb.userId}</td>
+      <td class="mono">${cb.rrn}</td>
+      <td class="mono" style="font-size:11px;">${cb.txnId}</td>
+      <td>${cb.glNo}</td>
+      <td>${fmtDisp(cb.txnDate)}</td>
+      <td>${statusBadge(cb.mStatus)}</td>
+      <td>${subBadge(cb.mSubStatus)}</td>
+      <td>${fmtDisp(cb.adjDate)}</td>
+      <td>${cb.adjType}</td>
+      <td>${cb.remitter}</td>
+      <td>${cb.beneficiary}</td>
+      <td>${cb.terminalId}</td>
+      <td class="mono">${cb.beneMobile}</td>
+      <td><strong>₹${cb.txnAmt.toLocaleString()}</strong></td>
+      <td>₹${cb.adjAmt.toLocaleString()}</td>
+      <td>${cb.leinAmt>0?`<span style="color:var(--yellow);font-weight:600;">₹${cb.leinAmt}</span>`:'₹0'}</td>
+      <td><span style="color:${cb.aging>4?'var(--red)':cb.aging>2?'var(--yellow)':'var(--green)'}; font-weight:600;">${cb.aging}d</span></td>
+      <td>${getAdminActions(cb)}</td>
+    </tr>
+    <tr id="expRow-${cb.id}" style="display:none;" class="expand-row">
+      <td colspan="19" style="padding:0;">
+        <div class="expand-inner" style="background:var(--bg); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+          <div class="expand-grid">
+            <div class="eg-item"><div class="ek">Terminal ID</div><div class="ev">${cb.terminalId}</div></div>
+            <div class="eg-item"><div class="ek">Remitter Mobile</div><div class="ev">${cb.remMobile}</div></div>
+            <div class="eg-item"><div class="ek">Hold Status</div><div class="ev">${cb.leinAmt>0?'HOLD ACTIVE':'NO HOLD'}</div></div>
+            <div class="eg-item"><div class="ek">Product / Scheme</div><div class="ev">${cb.product}</div></div>
+            <div class="eg-item"><div class="ek">Merchant Action</div><div class="ev">${cb.merchantAction||'—'}</div></div>
+            <div class="eg-item"><div class="ek">Admin Review Action</div><div class="ev">${cb.adminAction||'—'}</div></div>
+            ${cb.product === 'VISA' ? `<div class="eg-item"><div class="ek">VROL Case ID</div><div class="ev">${cb.caseId||'—'}</div></div><div class="eg-item"><div class="ek">Visa Reason Code</div><div class="ev">${cb.reasonCode||'—'}</div></div>` : ''}
+          </div>
+          ${cb.timeline && cb.timeline.length ? `
+            <div style="margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px;">
+              <div style="font-size: 11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; margin-bottom: 6px;">Audit Timeline:</div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                ${cb.timeline.map(tl=>`<div style="font-size:12px;"><strong>[${tl.time}] ${tl.title}</strong>: ${tl.remarks || 'No remarks'} ${tl.file ? `(File: ${tl.file})` : ''}</div>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join(''):`<tr><td colspan="19"><div class="no-data" style="padding:24px;"><p>No disputes match the filter</p></div></td></tr>`;
+  renderPaginationControls('aVcPagination', 'admin', filteredAdmin.length);
+}
+
+function getAdminActions(cb){
+  let btns='';
+  // Expand button is always nice to have
+  btns += `<button class="btn btn-sm btn-secondary" onclick="toggleExpand('${cb.id}')" style="margin-right:4px;">👁 Details</button>`;
+  
+  if(cb.merchantAction==='rejected'&&cb.adminAction===null){
+    btns+=`<button class="btn btn-sm btn-primary" onclick="openAdminRemarks('${cb.id}')" style="margin-right:4px;">Review</button>`;
+  }
+  if(cb.mStatus.includes('Arbitration')&&!cb.adminAction){
+    btns+=`<button class="btn btn-sm" style="background:var(--purple);color:#fff; margin-right:4px;" onclick="openArbitrationModal('${cb.id}')">Arb Decision</button>`;
+  }
+  if((cb.mSubStatus.includes('Won')||cb.mSubStatus.includes('Accepted')) && cb.mSubStatus !== 'Refund Success' && cb.mSubStatus !== 'Refund On Hold'){
+    btns+=`<button class="btn btn-sm btn-success" onclick="openRefundModal('${cb.id}')">Process Refund</button>`;
+  }
+  return btns;
+}
+
+function toggleExpand(id){
+  const row = document.getElementById('expRow-'+id);
+  if(row) {
+    row.style.display = row.style.display === 'none' ? '' : 'none';
+  }
+}
+
+function filterAdminCb(){
+  paginationState.admin.currentPage = 1;
+  const rrn=document.getElementById('aVcRrn').value.trim();
+  const status=document.getElementById('aVcStatus').value;
+  const sub=document.getElementById('aVcSubStatus').value;
+  const from=document.getElementById('aVcFrom').value;
+  const to=document.getElementById('aVcTo').value;
+  
+  filteredAdmin=chargebacks.filter(cb=>{
+    if(rrn&&!cb.rrn.includes(rrn))return false;
+    if(status&&cb.mStatus!==status)return false;
+    if(sub&&cb.mSubStatus!==sub)return false;
+    if(from && cb.createdDate && cb.createdDate<from) return false;
+    if(to && cb.createdDate && cb.createdDate>to) return false;
+    return true;
+  });
+  renderAdminCb();
+}
+
+function resetAdminCb(){
+  ['aVcRrn','aVcMid'].forEach(id=>document.getElementById(id).value='');
+  ['aVcStatus','aVcSubStatus'].forEach(id=>document.getElementById(id).value='');
+  setDefaultDates();
+  filteredAdmin=[...chargebacks];
+  renderAdminCb();
+}
+
+function searchAdminCb(){
+  paginationState.admin.currentPage = 1;
+  const q=document.getElementById('aVcSearch').value.toLowerCase();
+  if(!q){
+    filteredAdmin=[...chargebacks];
+  } else {
+    filteredAdmin=chargebacks.filter(cb=>cb.rrn.includes(q)||cb.txnId.includes(q)||cb.userName.toLowerCase().includes(q));
+  }
+  renderAdminCb();
+}
+
+// ═══════════════════════════════════════════
+// ADMIN REMARKS CONSIDER/DECLINE
+// ═══════════════════════════════════════════
+function openAdminRemarks(id){
+  currentActionId=id;
+  const cb=chargebacks.find(x=>x.id===id);
+  if(!cb) return;
+  const body=document.getElementById('adminRemarksBody');
+  const r=cb.rejectReason;
+  body.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:3px;">RRN</div><div style="font-weight:700;font-family:monospace;">${cb.rrn}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:3px;">Txn Amount</div><div style="font-weight:700;">₹${cb.txnAmt.toLocaleString()}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:3px;">Status</div><div>${statusBadge(cb.mStatus)}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:3px;">Merchant Action</div><div style="font-weight:600;">${cb.merchantAction||'No action yet'}</div></div>
+    </div>
+    ${r?`
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Submitted Document</div>
+      <div class="remarks-doc"><span>📄 Merchant_Evidence.pdf</span><button class="btn btn-sm btn-secondary" onclick="toast('Downloading Evidence File...','success')">⬇ Download</button></div>
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Merchant Remarks / Justification</div>
+      <div class="remarks-reason">${r}</div>
+    `:`<div style="padding:20px;text-align:center;color:var(--text-muted);">No remarks submitted by merchant yet.</div>`}
+  `;
+  const footer=document.getElementById('adminRemarksFooter');
+  if(cb.merchantAction==='rejected'&&cb.adminAction===null){
+    footer.innerHTML=`<button class="btn btn-success" style="flex:1" onclick="doAdminConsider()">Consider (Represent Case)</button><button class="btn btn-danger" style="flex:1" onclick="doAdminDecline()">Decline (Resubmit to Merchant)</button>`;
+  } else {
+    footer.innerHTML=`<button class="btn btn-secondary" onclick="closeModal('adminRemarksModal')">Close</button>`;
+  }
+  openModal('adminRemarksModal');
+}
+
+function doAdminConsider(){
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  if(cb){
+    cb.adminAction='considered';
+    cb.mSubStatus='Chargeback in Progress';
+    cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Representment Submitted to Card Network',remarks:'Merchant proof considered satisfactory. Representing to network.',file:null});
+    saveState();
+    loadAdminDashboard();
+    renderAdminPending();
+    renderAdminCb();
+  }
+  closeModal('adminRemarksModal');
+  toast('Dispute represented successfully to card network','success');
+}
+
+function doAdminDecline(){
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  if(cb){
+    cb.adminAction='declined';
+    cb.mSubStatus='Chargeback Resubmit';
+    cb.merchantAction=null; // Let merchant action again
+    cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Dispute Representation Declined',remarks:'Proof insufficient. Re-routed back to merchant to supply additional documentation.',file:null});
+    saveState();
+    loadAdminDashboard();
+    renderAdminPending();
+    renderAdminCb();
+  }
+  closeModal('adminRemarksModal');
+  toast('Proof declined. Dispute resubmitted to merchant.','warning');
+}
+
+// ═══════════════════════════════════════════
+// ARBITRATION ACTIONS
+// ═══════════════════════════════════════════
+function openArbitrationModal(id){
+  currentActionId=id;
+  const cb=chargebacks.find(x=>x.id===id);
+  if(!cb) return;
+  document.getElementById('arbitrationBody').innerHTML=`
+    <div style="padding:8px 0;">
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:14px;">Select the arbitration outcome received from NPCI/Card Network:</p>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Dispute Details</div>
+        <div style="font-weight:700;">RRN: ${cb.rrn}</div>
+        <div style="font-weight:700; margin-top:2px;">Dispute Amount: ₹${cb.adjAmt.toLocaleString()}</div>
+      </div>
+    </div>`;
+  openModal('arbitrationModal');
+}
+
+function doArbitrationWon(){
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  if(cb){
+    cb.mSubStatus='Chargeback Won';
+    cb.adminAction='won';
+    cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Arbitration Won',remarks:'NPCI network ruled in favor of merchant. Dispute closed.',file:null});
+    
+    // Credit merchant's wallet (since they won)
+    const username = cb.userName || 'masteruser';
+    if (USERS[username]) {
+      let balance = parseFloat(USERS[username].wallet.replace(/[^\d.]/g, ''));
+      balance += cb.adjAmt;
+      USERS[username].wallet = '₹ ' + balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    saveState();
+    loadAdminDashboard();
+    renderAdminCb();
+  }
+  closeModal('arbitrationModal');
+  toast('Arbitration Won. Merchant wallet credited.','success');
+}
+
+function doArbitrationLost(){
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  if(cb){
+    cb.mSubStatus='Chargeback Lost';
+    cb.adminAction='lost';
+    cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Arbitration Lost',remarks:'NPCI network ruled in favor of cardholder. Hold permanently debited.',file:null});
+    saveState();
+    loadAdminDashboard();
+    renderAdminCb();
+  }
+  closeModal('arbitrationModal');
+  toast('Arbitration Lost. Dispute closed.','error');
+}
+
+// ═══════════════════════════════════════════
+// REFUND ACTIONS
+// ═══════════════════════════════════════════
+function openRefundModal(id){
+  currentActionId=id;
+  const cb=chargebacks.find(x=>x.id===id);
+  if(!cb) return;
+  document.getElementById('refundBody').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div><div style="font-size:11px;color:var(--text-muted);">RRN</div><div style="font-weight:700;font-family:monospace;">${cb.rrn}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted);">Amount</div><div style="font-weight:700;">₹${cb.txnAmt.toLocaleString()}</div></div>
+    </div>
+    <div class="lein-highlight"><span>⚠️</span><span>Pre-checks passed: Wallet Debit Success, Hold Cleared, Txn &gt; 60 days</span></div>
+  `;
+  openModal('refundModal');
+}
+
+function doAcceptRefund(){
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  if(cb){
+    cb.mSubStatus='Refund Success';
+    cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Refund Accepted',remarks:'Refund successfully processed and wallet debited.',file:null});
+    
+    // Debit merchant's wallet
+    const username = cb.userName || 'masteruser';
+    if (USERS[username]) {
+      let balance = parseFloat(USERS[username].wallet.replace(/[^\d.]/g, ''));
+      balance -= cb.adjAmt;
+      USERS[username].wallet = '₹ ' + balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    saveState();
+    loadAdminDashboard();
+    renderAdminCb();
+  }
+  closeModal('refundModal');
+  toast('Refund completed. Merchant wallet debited.','success');
+}
+
+function doHoldRefund(){
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  if(cb){
+    cb.mSubStatus='Refund On Hold';
+    cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Refund Placed On Hold',remarks:'Internal team placed refund on hold pending further validation.',file:null});
+    saveState();
+    loadAdminDashboard();
+    renderAdminCb();
+  }
+  closeModal('refundModal');
+  toast('Refund placed on hold','warning');
+}
+
+// ═══════════════════════════════════════════
+// FILE UPLOAD AND BULK PARSING
+// ═══════════════════════════════════════════
+let selectedProvider='';
+function selectProvider(p){
+  selectedProvider=p;
+  ['VISA','VISA','Mastercard','Rupay'].forEach(x=>document.getElementById('p'+x.replace(' ',''))?.classList.remove('selected'));
+  document.getElementById('p'+p.replace(' ',''))?.classList.add('selected');
+  document.getElementById('providerStep').style.display='none';
+  document.getElementById('uploadStep').style.display='block';
+  document.getElementById('selectedProviderLabel').textContent=p;
+}
+
+function changeProvider(){
+  selectedProvider='';
+  document.getElementById('providerStep').style.display='block';
+  document.getElementById('uploadStep').style.display='none';
+  resetUpload();
+}
+
+let selectedFileContent = '';
+function fileSelected(input){
+  if(input.files.length){
+    const f=input.files[0];
+    document.getElementById('fileName').textContent=f.name+' ('+Math.round(f.size/1024)+' KB)';
+    document.getElementById('fileInfo').style.display='flex';
+    document.getElementById('uploadBtn').style.display='inline-flex';
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      selectedFileContent = e.target.result;
+    };
+    reader.readAsText(f);
+  }
+}
+
+function clearFile(){
+  document.getElementById('cbFile').value='';
+  document.getElementById('fileInfo').style.display='none';
+  document.getElementById('uploadBtn').style.display='none';
+  selectedFileContent = '';
+}
+
+function processUpload(){
+  if (!selectedFileContent) {
+    toast('No file content found', 'error');
+    return;
+  }
+  toast('Reading CSV and creating disputes...','warning');
+  
+  setTimeout(()=>{
+    const lines = selectedFileContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length < 2) {
+      toast('CSV file is empty or missing header', 'error');
+      return;
+    }
+    
+    // Simple CSV parser supporting quotes
+    const parseCSVRow = (text) => {
+      let p = false, r = [''], a = 0;
+      for (let i = 0; i < text.length; i++) {
+        let c = text[i];
+        if (c === '"') { p = !p; }
+        else if (c === ',' && !p) { r[++a] = ''; }
+        else { r[a] += c; }
+      }
+      return r.map(x => x.trim().replace(/^["']|["']$/g, ''));
+    };
+    
+    const headers = parseCSVRow(lines[0]);
+    let addedCount = 0;
+    let failedCount = 0;
+    
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCSVRow(lines[i]);
+      if (cols.length < headers.length || !cols[0]) {
+        failedCount++;
+        continue;
+      }
+      
+      const rowData = {};
+      headers.forEach((h, idx) => {
+        rowData[h] = cols[idx];
+      });
+      
+      const rrn = rowData['RRN'] || ('60999' + Math.floor(Math.random() * 99999));
+      const txnId = rowData['Txn ID'] || ('532' + Math.floor(Math.random() * 999999));
+      const txnAmt = parseFloat(rowData['Txn Amount']) || 500;
+      const txnDate = rowData['TXN Date'] || daysAgo(3);
+      const beneMobile = rowData['Bene Mobile'] || '9348909111';
+      const glNo = rowData['GL No'] || '354422';
+      const product = rowData['Product'] || selectedProvider || 'VISA';
+      
+      chargebacks.unshift({
+        id: 'CB' + Math.floor(Math.random() * 90000 + 10000),
+        caseId: 'CASE' + Math.floor(Math.random() * 90000 + 10000),
+        userName: 'masteruser',
+        userId: '2575789089',
+        rrn: rrn,
+        txnId: txnId,
+        terminalId: '5690001',
+        beneMobile: beneMobile,
+        remMobile: '7845695611',
+        createdDate: fmtDate(TODAY),
+        txnDate: txnDate,
+        adjDate: fmtDate(TODAY),
+        respondByDate: fmtDate(new Date(TODAY.getTime() + 86400000)),
+        mStatus: 'Chargeback Raise',
+        mSubStatus: 'Chargeback New',
+        adjType: 'Chargeback Raise',
+        remitter: 'AXB',
+        beneficiary: 'FIP',
+        txnAmt: txnAmt,
+        adjAmt: txnAmt,
+        leinAmt: 0,
+        glNo: glNo,
+        currency: 'Rupees',
+        reasonCode: '1',
+        pan: '832927*****',
+        walletStatus: 'Debited',
+        product: product,
+        aging: 0,
+        merchantAction: null,
+        adminAction: null,
+        timeline: [{ by: 'nsdladmin', time: new Date().toLocaleString(), title: 'Dispute Raised via Bulk Upload', remarks: '', file: null }]
+      });
+      addedCount++;
+    }
+    
+    // Update uploader results
+    const totalElem = document.getElementById('uploadResult').querySelector('.total .urv');
+    const successElem = document.getElementById('uploadResult').querySelector('.success .urv');
+    const failElem = document.getElementById('uploadResult').querySelector('.fail .urv');
+    
+    if (totalElem) totalElem.textContent = (addedCount + failedCount);
+    if (successElem) successElem.textContent = addedCount;
+    if (failElem) failElem.textContent = failedCount;
+    
+    document.getElementById('uploadZoneWrap').style.display='none';
+    document.getElementById('uploadResult').style.display='block';
+    
+    saveState();
+    loadAdminDashboard();
+    renderAdminCb();
+    renderAdminPending();
+    toast(`Successfully uploaded CSV. Created ${addedCount} chargebacks.`, 'success');
+  }, 800);
+}
+
+function resetUpload(){
+  clearFile();
+  document.getElementById('uploadZoneWrap').style.display='block';
+  document.getElementById('uploadResult').style.display='none';
+}
+
+function downloadSample(){
+  const headers = ['RRN', 'Txn ID', 'Txn Amount', 'TXN Date', 'Bene Mobile', 'GL No', 'Product'];
+  const rows = [
+    ['609315655333', '8768994', '500', daysAgo(5), '9348909106', '354422', 'VISA'],
+    ['609315298417', '8768995', '1200', daysAgo(3), '9348909107', '354422', 'VISA']
+  ];
+  const csvContent = "data:text/csv;charset=utf-8," 
+    + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "iserveu_chargeback_sample.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast('Sample template downloaded', 'success');
+}
+
+function downloadOutput(){
+  // Just export whatever we have filtered
+  exportExcel('admin');
+}
+
+function exportExcel(src){
+  let dataToExport = [];
+  let filename = 'chargeback_export.csv';
+  
+  if (src === 'admin') {
+    dataToExport = filteredAdmin;
+    filename = 'chargebacks_admin_view.csv';
+  } else {
+    dataToExport = chargebacks;
+  }
+  
+  if (!dataToExport.length) {
+    toast('No data to export', 'error');
+    return;
+  }
+  
+  const headers = ['RRN', 'Case ID', 'Txn ID', 'Merchant', 'Status', 'Sub Status', 'Amount', 'Date', 'Product'];
+  const rows = dataToExport.map(cb => [
+    cb.rrn,
+    cb.caseId,
+    cb.txnId,
+    cb.userName,
+    cb.mStatus,
+    cb.mSubStatus,
+    cb.txnAmt,
+    cb.createdDate,
+    cb.product
+  ]);
+  
+  const csvContent = "data:text/csv;charset=utf-8," 
+    + [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+    
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast('CSV Export completed', 'success');
+}
+
+// ═══════════════════════════════════════════
+// CREDIT ADJUSTMENT FORM
+// ═══════════════════════════════════════════
+function initCreditAdjustment() {
+  const select = document.getElementById('adjMerchant');
+  if (!select) return;
+  
+  let options = '<option value="">Select Target Merchant</option>';
+  for (let u in USERS) {
+    if (USERS[u].role === 'merchant') {
+      options += `<option value="${u}">${USERS[u].name} (${u})</option>`;
+    }
+  }
+  select.innerHTML = options;
+  renderLedger();
+}
+
+function renderLedger() {
+  const tbody = document.getElementById('ledgerBody');
+  if (!tbody) return;
+  
+  tbody.innerHTML = ledger.length ? ledger.map(item => `
+    <tr>
+      <td class="mono">${item.id}</td>
+      <td><strong>${item.merchant}</strong></td>
+      <td><span class="badge ${item.type === 'Credit' ? 'badge-won' : 'badge-lost'}">${item.type}</span></td>
+      <td><strong style="color: ${item.type === 'Credit' ? 'var(--green)' : 'var(--red)'};">${item.type === 'Credit' ? '+' : '-'} ₹${item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong></td>
+      <td>${fmtDisp(item.date)}</td>
+      <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.remarks}">${item.remarks}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="6" style="padding: 24px; text-align: center; color: var(--text-muted);">No adjustments logged.</td></tr>`;
+}
+
+function submitAdjustment() {
+  const merchant = document.getElementById('adjMerchant').value;
+  const type = document.querySelector('input[name="adjType"]:checked').value;
+  const amountInput = document.getElementById('adjAmount').value;
+  const remarks = document.getElementById('adjRemarks').value.trim();
+  
+  if (!merchant) { toast('Please select a merchant', 'error'); return; }
+  const amount = parseFloat(amountInput);
+  if (isNaN(amount) || amount <= 0) { toast('Please enter a valid adjustment amount', 'error'); return; }
+  if (!remarks) { toast('Please enter adjustment remarks', 'error'); return; }
+  
+  const user = USERS[merchant];
+  if (!user) { toast('Merchant not found', 'error'); return; }
+  
+  let balance = parseFloat(user.wallet.replace(/[^\d.]/g, ''));
+  if (type === 'Credit') {
+    balance += amount;
+  } else {
+    if (balance < amount) {
+      if (!confirm('Warning: Merchant wallet will go into negative balance. Proceed?')) {
+        return;
+      }
+    }
+    balance -= amount;
+  }
+  
+  user.wallet = '₹ ' + balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  
+  const adjId = 'ADJ' + (ledger.length + 101);
+  ledger.unshift({
+    id: adjId,
+    merchant: merchant,
+    type: type,
+    amount: amount,
+    date: fmtDate(TODAY),
+    remarks: remarks
+  });
+  
+  saveState();
+  
+  document.getElementById('adjAmount').value = '';
+  document.getElementById('adjRemarks').value = '';
+  
+  renderLedger();
+  toast(`Wallet adjustment successful for ${merchant}!`, 'success');
+}
+
+// ═══════════════════════════════════════════
+// BADGE BUILDERS & UTILS
+// ═══════════════════════════════════════════
+function statusBadge(s){
+  const m={'Chargeback Raise':'badge-cb','Pre-Arbitration Raise':'badge-prearb','Arbitration Raise':'badge-arb','Fraud Chargeback Raise':'badge-fraud','Differed Chargeback Raise':'badge-deferred', 'VROL Inquiry':'badge-pending', 'VROL Chargeback':'badge-cb', 'VROL Pre-Arbitration':'badge-prearb', 'VROL Arbitration':'badge-arb'};
+  return `<span class="badge ${m[s]||'badge-new'}">${s}</span>`;
+}
+function subBadge(s){
+  const m={'Chargeback New':'badge-new','Chargeback Lost':'badge-lost','Chargeback in Progress':'badge-progress','Chargeback Resubmit':'badge-resubmit','Chargeback Won':'badge-won','Refund Success':'badge-won','Refund On Hold':'badge-progress'};
+  return `<span class="badge ${m[s]||'badge-pending'}">${s}</span>`;
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});
+});
+
+function toggleSidebar(){
+  const s=document.getElementById('aSidebar');
+  s.classList.toggle('collapsed');
+}
+function toggleSbMenu(subId,parentId){
+  const sub=document.getElementById(subId);
+  const parent=document.getElementById(parentId);
+  if(!sub||!parent)return;
+  sub.classList.toggle('open');
+  parent.classList.toggle('open');
+}
+
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.className='toast '+type;
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIcon').textContent=type==='success'?'✅':type==='error'?'❌':'⚠️';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3400);
+}
+
+// ═══════════════════════════════════════════
+// ONLOAD
+// ═══════════════════════════════════════════
+window.onload=()=>{
+  const isDark = localStorage.getItem('isu_dark_mode') === 'true';
+  if(isDark){
+    document.body.classList.add('dark-mode');
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.textContent = '☀️');
+  }
+
+  // Load from localStorage if present
+  if (localStorage.getItem('isu_chargebacks')) {
+    chargebacks = JSON.parse(localStorage.getItem('isu_chargebacks'));
+  }
+  if (localStorage.getItem('isu_users')) {
+    USERS = JSON.parse(localStorage.getItem('isu_users'));
+  }
+  if (localStorage.getItem('isu_ledger')) {
+    ledger = JSON.parse(localStorage.getItem('isu_ledger'));
+  }
+
+  initAdmin();
+  
+  // Real-time synchronization event listener
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'isu_chargebacks' || e.key === 'isu_users' || e.key === 'isu_ledger') {
+      chargebacks = JSON.parse(localStorage.getItem('isu_chargebacks')) || DEFAULT_CHARGEBACKS;
+      USERS = JSON.parse(localStorage.getItem('isu_users')) || DEFAULT_USERS;
+      ledger = JSON.parse(localStorage.getItem('isu_ledger')) || DEFAULT_LEDGER;
+      updateHeaderWallet();
+      loadAdminDashboard();
+      renderAdminPending();
+      renderAdminCb();
+      if (document.getElementById('a-credit').classList.contains('active')) {
+        renderLedger();
+      }
+    }
+  });
+};
+</script>
+</body>
+</html>

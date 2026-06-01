@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iServeU – Merchant Dispute Management Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app" id="merchantApp">
+  <header class="app-header">
+    <button class="hdr-hamburger" onclick="toggleSidebar()">☰</button>
+    <div class="hdr-logo"><div class="hl-text">iServeU<sup>®</sup></div></div>
+    <div class="hdr-space"></div>
+    <div class="hdr-wallet"><span class="wi">💳</span><span class="wl">Wallet:</span><span class="wa" id="mWalletAmt">₹ 964.35</span></div>
+    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <button class="hdr-bell">🔔<span class="notif-dot"></span></button>
+    <div class="hdr-user" onclick="doLogout()">
+      <div class="avatar">🌐</div>
+      <div><div class="hdr-uname" id="mUserName">masteruser</div><div class="hdr-urole">Merchant</div></div>
+      <span style="font-size:12px;color:var(--text-muted)">▾</span>
+    </div>
+  </header>
+  <div class="app-body">
+    <nav class="sidebar" id="mSidebar">
+      <div class="sb-welcome" id="mWelcomeLabel">Welcome, Merchant</div>
+      <div class="sb-section">
+        <div class="sb-item active" id="mNavDash" onclick="showMPage('dashboard')">
+          <span class="si">⊞</span> Dashboard
+        </div>
+        <div class="sb-item" id="mNavReports" onclick="showMPage('reports')">
+          <span class="si">📋</span> Reports
+        </div>
+        <div class="sb-item open" id="mNavDM" onclick="toggleSbMenu('mDMSub','mNavDM')">
+          <span class="si">👤</span> Dispute Management <span class="arr">▾</span>
+        </div>
+        <div class="sb-sub open" id="mDMSub">
+          <div class="sb-sub-item" id="mNavRaised" onclick="showMPage('raised')">
+            <span class="ssi">📅</span> Dispute Raised Date
+          </div>
+          <div class="sb-sub-item" id="mNavRespond" onclick="showMPage('respond')">
+            <span class="ssi">📅</span> Dispute Respond By Date
+          </div>
+        </div>
+      </div>
+    </nav>
+    <main class="main">
+
+      <!-- Merchant Dashboard -->
+      <div class="page active" id="m-dashboard">
+        <div class="page-inner">
+          <div class="welcome-bar">
+            <div><div class="wb-title">Welcome, Merchant Dispute Dashboard 👋</div><div class="wb-sub">Manage and action customer payment claims</div></div>
+            <div class="wb-date" id="mDashDate"></div>
+          </div>
+          <div class="filter-card" style="margin-bottom:16px;">
+            <div class="filter-row">
+              <div class="filter-group"><label>From Date</label><input type="date" class="fi-date" id="dashFrom"></div>
+              <div class="filter-group"><label>To Date</label><input type="date" class="fi-date" id="dashTo"></div>
+              <button class="btn btn-primary" onclick="loadDashboard()">Search</button>
+            </div>
+          </div>
+          <div class="stats-grid" id="dashStats">
+            <!-- Dynamic Stats Cards -->
+          </div>
+          <div class="tbl-card">
+            <div class="tbl-toolbar"><span style="font-size:14px;font-weight:700;">Recent Chargebacks</span><div class="tbl-space"></div><button class="btn btn-outline btn-sm" onclick="showMPage('respond')">View All →</button></div>
+            <div class="tbl-wrap"><table>
+              <thead><tr><th>RRN Number</th><th>Txn ID</th><th>Merchant Status</th><th>Sub Status</th><th>Adj Amount</th><th>Adj Date</th><th>Action</th></tr></thead>
+              <tbody id="dashRecentBody"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Merchant Dispute Respond By Date -->
+      <div class="page" id="m-respond">
+        <div class="progress-tabs">
+          <div class="pt-seg" style="background:#FFD700;width:25%"></div>
+          <div class="pt-seg" style="background:#22c55e;width:35%"></div>
+          <div class="pt-seg" style="background:#22c55e;width:10%"></div>
+          <div class="pt-seg" style="background:#e5e7eb;flex:1"></div>
+        </div>
+        <div class="page-inner">
+          <div class="page-hdr">
+            <div>
+              <h1>Disputes by Respond By Date</h1>
+              <p>Action disputes before their deadlines to represent your case</p>
+            </div>
+          </div>
+          <div class="filter-card">
+            <div class="filter-row">
+              <div class="filter-group"><label>From Date <span class="req">*</span></label><input type="date" class="fi-date" id="rspFrom"></div>
+              <div class="filter-group"><label>To Date <span class="req">*</span></label><input type="date" class="fi-date" id="rspTo"></div>
+              <div class="filter-group"><label>RRN Number</label><input type="text" class="fi-text" id="rspRrn" placeholder="5757656456456"></div>
+              <div class="filter-group"><label>Transaction ID</label><input type="text" class="fi-text" id="rspTxnId" placeholder="Transaction ID"></div>
+              <div class="filter-group"><label>Status</label>
+                <select class="fi-sel" id="rspStatus">
+                  <option value="">Status</option>
+                  <option>Chargeback Raise</option>
+                  <option>Differed Chargeback Raise</option>
+                  <option>Fraud Chargeback Raise</option>
+                  <option>Pre-Arbitration Raise</option>
+                  <option>Arbitration Raise</option>
+                  <option>VROL Inquiry</option>
+                  <option>VROL Chargeback</option>
+                  <option>VROL Pre-Arbitration</option>
+                  <option>VROL Arbitration</option>
+                </select>
+              </div>
+              <div class="filter-group"><label>Sub Status</label>
+                <select class="fi-sel" id="rspSubStatus">
+                  <option value="">Sub Status</option>
+                  <option>Chargeback New</option>
+                  <option>Chargeback Lost</option>
+                  <option>Chargeback in Progress</option>
+                  <option>Chargeback Resubmit</option>
+                  <option>Chargeback Won</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="filterRespond()">Submit</button>
+              <button class="btn btn-secondary" onclick="resetRespond()">Reset</button>
+            </div>
+            <div class="filter-note">*Note: Filter by Dispute Respond By Date, which refers to the deadline by which response is required.</div>
+          </div>
+
+          <div id="rspTableSection" style="display:none;">
+            <div class="respond-bar">
+              <span>Respond By: <span class="rb-date">Tomorrow</span></span>
+              <span style="margin-left:auto;color:#92400e;font-size:12px;">⚠ Respond before deadline to protect your case</span>
+            </div>
+            <div class="tbl-card" style="border-radius:0 0 var(--radius-lg) var(--radius-lg);">
+              <div class="tbl-toolbar">
+                <div class="search-wrap"><span class="si">🔍</span><input type="text" class="tbl-search" placeholder="Search" id="rspSearch" oninput="searchRespond()"></div>
+                <div class="tbl-space"></div>
+                <button class="btn btn-primary btn-sm" onclick="exportExcel('respond')">⬇ Export</button>
+              </div>
+              <div class="tbl-wrap"><table>
+                <thead><tr>
+                  <th>User Name</th><th>RRN Number</th><th>Txn ID</th><th>Merchant Status</th><th>Merchant Sub Status</th><th>Adj Amount</th><th>Adj Date</th><th>Adj Type</th><th>Expand</th><th>Details</th><th>Action</th>
+                </tr></thead>
+                <tbody id="rspTblBody"></tbody>
+              </table></div>
+              <div class="tbl-footer">
+                <div class="rpp">Rows per page: <select id="rspRppSelect" onchange="resetRespondPageAndRender()"><option value="10">10</option><option value="25">25</option><option value="50">50</option></select></div>
+                <div class="pagination" id="rspPagination"></div>
+              </div>
+            </div>
+          </div>
+          <div id="rspNoData" style="display:none;"><div class="no-data"><div class="nd-svg">📁</div><h3>No Data Found!</h3><p>Try adjusting your filters.</p></div></div>
+        </div>
+      </div>
+
+      <!-- Merchant Dispute Raised Date -->
+      <div class="page" id="m-raised">
+        <div class="progress-tabs">
+          <div class="pt-seg" style="background:#FFD700;width:25%"></div>
+          <div class="pt-seg" style="background:#22c55e;width:35%"></div>
+          <div class="pt-seg" style="background:#22c55e;width:10%"></div>
+          <div class="pt-seg" style="background:#e5e7eb;flex:1"></div>
+        </div>
+        <div class="page-inner">
+          <div class="page-hdr">
+            <div>
+              <h1>Disputes by Raised Date</h1>
+              <p>View history of disputes from the date they were logged</p>
+            </div>
+          </div>
+          <div class="filter-card">
+            <div class="filter-row">
+              <div class="filter-group"><label>From Date <span class="req">*</span></label><input type="date" class="fi-date" id="rsdFrom"></div>
+              <div class="filter-group"><label>To Date <span class="req">*</span></label><input type="date" class="fi-date" id="rsdTo"></div>
+              <div class="filter-group"><label>RRN Number</label><input type="text" class="fi-text" id="rsdRrn" placeholder="5757656456456"></div>
+              <div class="filter-group"><label>Transaction ID</label><input type="text" class="fi-text" id="rsdTxnId" placeholder="Transaction ID"></div>
+              <div class="filter-group"><label>Status</label>
+                <select class="fi-sel" id="rsdStatus">
+                  <option value="">Status</option>
+                  <option>Chargeback Raise</option>
+                  <option>Differed Chargeback Raise</option>
+                  <option>Fraud Chargeback Raise</option>
+                  <option>Pre-Arbitration Raise</option>
+                  <option>Arbitration Raise</option>
+                  <option>VROL Inquiry</option>
+                  <option>VROL Chargeback</option>
+                  <option>VROL Pre-Arbitration</option>
+                  <option>VROL Arbitration</option>
+                </select>
+              </div>
+              <div class="filter-group"><label>Sub Status</label>
+                <select class="fi-sel" id="rsdSubStatus">
+                  <option value="">Sub Status</option>
+                  <option>Chargeback New</option>
+                  <option>Chargeback Lost</option>
+                  <option>Chargeback in Progress</option>
+                  <option>Chargeback Resubmit</option>
+                  <option>Chargeback Won</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="filterRaised()">Submit</button>
+              <button class="btn btn-secondary" onclick="resetRaised()">Reset</button>
+            </div>
+            <div class="filter-note">*Note: Filter by Dispute Raised Date, which indicates when the dispute was logged.</div>
+          </div>
+          <div id="rsdTableSection" style="display:none;">
+            <div class="tbl-card">
+              <div class="tbl-toolbar">
+                <div class="search-wrap"><span class="si">🔍</span><input type="text" class="tbl-search" placeholder="Search" id="rsdSearch" oninput="searchRaised()"></div>
+                <div class="tbl-space"></div>
+                <button class="btn btn-primary btn-sm" onclick="exportExcel('raised')">⬇ Export</button>
+              </div>
+              <div class="tbl-wrap"><table>
+                <thead><tr>
+                  <th>User Name</th><th>RRN Number</th><th>Txn ID</th><th>Merchant Status</th><th>Merchant Sub Status</th><th>Adj Amount</th><th>Adj Date</th><th>Adj Type</th><th>Expand</th><th>Details</th><th>Action</th>
+                </tr></thead>
+                <tbody id="rsdTblBody"></tbody>
+              </table></div>
+              <div class="tbl-footer">
+                <div class="rpp">Rows per page: <select id="rsdRppSelect" onchange="resetRaisedPageAndRender()"><option value="10">10</option><option value="25">25</option></select></div>
+                <div class="pagination" id="rsdPagination"></div>
+              </div>
+            </div>
+          </div>
+          <div id="rsdNoData" style="display:none;"><div class="no-data"><div class="nd-svg">📁</div><h3>No Data Found!</h3><p>Try adjusting your filters.</p></div></div>
+        </div>
+      </div>
+
+      <!-- Dispute Detail Page -->
+      <div class="page" id="m-dispute-detail">
+        <div class="page-inner">
+          <div style="margin-bottom:16px;"><span style="font-size:14px;color:var(--brand);cursor:pointer;font-weight:500;" onclick="goBackToList()">← Back to List</span></div>
+          <div class="dispute-hdr">
+            <h2 id="ddDisputeId">Dispute ID: 983836</h2>
+            <button class="btn btn-primary" onclick="openActionModal(currentDetailId)">Take Action</button>
+          </div>
+          <div class="dd-section">
+            <h3>Dispute Details</h3>
+            <div class="dd-grid" id="ddGrid"></div>
+          </div>
+          <div class="dd-section">
+            <div class="timeline-hdr">
+              <h3 style="margin:0;">Timeline</h3>
+            </div>
+            <div id="ddTimeline"></div>
+            <div style="margin-top:16px;">
+              <div class="reply-box">
+                <input type="text" placeholder="Add remarks / reply.." id="ddReplyInput">
+                <button class="rb-attach" onclick="toast('Files can be attached inside the Take Action evidence window','warning')">📎</button>
+                <button class="rb-send" onclick="sendReply()">➤</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Merchant Reports Page -->
+      <div class="page" id="m-reports">
+        <div class="page-inner">
+          <div class="page-hdr">
+            <div>
+              <h1>Dispute Reports & Analytics</h1>
+              <p>Analyze dispute trends, providers, and outcome distributions</p>
+            </div>
+          </div>
+          <div class="filter-card">
+            <div class="filter-row">
+              <div class="filter-group"><label>From Date</label><input type="date" class="fi-date" id="repFrom"></div>
+              <div class="filter-group"><label>To Date</label><input type="date" class="fi-date" id="repTo"></div>
+              <div class="filter-group">
+                <label>Provider</label>
+                <select class="fi-sel" id="repProvider">
+                  <option value="">All Providers</option>
+                                    <option>VISA</option>
+                  <option>Mastercard</option>
+                  <option>Rupay</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" onclick="generateReports()">Generate Report</button>
+            </div>
+          </div>
+          <div class="stats-grid" id="repStatsGrid" style="margin-bottom: 24px;"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+            <div class="tbl-card" style="padding: 20px;">
+              <h4 style="margin-bottom: 16px; font-size: 15px; font-weight: 700;">Disputes by Provider</h4>
+              <div id="providerChartWrap" style="display: flex; justify-content: center; align-items: center; min-height: 260px;"></div>
+            </div>
+            <div class="tbl-card" style="padding: 20px;">
+              <h4 style="margin-bottom: 16px; font-size: 15px; font-weight: 700;">Resolution Outcome (Won vs Lost)</h4>
+              <div id="outcomeChartWrap" style="display: flex; justify-content: center; align-items: center; min-height: 260px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="overlay" id="actionModal1">
+  <div class="modal modal-sm">
+    <button class="modal-close" style="position:absolute;top:12px;right:12px;color:var(--text-muted);" onclick="closeModal('actionModal1')">✕</button>
+    <div style="padding:32px 28px;text-align:center;">
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:10px;">Take Action For Dispute ID: <span id="am1Id"></span>!</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:28px;line-height:1.6;">Kindly respond before deadline and help us represent the case in your favour. If no response is received before deadline, the dispute will be deemed accepted.</p>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:12px;height:46px;font-size:15px;" onclick="openActionModal2()">Accept Dispute</button>
+      <button class="btn btn-outline" style="width:100%;height:46px;font-size:15px;" onclick="openContestModal()">Contest Dispute &amp; Submit Evidence</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="actionModal2">
+  <div class="modal">
+    <div class="modal-hdr"><h3>Ticket Action For Dispute ID: <span id="am2Id"></span></h3><button class="modal-close" onclick="closeModal('actionModal2')">✕</button></div>
+    <div class="modal-body">
+      <div style="font-size:15px;font-weight:600;margin-bottom:14px;">Select Your Response</div>
+      <div style="position:relative;">
+        <select class="mf-sel-box" id="responseSelect" onchange="handleResponseSelect()">
+          <option value="">Select Your Response</option>
+          <option value="accept">Accept Dispute</option>
+          <option value="contest">Contest Dispute and Submit Evidence</option>
+        </select>
+      </div>
+      <div id="acceptBlock" style="display:none;margin-top:16px;">
+        <p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:14px;line-height:1.6;">If you accept this dispute, dispute amount will be refunded to your customer and the dispute will be closed. Are you sure you want to accept this dispute?</p>
+        <div class="mf"><label>Remarks</label><textarea class="mfi mfi-area" id="acceptRemarks" placeholder="Enter remarks (optional)"></textarea></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+          <button class="btn btn-secondary" onclick="closeModal('actionModal2')">Cancel</button>
+          <button class="btn btn-primary" onclick="confirmAccept()">Accept Dispute</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="contestModal">
+  <div class="modal modal-lg">
+    <div class="modal-hdr"><h3>Ticket Action For Dispute ID: <span id="cmId"></span></h3><button class="modal-close" onclick="closeModal('contestModal')">✕</button></div>
+    <div class="modal-body">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Select Your Response</div>
+      <div class="radio-opts" style="margin-bottom:16px;">
+        <label class="radio-opt"><input type="radio" name="contestResp" value="accept" onclick="closeModal('contestModal'); openActionModal2();"> Accept Dispute</label>
+        <label class="radio-opt"><input type="radio" name="contestResp" value="contest" checked> Contest Dispute and Submit Evidence</label>
+      </div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Submit Evidence</div>
+      <p id="cmEvidenceHelp" style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">The evidence that you upload will be shared with the bank for review. Ensure you upload the proper evidence.<br>File types supported are jpeg, jpg, png, pdf and maximum file size allowed is 20 MB.</p>
+      <div id="evidenceList">
+        <div class="ev-row">
+          <label><span class="ev-info" title="Proof of delivery or service">ℹ</span> Delivery/Service Proof</label>
+          <div id="evFile1">
+            <div class="ev-uploaded" id="evUploaded1" style="display:none;">📄 DeliveredProof.pdf <button style="background:none;border:none;cursor:pointer;color:var(--brand);" onclick="removeEvidence(1)">✕</button></div>
+            <label class="ev-upload-btn" id="evBtn1" for="evInput1">☁ Choose a file</label>
+            <input type="file" id="evInput1" style="display:none;" onchange="evidenceUploaded(1,this)">
+          </div>
+        </div>
+        <div class="ev-row">
+          <label><span class="ev-info" title="Statement of service">ℹ</span> Statement of Service</label>
+          <div id="evFile2">
+            <label class="ev-upload-btn" id="evBtn2" for="evInput2">☁ Choose a file</label>
+            <input type="file" id="evInput2" style="display:none;" onchange="evidenceUploaded(2,this)">
+          </div>
+        </div>
+        <div class="ev-row">
+          <label><span class="ev-info" title="Refund proof">ℹ</span> Refund Proof</label>
+          <div id="evFile3">
+            <label class="ev-upload-btn" id="evBtn3" for="evInput3">☁ Choose a file</label>
+            <input type="file" id="evInput3" style="display:none;" onchange="evidenceUploaded(3,this)">
+          </div>
+        </div>
+      </div>
+      <div class="add-evidence" onclick="addMoreEvidence()">➕ Add Additional Evidence</div>
+      <div class="mf" style="margin-top:14px;"><label>Additional Remarks <span style="font-size:11px;font-weight:400;color:var(--text-light);">Optional</span></label><input type="text" class="mfi" id="contestRemarks" placeholder="Maximum 500 Characters" maxlength="500"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('contestModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitEvidence()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="successModal">
+  <div class="modal modal-sm">
+    <button style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted);z-index:10;" onclick="closeModal('successModal')">✕</button>
+    <div class="modal-success">
+      <div class="ms-icon">
+        <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="30" cy="30" r="30" fill="#8B0000"/>
+          <path d="M17 31L26 40L44 22" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Dispute Accepted Successfully!</h3>
+      <p><strong>Dispute Amount will be refunded to your customer.</strong></p>
+      <button class="btn btn-primary" style="margin-top:20px;width:180px;" onclick="closeModal('successModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="evidenceSuccessModal">
+  <div class="modal modal-sm">
+    <button style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted);z-index:10;" onclick="closeModal('evidenceSuccessModal')">✕</button>
+    <div class="modal-success">
+      <div class="ms-icon">
+        <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="30" cy="30" r="30" fill="#16a34a"/>
+          <path d="M17 31L26 40L44 22" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h3>Evidence Submitted Successfully!</h3>
+      <p>Your evidence has been submitted for review. The bank will evaluate and update the status.</p>
+      <button class="btn btn-primary" style="margin-top:20px;width:180px;" onclick="closeModal('evidenceSuccessModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastIcon">✅</span><span id="toastMsg"></span></div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA & STATE PERSISTENCE (SHARED)
+// ═══════════════════════════════════════════
+const TODAY = new Date();
+const fmtDate = d => d.toISOString().split('T')[0];
+const daysAgo = n => { let d=new Date(TODAY); d.setDate(d.getDate()-n); return fmtDate(d); };
+const fmtDisp = s => { if(!s)return ''; let d=new Date(s); return d.getDate().toString().padStart(2,'0')+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getFullYear(); };
+
+const DEFAULT_USERS = {
+  'Test@isu':  {pass:'Test@2026', role:'merchant', name:'masteruser', wallet:'₹ 964.35'},
+  'masteruser':{pass:'Test@2026', role:'merchant', name:'masteruser', wallet:'₹ 964.35'},
+  'Test@Ad':   {pass:'Test@2027', role:'admin',    name:'Krishna Das', wallet:'₹ 2,45,800'},
+};
+
+let USERS = JSON.parse(localStorage.getItem('isu_users')) || DEFAULT_USERS;
+
+const DEFAULT_CHARGEBACKS = [
+  {
+    id:'CB001', caseId:'CASE000001', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789089', txnId:'8768987', terminalId:'5683583',
+    beneMobile:'9348909106', remMobile:'7845695654',
+    createdDate: daysAgo(1), txnDate: daysAgo(5), adjDate: daysAgo(1),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+86400000)),
+    mStatus:'Chargeback Raise', mSubStatus:'Chargeback New',
+    adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:1000, adjAmt:1000, leinAmt:0, glNo:'354422',
+    currency:'Rupees', reasonCode:'4808', pan:'832927*****',
+    walletStatus:'Debited', product:'VISA', aging:1,
+    merchantAction:null, adminAction:null,
+    timeline:[
+      {by:'iServeU', time: daysAgo(1)+' 10:30 AM', title:'Dispute Raised', remarks:'', file:null},
+      {by:'iServeU', time: daysAgo(1)+' 5:30 PM', title:'Remarks Updated by iServeU', remarks:'Done', file:'disputesamplefile.pdf'},
+    ]
+  },
+  {
+    id:'CB002', caseId:'CASE000002', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789090', txnId:'8768988', terminalId:'5688584',
+    beneMobile:'9348909107', remMobile:'7845695653',
+    createdDate: daysAgo(2), txnDate: daysAgo(6), adjDate: daysAgo(2),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+2*86400000)),
+    mStatus:'Chargeback Raise', mSubStatus:'Chargeback New',
+    adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:3000, adjAmt:3000, leinAmt:0, glNo:'354422',
+    currency:'Rupees', reasonCode:'4808', pan:'832927*****',
+    walletStatus:'Debited', product:'VISA', aging:2,
+    merchantAction:null, adminAction:null,
+    timeline:[{by:'iServeU', time: daysAgo(2)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null}]
+  },
+  {
+    id:'CB003', caseId:'CASE000003', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789091', txnId:'8768989', terminalId:'5678585',
+    beneMobile:'9398909108', remMobile:'7845665652',
+    createdDate: daysAgo(3), txnDate: daysAgo(7), adjDate: daysAgo(3),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+86400000)),
+    mStatus:'Chargeback Raise', mSubStatus:'Chargeback Lost',
+    adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:1500, adjAmt:1500, leinAmt:100, glNo:'354422',
+    currency:'Rupees', reasonCode:'4808', pan:'397927*****',
+    walletStatus:'Debited', product:'VISA', aging:3,
+    merchantAction:'rejected', adminAction:'declined',
+    chargbackId:'CommonVISA17268', adminName:'nsdladmin',
+    rejectReason:'Based on internal investigation and transaction monitoring, this case exhibits patterns consistent with suspicious or unauthorized activity.',
+    timeline:[
+      {by:'iServeU', time: daysAgo(3)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null},
+      {by:'masteruser', time: daysAgo(2)+' 10:00 AM', title:'Remarks Updated by masteruser', remarks:'Done', file:'Evidencefile.pdf'},
+      {by:'iServeU', time: daysAgo(1)+' 03:00 PM', title:'Remarks Updated by iServeU', remarks:'Done', file:'disputesamplefile.pdf'},
+    ]
+  },
+  {
+    id:'CB004', caseId:'CASE000004', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789092', txnId:'8768990', terminalId:'5688585',
+    beneMobile:'9348909108', remMobile:'7845695652',
+    createdDate: daysAgo(4), txnDate: daysAgo(8), adjDate: daysAgo(4),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+3*86400000)),
+    mStatus:'Pre-Arbitration Raise', mSubStatus:'Chargeback New',
+    adjType:'Pre-Arbitration Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:2500, adjAmt:2500, leinAmt:0, glNo:'354422',
+    currency:'USD', reasonCode:'4808', pan:'832927*****',
+    walletStatus:'Debited', product:'VISA', aging:4,
+    merchantAction:null, adminAction:null,
+    timeline:[{by:'iServeU', time: daysAgo(4)+' 08:30 AM', title:'Dispute Raised', remarks:'', file:null}]
+  },
+  {
+    id:'CB005', caseId:'CASE000005', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789093', txnId:'8768991', terminalId:'5683583',
+    beneMobile:'9348909106', remMobile:'7845695654',
+    createdDate: daysAgo(5), txnDate: daysAgo(9), adjDate: daysAgo(5),
+    respondByDate: daysAgo(0),
+    mStatus:'Chargeback Raise', mSubStatus:'Chargeback in Progress',
+    adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:500, adjAmt:500, leinAmt:500, glNo:'354422',
+    currency:'Rupees', reasonCode:'1', pan:'832927*****',
+    walletStatus:'Hold', product:'VISA', aging:5,
+    merchantAction:'accepted', adminAction:null,
+    timeline:[
+      {by:'iServeU', time: daysAgo(5)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null},
+      {by:'masteruser', time: daysAgo(4)+' 11:45 AM', title:'Merchant Accepted', remarks:'Done', file:null},
+    ]
+  },
+  {
+    id:'CB006', caseId:'CASE000006', userName:'masteruser', userId:'2575789089',
+    rrn:'2575789094', txnId:'8768992', terminalId:'5688584',
+    beneMobile:'9348909107', remMobile:'7845695653',
+    createdDate: daysAgo(5), txnDate: daysAgo(10), adjDate: daysAgo(5),
+    respondByDate: fmtDate(new Date(TODAY.getTime()+4*86400000)),
+    mStatus:'Arbitration Raise', mSubStatus:'Chargeback New',
+    adjType:'Arbitration Raise', remitter:'AXB', beneficiary:'FIP',
+    txnAmt:3000, adjAmt:3000, leinAmt:0, glNo:'354422',
+    currency:'USD', reasonCode:'4808', pan:'832927*****',
+    walletStatus:'Debited', product:'VISA', aging:5,
+    merchantAction:null, adminAction:null,
+    timeline:[{by:'iServeU', time: daysAgo(5)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null}]
+  }    ,{
+      id: 'CB_VROL_01', caseId: 'CASE_VROL_01', userName: 'masteruser', userId: '2575789089',
+      rrn: '1231231231', txnId: '9898989', terminalId: '5690015',
+      beneMobile: '9999999999', remMobile: '8888888888',
+      createdDate: daysAgo(2), txnDate: daysAgo(5), adjDate: daysAgo(2), respondByDate: fmtDate(new Date(TODAY.getTime() + 5 * 86400000)),
+      mStatus: 'VROL Inquiry', mSubStatus: 'Chargeback New',
+      adjType: 'Chargeback Raise', remitter: 'HDFC', beneficiary: 'FIP',
+      txnAmt: 5000, adjAmt: 5000, leinAmt: 5000, glNo: '354435',
+      currency: 'Rupees', reasonCode: '10.4', pan: '416001*****',
+      walletStatus: 'Hold', product: 'VISA', aging: 2,
+      merchantAction: null, adminAction: null, visaPending: true,
+      timeline: [
+        { by: 'iServeU', time: daysAgo(2) + ' 10:00 AM', title: 'VROL Inquiry Initiated', remarks: 'Visa raised inquiry for potential fraud.', file: null }
+      ]
+    },
+    {
+      id: 'CB_VROL_02', caseId: 'CASE_VROL_02', userName: 'masteruser', userId: '2575789089',
+      rrn: '1231231232', txnId: '9898990', terminalId: '5690016',
+      beneMobile: '9999999998', remMobile: '8888888887',
+      createdDate: daysAgo(5), txnDate: daysAgo(10), adjDate: daysAgo(5), respondByDate: daysAgo(1),
+      mStatus: 'VROL Chargeback', mSubStatus: 'Chargeback in Progress',
+      adjType: 'Chargeback Raise', remitter: 'SBI', beneficiary: 'FIP',
+      txnAmt: 3500, adjAmt: 3500, leinAmt: 3500, glNo: '354436',
+      currency: 'Rupees', reasonCode: '13.1', pan: '426001*****',
+      walletStatus: 'Hold', product: 'VISA', aging: 5,
+      merchantAction: 'evidence', adminAction: null, visaPending: true,
+      timeline: [
+        { by: 'iServeU', time: daysAgo(5) + ' 11:00 AM', title: 'VROL Chargeback Received', remarks: 'First chargeback initiated by issuer.', file: null }
+      ]
+    },
+    {
+      id: 'CB_VROL_03', caseId: 'CASE_VROL_03', userName: 'masteruser', userId: '2575789089',
+      rrn: '1231231233', txnId: '9898991', terminalId: '5690017',
+      beneMobile: '9999999997', remMobile: '8888888886',
+      createdDate: daysAgo(15), txnDate: daysAgo(20), adjDate: daysAgo(15), respondByDate: daysAgo(2),
+      mStatus: 'VROL Pre-Arbitration', mSubStatus: 'Chargeback in Progress',
+      adjType: 'Pre-Arbitration Raise', remitter: 'AXIS', beneficiary: 'FIP',
+      txnAmt: 7500, adjAmt: 7500, leinAmt: 7500, glNo: '354437',
+      currency: 'Rupees', reasonCode: '10.4', pan: '436001*****',
+      walletStatus: 'Hold', product: 'VISA', aging: 15,
+      merchantAction: 'evidence', adminAction: 'considered', visaPending: true,
+      timeline: [
+        { by: 'iServeU', time: daysAgo(15) + ' 12:00 PM', title: 'VROL Pre-Arbitration Raised', remarks: 'Issuer declined evidence, pushed to pre-arb.', file: null }
+      ]
+    },
+    {
+      id: 'CB_VROL_04', caseId: 'CASE_VROL_04', userName: 'masteruser', userId: '2575789089',
+      rrn: '1231231234', txnId: '9898992', terminalId: '5690018',
+      beneMobile: '9999999996', remMobile: '8888888885',
+      createdDate: daysAgo(30), txnDate: daysAgo(40), adjDate: daysAgo(30), respondByDate: daysAgo(5),
+      mStatus: 'VROL Arbitration', mSubStatus: 'Chargeback Lost',
+      adjType: 'Arbitration Raise', remitter: 'ICICI', beneficiary: 'FIP',
+      txnAmt: 10000, adjAmt: 10000, leinAmt: 0, glNo: '354438',
+      currency: 'Rupees', reasonCode: '10.5', pan: '446001*****',
+      walletStatus: 'Debited', product: 'VISA', aging: 30,
+      merchantAction: 'evidence', adminAction: 'declined', visaPending: false,
+      timeline: [
+        { by: 'iServeU', time: daysAgo(30) + ' 01:00 PM', title: 'VROL Arbitration Lost', remarks: 'Visa Arbitration panel ruled in favor of cardholder.', file: null }
+      ]
+    }
+];
+
+let chargebacks = JSON.parse(localStorage.getItem('isu_chargebacks')) || DEFAULT_CHARGEBACKS;
+
+const DEFAULT_LEDGER = [
+  { id: 'ADJ001', merchant: 'masteruser', type: 'Credit', amount: 500, date: daysAgo(5), remarks: 'Reversal of erroneous chargeback debit' },
+  { id: 'ADJ002', merchant: 'masteruser', type: 'Debit', amount: 200, date: daysAgo(3), remarks: 'Processing fee adjustment' }
+];
+let ledger = JSON.parse(localStorage.getItem('isu_ledger')) || DEFAULT_LEDGER;
+
+// AUTO-SET ACTIVE MERCHANT SESSION FOR merchant.html
+let currentUser = { username: 'masteruser', ...USERS['masteruser'] };
+localStorage.setItem('isu_session', JSON.stringify(currentUser));
+
+let currentActionId = null;
+let currentDetailId = null;
+let currentDetailSource = 'respond';
+
+// Pagination state variables
+let paginationState = {
+  respond: { currentPage: 1, limit: 10 },
+  raised: { currentPage: 1, limit: 10 }
+};
+
+function paginateData(data, type) {
+  const state = paginationState[type];
+  const total = data.length;
+  const totalPages = Math.ceil(total / state.limit) || 1;
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
+  if (state.currentPage < 1) state.currentPage = 1;
+  const start = (state.currentPage - 1) * state.limit;
+  const end = Math.min(start + state.limit, total);
+  const paginated = data.slice(start, end);
+  return { paginated, start, end, total, totalPages };
+}
+
+function updateHeaderWallet() {
+  const user = USERS[currentUser.username];
+  if (user) {
+    currentUser.wallet = user.wallet;
+    const mWallet = document.getElementById('mWalletAmt');
+    if (mWallet) mWallet.textContent = user.wallet;
+  }
+}
+
+function renderPaginationControls(containerId, type, totalCount) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const state = paginationState[type];
+  const totalPages = Math.ceil(totalCount / state.limit) || 1;
+  
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
+  if (state.currentPage < 1) state.currentPage = 1;
+  const startRecord = totalCount === 0 ? 0 : (state.currentPage - 1) * state.limit + 1;
+  const endRecord = Math.min(state.currentPage * state.limit, totalCount);
+  
+  let html = `<span style="margin-right:8px;color:var(--text-muted);font-size:12px;">${startRecord}–${endRecord} of ${totalCount} records</span>`;
+  
+  html += `<button class="pg-btn" ${state.currentPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} onclick="changePage('${type}', ${state.currentPage - 1})">‹</button>`;
+  
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= state.currentPage - 1 && i <= state.currentPage + 1)) {
+      html += `<button class="pg-btn ${state.currentPage === i ? 'active' : ''}" onclick="changePage('${type}', ${i})">${i}</button>`;
+    } else if (i === 2 && state.currentPage > 3) {
+      html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+      i = state.currentPage - 2;
+    } else if (i === state.currentPage + 1 && state.currentPage < totalPages - 2) {
+      html += `<span style="padding: 0 4px; color: var(--text-muted);">...</span>`;
+      i = totalPages - 1;
+    }
+  }
+  
+  html += `<button class="pg-btn" ${state.currentPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} onclick="changePage('${type}', ${state.currentPage + 1})">›</button>`;
+  
+  container.innerHTML = html;
+}
+
+function changePage(type, page) {
+  paginationState[type].currentPage = page;
+  if (type === 'respond') renderRespond();
+  else if (type === 'raised') renderRaisedData(filteredRaised);
+}
+
+function resetRespondPageAndRender() {
+  paginationState.respond.currentPage = 1;
+  paginationState.respond.limit = parseInt(document.getElementById('rspRppSelect').value);
+  renderRespond();
+}
+
+function resetRaisedPageAndRender() {
+  paginationState.raised.currentPage = 1;
+  paginationState.raised.limit = parseInt(document.getElementById('rsdRppSelect').value);
+  filterRaised();
+}
+
+function saveState() {
+  localStorage.setItem('isu_chargebacks', JSON.stringify(chargebacks));
+  localStorage.setItem('isu_users', JSON.stringify(USERS));
+  localStorage.setItem('isu_ledger', JSON.stringify(ledger));
+  updateHeaderWallet();
+}
+
+if (!localStorage.getItem('isu_chargebacks')) {
+  saveState();
+}
+
+// ═══════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════
+function toggleTheme(){
+  document.body.classList.toggle('dark-mode');
+  const isDark = document.body.classList.contains('dark-mode');
+  localStorage.setItem('isu_dark_mode', isDark);
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.textContent = isDark ? '☀️' : '🌙';
+  });
+  if (document.getElementById('m-reports').classList.contains('active')) {
+    generateReports();
+  }
+}
+
+function doLogout(){
+  if(confirm('Are you sure you want to reset session? (You will remain on the merchant portal, but localStorage data resets to default)')){
+    localStorage.removeItem('isu_chargebacks');
+    localStorage.removeItem('isu_users');
+    localStorage.removeItem('isu_ledger');
+    location.reload();
+  }
+}
+
+// ═══════════════════════════════════════════
+// MERCHANT INIT
+// ═══════════════════════════════════════════
+function initMerchant(){
+  setDefaultDates();
+  document.getElementById('mWelcomeLabel').textContent='Welcome, '+currentUser.name;
+  document.getElementById('mUserName').textContent=currentUser.name;
+  updateHeaderWallet();
+  document.getElementById('mDashDate').textContent=new Date().toLocaleDateString('en-IN');
+  loadDashboard();
+  showMPage('dashboard');
+  filterRespond();
+}
+
+function showMPage(p){
+  document.querySelectorAll('#merchantApp .page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('m-'+p)?.classList.add('active');
+  ['mNavDash','mNavReports','mNavRaised','mNavRespond'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  const map={dashboard:'mNavDash',reports:'mNavReports',raised:'mNavRaised',respond:'mNavRespond'};
+  if(map[p]) document.getElementById(map[p])?.classList.add('active');
+  if(p==='reports') generateReports();
+}
+
+function setDefaultDates(){
+  const t=fmtDate(TODAY);
+  const m=new Date(TODAY); m.setDate(m.getDate()-30);
+  const from=fmtDate(m);
+  ['dashFrom','dashTo','rspFrom','rspTo','rsdFrom','rsdTo','repFrom','repTo'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.value=id.includes('From')?from:t;
+  });
+}
+
+function loadDashboard(){
+  const from = document.getElementById('dashFrom').value;
+  const to = document.getElementById('dashTo').value;
+  
+  const filtered = chargebacks.filter(cb => {
+    if (from && cb.createdDate && cb.createdDate < from) return false;
+    if (to && cb.createdDate && cb.createdDate > to) return false;
+    return true;
+  });
+  
+  const totalCount = filtered.length;
+  const totalAmt = filtered.reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const openCount = filtered.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold')).length;
+  const wonCount = filtered.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).length;
+  const lostCount = filtered.filter(cb => cb.mSubStatus.includes('Lost')).length;
+  
+  const openAmt = filtered.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const wonAmt = filtered.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const lostAmt = filtered.filter(cb => cb.mSubStatus.includes('Lost')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+
+  const statsHtml = `
+    <div class="stat-card received"><div class="stat-icon">📥</div><div><div class="stat-val">₹${totalAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Disputes Received</div><div class="stat-cnt">Count: ${totalCount}</div></div></div>
+    <div class="stat-card open"><div class="stat-icon">🔄</div><div><div class="stat-val">₹${openAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Open Disputes</div><div class="stat-cnt">Count: ${openCount}</div></div></div>
+    <div class="stat-card lost"><div class="stat-icon">❌</div><div><div class="stat-val">₹${lostAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Disputes Lost</div><div class="stat-cnt">Count: ${lostCount}</div></div></div>
+    <div class="stat-card won"><div class="stat-icon">✅</div><div><div class="stat-val">₹${wonAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Disputes Won</div><div class="stat-cnt">Count: ${wonCount}</div></div></div>
+  `;
+  
+  const statsGrid = document.getElementById('dashStats');
+  if (statsGrid) statsGrid.innerHTML = statsHtml;
+  
+  renderDashRecent();
+}
+
+function renderDashRecent(){
+  const tbody=document.getElementById('dashRecentBody');
+  if(!tbody) return;
+  const rows=chargebacks.slice(0,5);
+  tbody.innerHTML=rows.map(cb=>`
+    <tr>
+      <td class="mono">${cb.rrn}</td>
+      <td class="mono">${cb.txnId}</td>
+      <td>${statusBadge(cb.mStatus)}</td>
+      <td>${subBadge(cb.mSubStatus)}</td>
+      <td><strong>₹${cb.adjAmt.toLocaleString()}</strong></td>
+      <td>${fmtDisp(cb.adjDate)}</td>
+      <td>${getMerchantActionBtn(cb)}</td>
+    </tr>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+// RESPOND BY DATE PAGE
+// ═══════════════════════════════════════════
+let filteredRespond=[];
+function filterRespond(){
+  paginationState.respond.currentPage = 1;
+  const from=document.getElementById('rspFrom').value;
+  const to=document.getElementById('rspTo').value;
+  const rrn=document.getElementById('rspRrn').value.trim();
+  const txn=document.getElementById('rspTxnId').value.trim();
+  const status=document.getElementById('rspStatus').value;
+  const sub=document.getElementById('rspSubStatus').value;
+  filteredRespond=chargebacks.filter(cb=>{
+    if(from && cb.respondByDate && cb.respondByDate<from) return false;
+    if(to && cb.respondByDate && cb.respondByDate>to) return false;
+    if(rrn && !cb.rrn.includes(rrn)) return false;
+    if(txn && !cb.txnId.includes(txn)) return false;
+    if(status && cb.mStatus!==status) return false;
+    if(sub && cb.mSubStatus!==sub) return false;
+    return true;
+  });
+  if(!filteredRespond.length){
+    document.getElementById('rspTableSection').style.display='none';
+    document.getElementById('rspNoData').style.display='block';
+  } else {
+    document.getElementById('rspTableSection').style.display='block';
+    document.getElementById('rspNoData').style.display='none';
+    renderRespond();
+  }
+}
+function resetRespond(){
+  ['rspRrn','rspTxnId'].forEach(id=>document.getElementById(id).value='');
+  ['rspStatus','rspSubStatus'].forEach(id=>document.getElementById(id).value='');
+  filterRespond();
+}
+function searchRespond(){
+  paginationState.respond.currentPage = 1;
+  const q=document.getElementById('rspSearch').value.toLowerCase();
+  const data=q?chargebacks.filter(cb=>cb.rrn.includes(q)||cb.txnId.includes(q)||cb.mStatus.toLowerCase().includes(q)):filteredRespond;
+  renderRespondData(data);
+}
+function renderRespond(){ renderRespondData(filteredRespond); }
+function renderRespondData(data){
+  const tbody=document.getElementById('rspTblBody');
+  const { paginated } = paginateData(data, 'respond');
+  tbody.innerHTML=paginated.map(cb=>buildTableRow(cb,'respond')).join('');
+  renderPaginationControls('rspPagination', 'respond', data.length);
+}
+
+// ═══════════════════════════════════════════
+// RAISED DATE PAGE
+// ═══════════════════════════════════════════
+let filteredRaised=[];
+function filterRaised(){
+  paginationState.raised.currentPage = 1;
+  const from=document.getElementById('rsdFrom').value;
+  const to=document.getElementById('rsdTo').value;
+  const rrn=document.getElementById('rsdRrn').value.trim();
+  const txn=document.getElementById('rsdTxnId').value.trim();
+  const status=document.getElementById('rsdStatus').value;
+  const sub=document.getElementById('rsdSubStatus').value;
+  filteredRaised=chargebacks.filter(cb=>{
+    if(from && cb.createdDate && cb.createdDate<from) return false;
+    if(to && cb.createdDate && cb.createdDate>to) return false;
+    if(rrn && !cb.rrn.includes(rrn)) return false;
+    if(txn && !cb.txnId.includes(txn)) return false;
+    if(status && cb.mStatus!==status) return false;
+    if(sub && cb.mSubStatus!==sub) return false;
+    return true;
+  });
+  if(!filteredRaised.length){
+    document.getElementById('rsdTableSection').style.display='none';
+    document.getElementById('rsdNoData').style.display='block';
+  } else {
+    document.getElementById('rsdTableSection').style.display='block';
+    document.getElementById('rsdNoData').style.display='none';
+    renderRaisedData(filteredRaised);
+  }
+}
+function resetRaised(){
+  ['rsdRrn','rsdTxnId'].forEach(id=>document.getElementById(id).value='');
+  ['rsdStatus','rsdSubStatus'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rsdTableSection').style.display='none';
+  document.getElementById('rsdNoData').style.display='none';
+}
+function searchRaised(){
+  paginationState.raised.currentPage = 1;
+  const q=document.getElementById('rsdSearch').value.toLowerCase();
+  const data=q?chargebacks.filter(cb=>cb.rrn.includes(q)||cb.txnId.includes(q)||cb.mStatus.toLowerCase().includes(q)):filteredRaised;
+  renderRaisedData(data);
+}
+function renderRaisedData(data){
+  const tbody=document.getElementById('rsdTblBody');
+  const { paginated } = paginateData(data, 'raised');
+  tbody.innerHTML=paginated.map(cb=>buildTableRow(cb,'raised')).join('');
+  renderPaginationControls('rsdPagination', 'raised', data.length);
+}
+
+// ═══════════════════════════════════════════
+// TABLE ROW BUILDER (shared)
+// ═══════════════════════════════════════════
+function buildTableRow(cb, source){
+  return `
+  <tr id="row-${cb.id}">
+    <td>${cb.userName}</td>
+    <td class="mono">${cb.rrn}</td>
+    <td class="mono">${cb.txnId}</td>
+    <td>${statusBadge(cb.mStatus)}</td>
+    <td>${subBadge(cb.mSubStatus)}</td>
+    <td><strong>₹${cb.adjAmt.toLocaleString()}</strong></td>
+    <td>${fmtDisp(cb.adjDate)}</td>
+    <td>${cb.adjType}</td>
+    <td><button class="expand-btn" onclick="toggleExpand('${cb.id}','${source}')" id="expBtn-${cb.id}">▾</button></td>
+    <td><button class="info-btn" onclick="openDisputeDetail('${cb.id}','${source}')">ℹ</button></td>
+    <td>${getMerchantActionBtn(cb)}</td>
+  </tr>
+  <tr id="expRow-${cb.id}" style="display:none;">
+    <td colspan="11" style="padding:0;">
+      <div class="expand-inner" style="background:#f9fafb;border-top:1px solid var(--border);">
+        <div class="expand-grid">
+          <div class="eg-item"><div class="ek">User ID</div><div class="ev">${cb.userId}</div></div>
+          <div class="eg-item"><div class="ek">Created Date</div><div class="ev">${fmtDisp(cb.createdDate)}</div></div>
+          <div class="eg-item"><div class="ek">Remitter</div><div class="ev">${cb.remitter}</div></div>
+          <div class="eg-item"><div class="ek">Beneficiary</div><div class="ev">${cb.beneficiary}</div></div>
+          <div class="eg-item"><div class="ek">Txn Date</div><div class="ev" style="color:var(--brand);font-weight:700;">${fmtDisp(cb.txnDate)}</div></div>
+          <div class="eg-item"><div class="ek">Terminal ID</div><div class="ev">${cb.terminalId}</div></div>
+          <div class="eg-item"><div class="ek">Bene Mobile No</div><div class="ev">${cb.beneMobile}</div></div>
+          <div class="eg-item"><div class="ek">Rem Mobile No</div><div class="ev">${cb.remMobile}</div></div>
+          <div class="eg-item"><div class="ek">Txn Amount</div><div class="ev">₹${cb.txnAmt.toLocaleString()}</div></div>
+          <div class="eg-item"><div class="ek">Hold Amount</div><div class="ev">₹${cb.leinAmt.toLocaleString()}</div></div>
+          <div class="eg-item"><div class="ek">Status</div><div class="ev">${cb.mSubStatus}</div></div>
+          <div class="eg-item"><div class="ek">Rejection Remark</div><div class="ev">${cb.rejectReason||'-'}</div></div>
+          <div class="eg-item"><div class="ek">Chargeback ID</div><div class="ev">${cb.chargbackId||cb.caseId}</div></div>
+          ${cb.product === 'VISA' ? `<div class="eg-item"><div class="ek">VROL Case ID</div><div class="ev">${cb.caseId||'-'}</div></div><div class="eg-item"><div class="ek">Visa Reason Code</div><div class="ev">${cb.reasonCode||'-'}</div></div>` : ''}
+          <div class="eg-item"><div class="ek">Wallet Status</div><div class="ev">${cb.walletStatus}</div></div>
+          <div class="eg-item"><div class="ek">Product</div><div class="ev">${cb.product}</div></div>
+          <div class="eg-item"><div class="ek">Aging</div><div class="ev">${cb.aging} Days</div></div>
+          <div class="eg-item"><div class="ek">Admin Name</div><div class="ev">${cb.adminName||'nsdladmin'}</div></div>
+          <div class="eg-item"><div class="ek">Updated Date</div><div class="ev">${fmtDisp(cb.adjDate)}</div></div>
+        </div>
+      </div>
+    </td>
+  </tr>`;
+}
+
+function toggleExpand(id, source){
+  const row=document.getElementById('expRow-'+id);
+  const btn=document.getElementById('expBtn-'+id);
+  if(row.style.display==='none'){row.style.display='';btn.textContent='▴';}
+  else{row.style.display='none';btn.textContent='▾';}
+}
+
+function getMerchantActionBtn(cb){
+  if(cb.merchantAction==='accepted') return `<span class="badge badge-won">✓ Accepted</span>`;
+  if(cb.merchantAction==='rejected') return `<span class="badge badge-resubmit">✕ Rejected</span>`;
+  if(cb.merchantAction==='evidence') return `<span class="badge badge-progress">Evidence Submitted</span>`;
+  return `<button class="ta-btn" onclick="openActionModal('${cb.id}')">Take Action</button>`;
+}
+
+// ═══════════════════════════════════════════
+// DISPUTE DETAIL
+// ═══════════════════════════════════════════
+function openDisputeDetail(id, source){
+  currentDetailId=id;
+  currentDetailSource=source;
+  const cb=chargebacks.find(x=>x.id===id);
+  if(!cb) return;
+  document.getElementById('ddDisputeId').textContent='Dispute ID: '+cb.caseId;
+  document.getElementById('ddGrid').innerHTML=`
+    <div class="dd-item"><span class="dk">Order ID</span><span class="dv">${cb.caseId}</span></div>
+    <div class="dd-item"><span class="dk">Transaction ID</span><span class="dv">${cb.txnId}</span></div>
+    <div class="dd-item"><span class="dk">Transaction Amount</span><span class="dv">₹${cb.txnAmt.toLocaleString()}</span></div>
+    <div class="dd-item"><span class="dk">Dispute Amount</span><span class="dv">₹${cb.adjAmt.toLocaleString()}</span></div>
+    <div class="dd-item"><span class="dk">Payment Method</span><span class="dv">${cb.product||'VISA'}</span></div>
+    <div class="dd-item"><span class="dk">Dispute Reason</span><span class="dv">Authorization not obtained</span></div>
+    <div class="dd-item"><span class="dk">Dispute Type</span><span class="dv">Dispute</span></div>
+    <div class="dd-item"><span class="dk">Responded by</span><span class="dv">${fmtDisp(cb.respondByDate)}</span></div>
+  `;
+  renderTimeline(cb);
+  showMPage('dispute-detail');
+}
+
+function renderTimeline(cb){
+  const tl=document.getElementById('ddTimeline');
+  if(!cb.timeline||!cb.timeline.length){tl.innerHTML='<p style="color:var(--text-muted);padding:16px 0;">No timeline entries yet.</p>';return;}
+  tl.innerHTML=cb.timeline.map((t,i)=>`
+    <div class="tl-entry">
+      <div><div class="tl-icon">✓</div></div>
+      <div style="flex:1;">
+        <div class="tl-title">${t.title}</div>
+        <div class="tl-time">${t.time}</div>
+        ${t.remarks?`<div class="tl-meta"><span>Remarks</span><strong>${t.remarks}</strong></div>`:''}
+        ${t.file?`<div class="tl-file">📄 ${t.file}</div>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function sendReply(){
+  const input=document.getElementById('ddReplyInput');
+  const msg=input.value.trim();
+  if(!msg){toast('Please enter a message','error');return;}
+  const cb=chargebacks.find(x=>x.id===currentDetailId);
+  if(cb){
+    cb.timeline.unshift({by:currentUser.name||'masteruser',time:new Date().toLocaleString(),title:'Remarks Updated by '+currentUser.name,remarks:msg,file:null});
+    renderTimeline(cb);
+    saveState();
+  }
+  input.value='';
+  toast('Message sent','success');
+}
+
+function goBackToList(){
+  showMPage(currentDetailSource);
+}
+
+// ═══════════════════════════════════════════
+// ACTION MODALS
+// ═══════════════════════════════════════════
+function openActionModal(id){
+  currentActionId=id;
+  const cb=chargebacks.find(x=>x.id===id);
+  if(!cb) return;
+  document.getElementById('am1Id').textContent=cb.caseId;
+  openModal('actionModal1');
+}
+
+function openActionModal2(){
+  closeModal('actionModal1');
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  document.getElementById('am2Id').textContent=cb?cb.caseId:'';
+  document.getElementById('responseSelect').value='';
+  document.getElementById('acceptBlock').style.display='none';
+  document.getElementById('acceptRemarks').value='';
+  openModal('actionModal2');
+}
+
+function handleResponseSelect(){
+  const val=document.getElementById('responseSelect').value;
+  if(val==='accept'){
+    document.getElementById('acceptBlock').style.display='block';
+  } else if(val==='contest'){
+    closeModal('actionModal2');
+    openContestModal();
+  } else {
+    document.getElementById('acceptBlock').style.display='none';
+  }
+}
+
+function openContestModal(){
+  closeModal('actionModal1');
+  closeModal('actionModal2');
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  document.getElementById('cmId').textContent=cb?cb.caseId:'';
+  const evHelp = document.getElementById('cmEvidenceHelp');
+  if (evHelp) {
+    if (cb && cb.product === 'VISA') {
+      evHelp.innerHTML = 'The evidence that you upload will be shared with the bank for review via VROL. Ensure you upload VCR compliant evidence.<br>File types supported are jpeg, jpg, png, pdf and maximum file size allowed is 20 MB.';
+    } else {
+      evHelp.innerHTML = 'The evidence that you upload will be shared with the bank for review. Ensure you upload the proper evidence.<br>File types supported are jpeg, jpg, png, pdf and maximum file size allowed is 20 MB.';
+    }
+  }
+  openModal('contestModal');
+}
+
+function confirmAccept(){
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  if(cb){
+    cb.merchantAction='accepted';
+    cb.mSubStatus='Chargeback Lost';
+    cb.timeline.push({by:currentUser.name,time:new Date().toLocaleString(),title:'Merchant Accepted Dispute',remarks:document.getElementById('acceptRemarks').value||'Accepted',file:null});
+    saveState();
+    loadDashboard();
+    filterRespond();
+    filterRaised();
+  }
+  closeModal('actionModal2');
+  openModal('successModal');
+}
+
+function submitEvidence(){
+  const cb=chargebacks.find(x=>x.id===currentActionId);
+  if(cb){
+    cb.merchantAction='evidence';
+    cb.mSubStatus='Chargeback in Progress';
+    const remarks = document.getElementById('contestRemarks').value.trim();
+    cb.timeline.push({
+      by:currentUser.name,
+      time:new Date().toLocaleString(),
+      title:'Evidence Submitted by '+cb.userName,
+      remarks: remarks || 'Done',
+      file:'EvidenceSubmitted.pdf'
+    });
+    saveState();
+    loadDashboard();
+    filterRespond();
+    filterRaised();
+    document.getElementById('contestRemarks').value = '';
+  }
+  closeModal('contestModal');
+  openModal('evidenceSuccessModal');
+}
+
+function evidenceUploaded(n, input){
+  if(input.files.length){
+    const f=input.files[0];
+    const uploaded=document.getElementById('evUploaded'+n);
+    const btn=document.getElementById('evBtn'+n);
+    if(uploaded){ uploaded.style.display='flex'; uploaded.innerHTML=`📄 ${f.name} <button style="background:none;border:none;cursor:pointer;color:var(--brand);margin-left:8px;" onclick="removeEvidence(${n})">✕</button>`; }
+    if(btn) btn.style.display='none';
+  }
+}
+function removeEvidence(n){
+  const uploaded=document.getElementById('evUploaded'+n);
+  const btn=document.getElementById('evBtn'+n);
+  const input=document.getElementById('evInput'+n);
+  if(uploaded) uploaded.style.display='none';
+  if(btn) btn.style.display='flex';
+  if(input) input.value='';
+}
+let extraEvidenceCount=3;
+function addMoreEvidence(){
+  extraEvidenceCount++;
+  const n=extraEvidenceCount;
+  const list=document.getElementById('evidenceList');
+  const div=document.createElement('div');
+  div.className='ev-row';
+  div.innerHTML=`<label>Additional Evidence ${n-3}</label><div id="evFile${n}"><label class="ev-upload-btn" id="evBtn${n}" for="evInput${n}">☁ Choose a file</label><input type="file" id="evInput${n}" style="display:none;" onchange="evidenceUploaded(${n},this)"></div>`;
+  list.appendChild(div);
+}
+
+// ═══════════════════════════════════════════
+// REPORTS VISUALIZATIONS
+// ═══════════════════════════════════════════
+function drawDonutChart(dataSegments) {
+  const total = dataSegments.reduce((sum, s) => sum + s.value, 0);
+  if (total === 0) {
+    return `<div style="color: var(--text-muted); font-size: 13px; font-weight: 500; text-align: center; width: 100%;">No dispute data for the selected period</div>`;
+  }
+  
+  const r = 50;
+  const cx = 80;
+  const cy = 80;
+  const circumference = 2 * Math.PI * r;
+  
+  let currentOffset = 0;
+  let svgContent = '';
+  
+  dataSegments.forEach(segment => {
+    if (segment.value === 0) return;
+    const percentage = segment.value / total;
+    const dashArray = percentage * circumference;
+    const strokeDash = `${dashArray} ${circumference}`;
+    const strokeOffset = currentOffset;
+    
+    svgContent += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="transparent" stroke="${segment.color}" stroke-width="20" stroke-dasharray="${strokeDash}" stroke-dashoffset="${strokeOffset}" transform="rotate(-90 ${cx} ${cy})" style="transition: stroke-dashoffset 0.5s ease;"></circle>`;
+    currentOffset -= dashArray;
+  });
+  
+  let legendHtml = '<div style="display:flex; flex-direction:column; gap:10px; margin-left: 20px; text-align: left;">';
+  dataSegments.forEach(segment => {
+    const pct = total > 0 ? Math.round((segment.value / total) * 100) : 0;
+    legendHtml += `
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+        <span style="width: 12px; height: 12px; background: ${segment.color}; border-radius: 3px; display: inline-block;"></span>
+        <span style="font-weight: 500; color: var(--text);">${segment.label}:</span>
+        <span style="color: var(--text-muted);">${segment.value} (${pct}%)</span>
+      </div>
+    `;
+  });
+  legendHtml += '</div>';
+  
+  const svg = `
+    <svg width="180" height="160" viewBox="0 0 160 160" style="overflow: visible;">
+      ${svgContent}
+      <circle cx="${cx}" cy="${cy}" r="${r - 10}" fill="var(--card)"></circle>
+      <text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--text)">Total</text>
+      <text x="${cx}" y="${cy + 20}" text-anchor="middle" font-size="14" font-weight="800" fill="var(--brand)">${total}</text>
+    </svg>
+  `;
+  
+  return `<div style="display: flex; align-items: center; justify-content: center; width: 100%;">${svg}${legendHtml}</div>`;
+}
+
+function drawBarChart(providerData) {
+  const maxVal = Math.max(...providerData.map(d => d.value), 1);
+  const chartHeight = 150;
+  const chartWidth = 260;
+  const barWidth = 36;
+  const gap = 20;
+  
+  let barsHtml = '';
+  let labelsHtml = '';
+  
+  providerData.forEach((item, index) => {
+    const barHeight = (item.value / maxVal) * chartHeight;
+    const x = 30 + index * (barWidth + gap);
+    const y = chartHeight - barHeight + 10;
+    
+    barsHtml += `
+      <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" fill="${item.color}" rx="4" style="transition: height 0.5s ease, y 0.5s ease;">
+        <title>${item.label}: ${item.value}</title>
+      </rect>
+      <text x="${x + barWidth/2}" y="${y - 6}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">${item.value}</text>
+    `;
+    
+    labelsHtml += `
+      <text x="${x + barWidth/2}" y="${chartHeight + 26}" text-anchor="middle" font-size="11" font-weight="500" fill="var(--text-muted)">${item.label}</text>
+    `;
+  });
+  
+  const svg = `
+    <svg width="${chartWidth}" height="${chartHeight + 40}" viewBox="0 0 ${chartWidth} ${chartHeight + 40}">
+      <line x1="15" y1="${chartHeight + 10}" x2="${chartWidth - 15}" y2="${chartHeight + 10}" stroke="var(--border)" stroke-width="1.5"></line>
+      ${barsHtml}
+      ${labelsHtml}
+    </svg>
+  `;
+  
+  return svg;
+}
+
+function generateReports() {
+  const from = document.getElementById('repFrom').value;
+  const to = document.getElementById('repTo').value;
+  const provider = document.getElementById('repProvider').value;
+  
+  const filtered = chargebacks.filter(cb => {
+    if (from && cb.createdDate && cb.createdDate < from) return false;
+    if (to && cb.createdDate && cb.createdDate > to) return false;
+    if (provider && cb.product !== provider) return false;
+    return true;
+  });
+  
+  const totalCount = filtered.length;
+  const totalAmt = filtered.reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const openCount = filtered.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold')).length;
+  const wonCount = filtered.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).length;
+  const lostCount = filtered.filter(cb => cb.mSubStatus.includes('Lost')).length;
+  
+  const openAmt = filtered.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const wonAmt = filtered.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+  const lostAmt = filtered.filter(cb => cb.mSubStatus.includes('Lost')).reduce((sum, cb) => sum + cb.txnAmt, 0);
+  
+  const statsHtml = `
+    <div class="stat-card received"><div class="stat-icon">📥</div><div><div class="stat-val">₹${totalAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Disputes Volume</div><div class="stat-cnt">Count: ${totalCount}</div></div></div>
+    <div class="stat-card open"><div class="stat-icon">🔄</div><div><div class="stat-val">₹${openAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Open Disputes</div><div class="stat-cnt">Count: ${openCount}</div></div></div>
+    <div class="stat-card lost"><div class="stat-icon">❌</div><div><div class="stat-val">₹${lostAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Disputes Lost</div><div class="stat-cnt">Count: ${lostCount}</div></div></div>
+    <div class="stat-card won"><div class="stat-icon">✅</div><div><div class="stat-val">₹${wonAmt.toLocaleString('en-IN')}</div><div class="stat-lbl">Disputes Won</div><div class="stat-cnt">Count: ${wonCount}</div></div></div>
+  `;
+  
+  const statsGrid = document.getElementById('repStatsGrid');
+  if (statsGrid) statsGrid.innerHTML = statsHtml;
+  
+  const upiCount = filtered.filter(cb => cb.product === 'VISA').length;
+  const visaCount = filtered.filter(cb => cb.product === 'VISA').length;
+  const mcCount = filtered.filter(cb => cb.product === 'Mastercard').length;
+  const rupayCount = filtered.filter(cb => cb.product === 'Rupay').length;
+  
+  const providerChartData = [
+    { label: 'VISA', value: upiCount, color: '#1d4ed8' },
+    { label: 'VISA', value: visaCount, color: '#ca8a04' },
+    { label: 'Mastercard', value: mcCount, color: '#dc2626' },
+    { label: 'Rupay', value: rupayCount, color: '#7c3aed' }
+  ];
+  
+  const pChartWrap = document.getElementById('providerChartWrap');
+  if (pChartWrap) pChartWrap.innerHTML = drawBarChart(providerChartData);
+  
+  const outcomeChartData = [
+    { label: 'Won', value: wonCount, color: '#16a34a' },
+    { label: 'Lost', value: lostCount, color: '#dc2626' },
+    { label: 'Open', value: openCount, color: '#1d4ed8' }
+  ];
+  
+  const oChartWrap = document.getElementById('outcomeChartWrap');
+  if (oChartWrap) oChartWrap.innerHTML = drawDonutChart(outcomeChartData);
+}
+
+function exportExcel(src){
+  let dataToExport = [];
+  let filename = 'chargeback_export.csv';
+  
+  if (src === 'respond') {
+    dataToExport = filteredRespond;
+    filename = 'chargebacks_respond_by_date.csv';
+  } else if (src === 'raised') {
+    dataToExport = filteredRaised;
+    filename = 'chargebacks_raised_date.csv';
+  }
+  
+  if (!dataToExport.length) {
+    toast('No data to export', 'error');
+    return;
+  }
+  
+  const headers = ['RRN', 'Case ID', 'Txn ID', 'Merchant', 'Status', 'Sub Status', 'Amount', 'Date', 'Product'];
+  const rows = dataToExport.map(cb => [
+    cb.rrn,
+    cb.caseId,
+    cb.txnId,
+    cb.userName,
+    cb.mStatus,
+    cb.mSubStatus,
+    cb.txnAmt,
+    cb.createdDate,
+    cb.product
+  ]);
+  
+  const csvContent = "data:text/csv;charset=utf-8," 
+    + [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+    
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast('CSV Export completed', 'success');
+}
+
+function statusBadge(s){
+  const m={'Chargeback Raise':'badge-cb','Pre-Arbitration Raise':'badge-prearb','Pre-Arbitration Raised':'badge-prearb','Arbitration Raise':'badge-arb','Arbitration Raised':'badge-arb','Fraud Chargeback Raise':'badge-fraud','Differed Chargeback Raise':'badge-deferred', 'VROL Inquiry':'badge-pending', 'VROL Chargeback':'badge-cb', 'VROL Pre-Arbitration':'badge-prearb', 'VROL Arbitration':'badge-arb'};
+  return `<span class="badge ${m[s]||'badge-new'}">${s}</span>`;
+}
+function subBadge(s){
+  const m={'Chargeback New':'badge-new','Chargeback Lost':'badge-lost','Chargeback in Progress':'badge-progress','Chargeback Resubmit':'badge-resubmit','Chargeback Won':'badge-won','Refund Success':'badge-won','Refund On Hold':'badge-progress'};
+  return `<span class="badge ${m[s]||'badge-pending'}">${s}</span>`;
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});
+});
+
+function toggleSidebar(){
+  const s=document.getElementById('mSidebar');
+  s.classList.toggle('collapsed');
+}
+function toggleSbMenu(subId,parentId){
+  const sub=document.getElementById(subId);
+  const parent=document.getElementById(parentId);
+  if(!sub||!parent)return;
+  sub.classList.toggle('open');
+  parent.classList.toggle('open');
+}
+
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.className='toast '+type;
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIcon').textContent=type==='success'?'✅':type==='error'?'❌':'⚠️';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3400);
+}
+
+// ═══════════════════════════════════════════
+// ONLOAD
+// ═══════════════════════════════════════════
+window.onload=()=>{
+  const isDark = localStorage.getItem('isu_dark_mode') === 'true';
+  if(isDark){
+    document.body.classList.add('dark-mode');
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.textContent = '☀️');
+  }
+
+  // Load datasets dynamically if they are already present in localStorage
+  if (localStorage.getItem('isu_chargebacks')) {
+    chargebacks = JSON.parse(localStorage.getItem('isu_chargebacks'));
+  }
+  if (localStorage.getItem('isu_users')) {
+    USERS = JSON.parse(localStorage.getItem('isu_users'));
+  }
+  if (localStorage.getItem('isu_ledger')) {
+    ledger = JSON.parse(localStorage.getItem('isu_ledger'));
+  }
+
+  initMerchant();
+  
+  // Set window event to periodically check changes if opened in multiple tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'isu_chargebacks' || e.key === 'isu_users') {
+      chargebacks = JSON.parse(localStorage.getItem('isu_chargebacks')) || DEFAULT_CHARGEBACKS;
+      USERS = JSON.parse(localStorage.getItem('isu_users')) || DEFAULT_USERS;
+      updateHeaderWallet();
+      loadDashboard();
+      filterRespond();
+      filterRaised();
+      if (document.getElementById('m-reports').classList.contains('active')) {
+        generateReports();
+      }
+    }
+  });
+};
+</script>
+</body>
+</html>
