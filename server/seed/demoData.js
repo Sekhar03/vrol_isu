@@ -37,27 +37,37 @@ const attachPartnerId = (chargebacks) =>
   chargebacks.map((cb) => ({ ...cb, partnerId: PARTNER_ID }));
 
 async function seedAllDemoData() {
+  if (global.MOCK_MODE) {
+    return require('../mockStore').resetDemo();
+  }
+
   const TODAY = new Date();
 
-  await User.deleteMany({});
-  await Chargeback.deleteMany({});
-  await Ledger.deleteMany({});
+  try {
+    await User.deleteMany({});
+    await Chargeback.deleteMany({});
+    await Ledger.deleteMany({});
 
-  const users = buildDefaultUsers();
-  await User.insertMany(users);
+    const users = buildDefaultUsers();
+    await User.insertMany(users);
 
-  const { buildSeedData } = require('../routes/auth');
-  const chargebacks = attachPartnerId(buildSeedData(TODAY));
-  await Chargeback.insertMany(chargebacks);
+    const { buildSeedData } = require('../routes/auth');
+    const chargebacks = attachPartnerId(buildSeedData(TODAY));
+    await Chargeback.insertMany(chargebacks);
 
-  const ledger = buildSeedLedger(TODAY);
-  await Ledger.insertMany(ledger);
+    const ledger = buildSeedLedger(TODAY);
+    await Ledger.insertMany(ledger);
 
-  return {
-    users: users.length,
-    chargebacks: chargebacks.length,
-    ledger: ledger.length
-  };
+    return {
+      users: users.length,
+      chargebacks: chargebacks.length,
+      ledger: ledger.length
+    };
+  } catch (err) {
+    console.warn('[seed] MongoDB seed failed, using in-memory store:', err.message);
+    global.MOCK_MODE = true;
+    return require('../mockStore').resetDemo();
+  }
 }
 
 module.exports = {

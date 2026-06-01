@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { CLIENT_DEMO } from './demoFallback.js';
 
 // API BASE URL
 const API_URL = import.meta.env.VITE_API_URL || '/api';
@@ -71,14 +72,15 @@ export default function App() {
     localStorage.setItem('isu_dark_mode', newTheme);
   };
 
-  const refreshAllData = useCallback(async () => {
+  const refreshAllData = useCallback(async (userOverride) => {
     try {
+      const activeUser = userOverride || currentUser;
       const headers = {};
-      if (currentUser) {
-        headers['x-user-role'] = currentUser.role;
-        headers['x-user-name'] = currentUser.username;
-        if (currentUser.role === 'partner') {
-          headers['x-partner-id'] = currentUser.username;
+      if (activeUser) {
+        headers['x-user-role'] = activeUser.role;
+        headers['x-user-name'] = activeUser.username;
+        if (activeUser.role === 'partner') {
+          headers['x-partner-id'] = activeUser.username;
         }
       }
 
@@ -99,8 +101,8 @@ export default function App() {
       }
 
       // Keep current user session synced with updated database balance
-      if (currentUser && Array.isArray(dataUsers)) {
-        const found = dataUsers.find(u => u.username === currentUser.username);
+      if (activeUser && Array.isArray(dataUsers)) {
+        const found = dataUsers.find(u => u.username === activeUser.username);
         if (found) {
           setCurrentUser(prev => prev ? ({ ...prev, walletBalance: found.walletBalance }) : null);
         }
@@ -112,27 +114,60 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
-  // Seed demo data on launch (empty DB) then fetch
-  useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        await fetch(`${API_URL}/users/seed`, { method: 'POST' });
-        const cbRes = await fetch(`${API_URL}/disputes`, {
-          headers: { 'x-user-role': 'admin', 'x-user-name': 'Test@Ad' }
-        });
-        if (cbRes.ok) {
-          const existing = await cbRes.json();
-          if (!Array.isArray(existing) || existing.length === 0) {
-            await fetch(`${API_URL}/users/demo`, { method: 'POST' });
-          }
-        }
-        await refreshAllData();
-      } catch (err) {
-        console.error("Initialization failed:", err);
+  const hydrateDemoBundle = useCallback((bundle, user) => {
+    if (Array.isArray(bundle.users)) setUsers(bundle.users);
+    if (Array.isArray(bundle.chargebacks)) setChargebacks(bundle.chargebacks);
+    if (Array.isArray(bundle.ledger)) setLedger(bundle.ledger);
+    if (user && Array.isArray(bundle.users)) {
+      const found = bundle.users.find((u) => u.username === user.username);
+      if (found) {
+        setCurrentUser((prev) => (prev ? { ...prev, walletBalance: found.walletBalance } : null));
       }
-    };
-    bootstrap();
-  }, [refreshAllData]);
+    }
+  }, []);
+
+  const applyClientDemoFallback = useCallback((user) => {
+    hydrateDemoBundle(CLIENT_DEMO, user || currentUser);
+    return CLIENT_DEMO.chargebacks.length > 0;
+  }, [currentUser, hydrateDemoBundle]);
+
+  const fetchDemoBundle = useCallback(async () => {
+    await fetch(`${API_URL}/users/seed`, { method: 'POST' }).catch(() => null);
+    await fetch(`${API_URL}/users/demo`, { method: 'POST' }).catch(() => null);
+    const bootRes = await fetch(`${API_URL}/users/bootstrap`);
+    if (!bootRes.ok) {
+      const err = await bootRes.json().catch(() => ({}));
+      throw new Error(err.message || `Bootstrap failed (${bootRes.status})`);
+    }
+    return bootRes.json();
+  }, []);
+
+  const ensureDemoDataLoaded = useCallback(async (user) => {
+    try {
+      const bundle = await fetchDemoBundle();
+      if (!bundle.chargebacks?.length) {
+        throw new Error('No chargeback records in database');
+      }
+      hydrateDemoBundle(bundle, user);
+      return true;
+    } catch (err) {
+      console.error('ensureDemoDataLoaded failed:', err);
+      return applyClientDemoFallback(user);
+    }
+  }, [fetchDemoBundle, hydrateDemoBundle, applyClientDemoFallback]);
+
+  // Seed demo data on launch then fetch
+  useEffect(() => {
+    ensureDemoDataLoaded(null);
+  }, [ensureDemoDataLoaded]);
+
+  // If logged into a portal with no rows, reload demo data
+  useEffect(() => {
+    if (view === 'selector' || !currentUser) return;
+    if (chargebacks.length === 0) {
+      ensureDemoDataLoaded(currentUser);
+    }
+  }, [view, currentUser, chargebacks.length, ensureDemoDataLoaded]);
 
   // Poll database every 3 seconds to synchronize states in real-time across tabs/roles
   useEffect(() => {
@@ -151,14 +186,20 @@ export default function App() {
 
   const loadDemoData = async () => {
     try {
-      const res = await fetch(`${API_URL}/users/demo`, { method: 'POST' });
-      if (!res.ok) throw new Error('Demo seed failed');
-      await refreshAllData();
-      showToast('Demo data loaded — users, chargebacks & ledger');
+      const bundle = await fetchDemoBundle();
+      if (!bundle.chargebacks?.length) {
+        throw new Error('Server returned empty chargeback list');
+      }
+      hydrateDemoBundle(bundle, currentUser);
+      showToast(`Demo loaded: ${bundle.chargebacks.length} chargebacks, ${bundle.users?.length || 0} users`);
       return true;
     } catch (err) {
       console.error('Demo data load failed:', err);
-      showToast('Failed to load demo data', 'error');
+      if (applyClientDemoFallback(currentUser)) {
+        showToast(`Demo loaded offline: ${CLIENT_DEMO.chargebacks.length} chargebacks (start server for full dataset)`);
+        return true;
+      }
+      showToast(`Failed to load demo data: ${err.message}. Is the server running on port 5000?`, 'error');
       return false;
     }
   };
@@ -178,23 +219,23 @@ export default function App() {
            d.getFullYear();
   };
 
-  const handleLogin = (e, username, password) => {
+  const handleLogin = async (e, username, password) => {
     e.preventDefault();
     const u = users.find(x => x.username === username && x.password === password);
     let loggedUser = null;
     let loggedView = 'selector';
 
     if (u) {
-      loggedUser = u;
+      loggedUser = { username: u.username, name: u.name, role: u.role, walletBalance: u.walletBalance };
       loggedView = u.role;
       showToast(`Logged in as ${u.name} (${u.role})`);
     } else {
       // Fallback credentials (used when API is slow or unavailable)
       const fallbacks = {
-        'masteruser':  { pw: 'Test@2026', user: { username: 'masteruser',  name: 'masteruser',            role: 'merchant' } },
-        'Test@isu':    { pw: 'Test@2026', user: { username: 'Test@isu',    name: 'Test@isu',              role: 'merchant' } },
-        'Test@Ad':     { pw: 'Test@2027', user: { username: 'Test@Ad',     name: 'Krishna Das',           role: 'admin'    } },
-        'partneruser': { pw: 'Test@2028', user: { username: 'partneruser', name: 'Arjun Mehta (Partner)', role: 'partner'  } },
+        'masteruser':  { pw: 'Test@2026', user: { username: 'masteruser',  name: 'masteruser',            role: 'merchant', walletBalance: 964.35 } },
+        'Test@isu':    { pw: 'Test@2026', user: { username: 'Test@isu',    name: 'Test@isu',              role: 'merchant', walletBalance: 12450.75 } },
+        'Test@Ad':     { pw: 'Test@2027', user: { username: 'Test@Ad',     name: 'Krishna Das',           role: 'admin', walletBalance: 245800 } },
+        'partneruser': { pw: 'Test@2028', user: { username: 'partneruser', name: 'Arjun Mehta (Partner)', role: 'partner', walletBalance: 0 } },
       };
       const match = fallbacks[username];
       if (match && match.pw === password) {
@@ -207,11 +248,12 @@ export default function App() {
       }
     }
 
-    // Set both together, then persist — avoids any race between state and effect
     setCurrentUser(loggedUser);
     setView(loggedView);
     localStorage.setItem('isu_currentUser', JSON.stringify(loggedUser));
     localStorage.setItem('isu_view', loggedView);
+
+    await ensureDemoDataLoaded(loggedUser);
   };
 
   const handleLogout = () => {

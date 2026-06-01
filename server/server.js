@@ -1,13 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
+const { ensureDataReady } = require('./initData');
 
 // Load env vars
 dotenv.config();
-
-// Connect to database
-connectDB();
 
 const app = express();
 
@@ -16,6 +13,16 @@ app.use(express.json());
 
 // Enable CORS
 app.use(cors());
+
+// Ensure MongoDB or in-memory demo data before API handlers (serverless-safe)
+app.use(async (req, res, next) => {
+  try {
+    await ensureDataReady();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 const fs = require('fs');
 const path = require('path');
@@ -50,8 +57,10 @@ app.use('/api/ledger', require('./routes/ledger'));
 const PORT = process.env.PORT || 5000;
 
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  ensureDataReady().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    });
   });
 }
 

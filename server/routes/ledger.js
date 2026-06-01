@@ -13,6 +13,10 @@ router.get('/', async (req, res) => {
       query.merchant = userName;
     }
 
+    if (global.MOCK_MODE) {
+      return res.json(require('../mockStore').getLedger(query));
+    }
+
     const entries = await Ledger.find(query).sort({ date: -1, createdAt: -1 });
     res.json(entries);
   } catch (error) {
@@ -33,6 +37,28 @@ router.post('/', async (req, res) => {
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       return res.status(400).json({ message: 'amount must be a positive number' });
+    }
+
+    if (global.MOCK_MODE) {
+      const mockStore = require('../mockStore');
+      const user = mockStore.findUser({ username: merchant });
+      if (!user) return res.status(404).json({ message: 'Merchant not found' });
+
+      let balance = user.walletBalance;
+      if (type === 'Credit') balance += parsedAmount;
+      else balance -= parsedAmount;
+      mockStore.updateUserWallet(merchant, balance);
+
+      const entry = {
+        id: `ADJ${mockStore.countLedger() + 101}`,
+        merchant,
+        type,
+        amount: parsedAmount,
+        date: new Date().toISOString().split('T')[0],
+        remarks: remarks || ''
+      };
+      mockStore.addLedgerEntry(entry);
+      return res.status(201).json(entry);
     }
 
     const user = await User.findOne({ username: merchant });

@@ -6,19 +6,11 @@ const Chargeback = require('../models/Chargeback');
 // Fetch all users
 router.get('/', async (req, res) => {
   try {
+    if (global.MOCK_MODE) {
+      return res.json(require('../mockStore').getUsers());
+    }
     const users = await User.find({});
     res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Fetch a single user by username
-router.get('/:username', async (req, res) => {
-  try {
-    const user = await User.findOne({ username: req.params.username });
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -742,6 +734,17 @@ const buildSeedData = (TODAY) => {
 // ── Standard Seed (only fills empty collections) ─────────────────────────────
 router.post('/seed', async (req, res) => {
   try {
+    if (global.MOCK_MODE) {
+      const counts = require('../mockStore').resetDemo();
+      return res.json({
+        message: 'Seeding completed (in-memory)',
+        usersSeeded: true,
+        chargebacksSeeded: true,
+        ledgerSeeded: true,
+        ...counts
+      });
+    }
+
     const { buildDefaultUsers, buildSeedLedger } = require('../seed/demoData');
     const Ledger = require('../models/Ledger');
 
@@ -778,10 +781,78 @@ router.post('/seed', async (req, res) => {
 // ── Full demo reset: users + chargebacks + ledger ───────────────────────────
 router.post('/demo', async (req, res) => {
   try {
+    const mockStore = require('../mockStore');
     const { seedAllDemoData } = require('../seed/demoData');
     const counts = await seedAllDemoData();
     res.json({
-      message: 'Demo data loaded successfully',
+      message: global.MOCK_MODE
+        ? 'Demo data loaded successfully (in-memory)'
+        : 'Demo data loaded successfully',
+      ...counts
+    });
+  } catch (error) {
+    try {
+      global.MOCK_MODE = true;
+      const counts = require('../mockStore').resetDemo();
+      return res.json({ message: 'Demo data loaded (fallback in-memory)', ...counts });
+    } catch (fallbackErr) {
+      res.status(500).json({ message: error.message || fallbackErr.message });
+    }
+  }
+});
+
+// Full demo bundle for client hydration (always works with mock fallback)
+router.get('/bootstrap', async (req, res) => {
+  try {
+    const mockStore = require('../mockStore');
+    if (global.MOCK_MODE) {
+      return res.json({
+        users: mockStore.getUsers(),
+        chargebacks: mockStore.getChargebacks({}),
+        ledger: mockStore.getLedger({})
+      });
+    }
+
+    const Ledger = require('../models/Ledger');
+    let users = await User.find({});
+    let chargebacks = await Chargeback.find({});
+    let ledger = await Ledger.find({});
+
+    if (chargebacks.length === 0) {
+      await require('../seed/demoData').seedAllDemoData();
+      users = await User.find({});
+      chargebacks = await Chargeback.find({});
+      ledger = await Ledger.find({});
+    }
+
+    res.json({ users, chargebacks, ledger });
+  } catch (error) {
+    try {
+      global.MOCK_MODE = true;
+      const mockStore = require('../mockStore');
+      mockStore.resetDemo();
+      return res.json({
+        users: mockStore.getUsers(),
+        chargebacks: mockStore.getChargebacks({}),
+        ledger: mockStore.getLedger({})
+      });
+    } catch (fallbackErr) {
+      res.status(500).json({ message: error.message || fallbackErr.message });
+    }
+  }
+});
+
+// ── Force Reseed: alias for full demo reset ───────────────────────────────────
+router.post('/reseed', async (req, res) => {
+  try {
+    if (global.MOCK_MODE) {
+      const counts = require('../mockStore').resetDemo();
+      return res.json({ message: 'Force reseed completed successfully (in-memory)', ...counts });
+    }
+    const { seedAllDemoData } = require('../seed/demoData');
+    const counts = await seedAllDemoData();
+    res.json({
+      message: 'Force reseed completed successfully',
       ...counts
     });
   } catch (error) {
@@ -789,15 +860,18 @@ router.post('/demo', async (req, res) => {
   }
 });
 
-// ── Force Reseed: alias for full demo reset ───────────────────────────────────
-router.post('/reseed', async (req, res) => {
+// Fetch a single user by username (must be after /bootstrap, /seed paths)
+router.get('/:username', async (req, res) => {
   try {
-    const { seedAllDemoData } = require('../seed/demoData');
-    const counts = await seedAllDemoData();
-    res.json({
-      message: 'Force reseed completed successfully',
-      ...counts
-    });
+    if (global.MOCK_MODE) {
+      const user = require('../mockStore').findUser({ username: req.params.username });
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      const { save, toObject, ...rest } = user;
+      return res.json(rest);
+    }
+    const user = await User.findOne({ username: req.params.username });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

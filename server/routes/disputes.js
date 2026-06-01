@@ -47,6 +47,11 @@ router.get('/', async (req, res) => {
       ];
     }
 
+    if (global.MOCK_MODE) {
+      const mockStore = require('../mockStore');
+      return res.json(mockStore.getChargebacks(query));
+    }
+
     const disputes = await Chargeback.find(query).sort({ createdDate: -1 });
     res.json(disputes);
   } catch (error) {
@@ -82,6 +87,25 @@ router.post('/bulk-upload', async (req, res) => {
 // Update a dispute (Take merchant action, timeline post, admin review)
 router.put('/:id', async (req, res) => {
   try {
+    if (global.MOCK_MODE) {
+      const mockStore = require('../mockStore');
+      const dispute = mockStore.findChargebackById(req.params.id);
+      if (!dispute) return res.status(404).json({ message: 'Dispute not found' });
+      const updates = req.body;
+      if (updates.merchantAction !== undefined) dispute.merchantAction = updates.merchantAction;
+      if (updates.adminAction !== undefined) dispute.adminAction = updates.adminAction;
+      if (updates.mStatus !== undefined) dispute.mStatus = updates.mStatus;
+      if (updates.mSubStatus !== undefined) dispute.mSubStatus = updates.mSubStatus;
+      if (updates.rejectReason !== undefined) dispute.rejectReason = updates.rejectReason;
+      if (updates.visaPending !== undefined) dispute.visaPending = updates.visaPending;
+      if (updates.timelineEntry) {
+        dispute.timeline = dispute.timeline || [];
+        dispute.timeline.unshift(updates.timelineEntry);
+      }
+      const { save, toObject, ...rest } = dispute;
+      return res.json({ ...rest });
+    }
+
     const dispute = await Chargeback.findOne({ id: req.params.id });
     if (!dispute) {
       return res.status(404).json({ message: 'Dispute not found' });
