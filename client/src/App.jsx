@@ -3210,13 +3210,13 @@ function AdminPortal({
           {(() => {
             const cb = chargebacks.find(c => c.id === targetDisputeId) || {};
             return (
-              <div className="modal" style={{ width: '90%', maxWidth: '1100px', padding: '0', borderRadius: '4px', overflow: 'hidden', fontFamily: 'Arial, sans-serif' }}>
-                <div style={{ padding: '12px 20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="modal" style={{ width: '90%', maxWidth: '1100px', padding: '0', borderRadius: '4px', overflow: 'hidden', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+                <div style={{ padding: '12px 20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                   <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#000' }}>{cb.id}</h2>
                   <button onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#9e9e9e' }}>&times;</button>
                 </div>
                 
-                <div style={{ padding: '0', maxHeight: '80vh', overflowY: 'auto' }}>
+                <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
                   {/* Original Transaction Details */}
                   <div style={{ padding: '12px 20px', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
                     <span>Original Transaction Details</span>
@@ -3295,7 +3295,7 @@ function AdminPortal({
                   </div>
                 </div>
                 
-                <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', background: '#fff' }}>
+                <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10 }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     {cb.merchantAction === 'rejected' && cb.adminAction === null && (
                       <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('remarks'); }}>
