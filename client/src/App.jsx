@@ -260,35 +260,104 @@ function LoginForm({ handleLogin, toggleTheme, darkMode }) {
   const [password, setPassword] = useState('');
 
   return (
-    <div className="portal-selector-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)' }}>
-      <div className="portal-selector-card" style={{ position: 'relative', width: '100%', maxWidth: '400px', padding: '40px', background: 'var(--card)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)' }}>
-        <button 
-          className="theme-toggle-btn" 
-          onClick={toggleTheme} 
-          style={{ position: 'absolute', top: '20px', right: '20px', color: '#fff', background: 'rgba(255,255,255,0.1)' }}
-        >
-          {darkMode ? '☀️' : '🌙'}
-        </button>
-        <div className="portal-selector-logo" style={{ textAlign: 'center', marginBottom: '10px' }}>iServeU<span>®</span></div>
-        <p className="portal-selector-subtitle" style={{ textAlign: 'center', marginBottom: '30px' }}>Sign in to continue to the portal</p>
-        
-        <form onSubmit={(e) => handleLogin(e, username, password)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text)' }}>Username or Email</label>
-            <input type="text" className="form-control" placeholder="Enter username" value={username} onChange={e => setUsername(e.target.value)} required />
+    <div style={{ 
+      display: 'flex', minHeight: '100vh', 
+      background: darkMode ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : 'linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)',
+      fontFamily: "'Inter', sans-serif"
+    }}>
+      <div style={{ 
+        flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px'
+      }}>
+        <div style={{
+          width: '100%', maxWidth: '440px', 
+          background: darkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.6)',
+          borderRadius: '24px', padding: '48px',
+          boxShadow: darkMode ? '0 25px 50px -12px rgba(0,0,0,0.5)' : '0 25px 50px -12px rgba(14,165,233,0.15)'
+        }}>
+          <button 
+            onClick={toggleTheme} 
+            title="Toggle Theme"
+            style={{ position: 'absolute', top: '24px', right: '24px', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', transition: 'transform 0.2s' }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+          
+          <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+            <div style={{ fontSize: '36px', fontWeight: '800', color: 'var(--brand)', letterSpacing: '-1px', marginBottom: '8px' }}>
+              iServeU<span style={{ fontSize: '16px', verticalAlign: 'super' }}>®</span>
+            </div>
+            <p style={{ fontSize: '15px', color: 'var(--text-muted)', fontWeight: '500' }}>Chargeback & Dispute Resolution</p>
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '6px', color: 'var(--text)' }}>Password</label>
-            <input type="password" className="form-control" placeholder="Enter password" value={password} onChange={e => setPassword(e.target.value)} required />
+          
+          <form onSubmit={(e) => handleLogin(e, username, password)} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '8px', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Username or Email</label>
+              <input 
+                type="text" 
+                placeholder="Enter username" 
+                value={username} onChange={e => setUsername(e.target.value)} required 
+                style={{ 
+                  width: '100%', padding: '16px', fontSize: '15px', 
+                  background: darkMode ? 'rgba(15, 23, 42, 0.5)' : '#fff',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+                  borderRadius: '12px', color: 'var(--text)', outline: 'none', transition: 'all 0.2s ease',
+                  boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.02)'
+                }}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--brand)'; e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.2)'; }}
+                onBlur={(e) => { e.target.style.borderColor = darkMode ? 'rgba(255,255,255,0.1)' : '#cbd5e1'; e.target.style.boxShadow = 'inset 0 2px 4px 0 rgba(0,0,0,0.02)'; }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '8px', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Password</label>
+              <input 
+                type="password" 
+                placeholder="Enter password" 
+                value={password} onChange={e => setPassword(e.target.value)} required 
+                style={{ 
+                  width: '100%', padding: '16px', fontSize: '15px', 
+                  background: darkMode ? 'rgba(15, 23, 42, 0.5)' : '#fff',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
+                  borderRadius: '12px', color: 'var(--text)', outline: 'none', transition: 'all 0.2s ease',
+                  boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.02)'
+                }}
+                onFocus={(e) => { e.target.style.borderColor = 'var(--brand)'; e.target.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.2)'; }}
+                onBlur={(e) => { e.target.style.borderColor = darkMode ? 'rgba(255,255,255,0.1)' : '#cbd5e1'; e.target.style.boxShadow = 'inset 0 2px 4px 0 rgba(0,0,0,0.02)'; }}
+              />
+            </div>
+            <button 
+              type="submit" 
+              style={{ 
+                width: '100%', marginTop: '8px', padding: '16px', fontSize: '16px', fontWeight: '600', 
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: '#fff', 
+                border: 'none', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s',
+                boxShadow: '0 4px 14px 0 rgba(14, 165, 233, 0.39)'
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(14, 165, 233, 0.5)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 14px 0 rgba(14, 165, 233, 0.39)'; }}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+              onMouseUp={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            >
+              Secure Login
+            </button>
+          </form>
+          
+          <div style={{ marginTop: '36px', paddingTop: '24px', borderTop: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', lineHeight: '1.8' }}>
+            <strong style={{ color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '11px' }}>Demo Access Details</strong><br />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '16px', textAlign: 'left', background: darkMode ? 'rgba(0,0,0,0.2)' : '#f1f5f9', padding: '16px', borderRadius: '12px' }}>
+              <div style={{ fontWeight: '600' }}>Merchant</div><div>masteruser <span style={{ color: 'var(--text-light)', fontSize: '11px' }}>/ Test@2026</span></div>
+              <div style={{ fontWeight: '600' }}>Admin</div><div>Test@Ad <span style={{ color: 'var(--text-light)', fontSize: '11px' }}>/ Test@2027</span></div>
+              <div style={{ fontWeight: '600' }}>Partner</div><div>partneruser <span style={{ color: 'var(--text-light)', fontSize: '11px' }}>/ Test@2028</span></div>
+            </div>
           </div>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '10px', height: '44px', fontSize: '15px' }}>Login</button>
-        </form>
+        </div>
         
-        <div style={{ marginTop: '24px', fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', lineHeight: '1.6' }}>
-          <strong style={{ color: 'var(--brand)' }}>Demo Credentials:</strong><br />
-          <span style={{ display: 'inline-block', marginTop: '6px' }}>Merchant: <b>masteruser</b> / <b>Test@2026</b></span><br />
-          <span style={{ display: 'inline-block', marginTop: '4px' }}>Admin: <b>Test@Ad</b> / <b>Test@2027</b></span><br />
-          <span style={{ display: 'inline-block', marginTop: '4px' }}>Partner: <b>partneruser</b> / <b>Test@2028</b></span>
+        <div style={{ marginTop: '40px', color: darkMode ? 'rgba(255,255,255,0.4)' : '#64748b', fontSize: '12px', textAlign: 'center', lineHeight: '1.6' }}>
+          &copy; 2026 iServeU Technology Pvt Ltd. All rights reserved.<br/>
+          Protected by AES-256 encryption.
         </div>
       </div>
     </div>
