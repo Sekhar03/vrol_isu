@@ -338,10 +338,7 @@ function MerchantPortal({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [disputeMenuOpen, setDisputeMenuOpen] = useState(true);
   
-  // Detail disputes states
-  const [selectedDisputeId, setSelectedDisputeId] = useState(null);
-  const [detailSourcePage, setDetailSourcePage] = useState('respond');
-  const [timelineRemark, setTimelineRemark] = useState('');
+  // Detail disputes states (Removed)
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // null | 'action1' | 'action2' | 'contest' | 'successAccept' | 'successEvidence'
@@ -519,49 +516,13 @@ function MerchantPortal({
     );
   };
 
-  // Detail dispute view handler
-  const openDetail = (id, source) => {
-    setSelectedDisputeId(id);
-    setDetailSourcePage(source);
-    setActivePage('detail');
-  };
-
-  const activeDetailDispute = merchantDisputes.find(x => x.id === selectedDisputeId);
-
   // Post remarks reply
   const sendReply = async () => {
-    if (!timelineRemark.trim()) {
-      showToast('Please enter a message', 'error');
-      return;
-    }
-
-    try {
-      const entry = {
-        by: currentUser.name || 'masteruser',
-        time: new Date().toLocaleString(),
-        title: 'Remarks Updated by ' + currentUser.name,
-        remarks: timelineRemark,
-        file: null
-      };
-
-      const response = await fetch(`${API_URL}/disputes/${activeDetailDispute.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ timelineEntry: entry })
-      });
-
-      if (response.ok) {
-        setTimelineRemark('');
-        showToast('Remarks posted successfully');
-        await refreshAllData();
-      } else {
-        showToast('Failed to post reply', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('API communication error', 'error');
-    }
+    // This function is kept stubbed in case it's used elsewhere, but ideally it should be removed if completely unused.
+    // Actually wait, let's just leave it for now in case another part of the UI depends on it to prevent errors.
+    console.log('sendReply stub');
   };
+
 
   // Confirm Accept Dispute Action
   const confirmAccept = async () => {
@@ -1073,7 +1034,7 @@ function MerchantPortal({
                                 <td>{formatDateDisp(cb.respondByDate)}</td>
                                 <td>{cb.adjType}</td>
                                 <td>
-                                  <button className="info-btn" onClick={() => openDetail(cb.id, 'respond')}>ℹ</button>
+                                  <button className="info-btn" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>ℹ</button>
                                 </td>
                                 <td>{getActionBtn(cb)}</td>
                               </tr>
@@ -1535,43 +1496,39 @@ function MerchantPortal({
                       <div className="tbl-wrap">
                         <table>
                           <thead>
-                            <tr>
-                              <th>Ticket ID</th>
-                              <th>Dispute Date</th>
-                              <th>Aggregator</th>
-                              <th>Scheme</th>
-                              <th>Dispute Type</th>
-                              <th>Merchant Name</th>
-                              <th>MID</th>
-                              <th>ARN / RRN</th>
-                              <th>Dispute Status</th>
-                              <th>TXN Ref. Number</th>
-                              <th>Remaining Days</th>
-                              <th>Visa</th>
+                            <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Ticket ID</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Txn Currency</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Amount</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Current Status</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>TAT</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Action</th>
                             </tr>
                           </thead>
                           <tbody>
                             {reportData.filtered.slice(0, 10).map(cb => (
-                              <tr key={cb.id}>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.caseId}</td>
-                                <td>{formatDateDisp(cb.createdDate)}</td>
-                                <td>{cb.product === 'VISA' ? 'NPCI' : 'Acquirer'}</td>
-                                <td><span className="badge badge-new">{cb.product}</span></td>
-                                <td>{renderStatusBadge(cb.mStatus)}</td>
-                                <td>{cb.userName}</td>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.userId}</td>
-                                <td className="mono">{cb.rrn}</td>
-                                <td>{renderSubBadge(cb.mSubStatus)}</td>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.txnId}</td>
-                                <td>
-                                  <span style={{ color: cb.aging > 4 ? 'var(--red)' : cb.aging > 2 ? 'var(--yellow)' : 'var(--green)', fontWeight: '700' }}>
-                                    {Math.max(0, 10 - cb.aging)}d
+                              <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
+                                <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>INR</td>
+                                <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{cb.txnAmt}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.mStatus}</td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
+                                    {cb.aging}d
                                   </span>
                                 </td>
-                                <td>
-                                  {cb.visaPending
-                                    ? <span className="badge badge-visa">🌐 Visa</span>
-                                    : <span style={{ color: 'var(--text-light)', fontSize: '11px' }}>—</span>}
+                                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5e35b1', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                    👁
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -1592,42 +1549,44 @@ function MerchantPortal({
                       <div className="tbl-wrap">
                         <table>
                           <thead>
-                            <tr>
-                              <th>Ticket ID</th>
-                              <th>Dispute Date</th>
-                              <th>Scheme</th>
-                              <th>Dispute Type</th>
-                              <th>Merchant Name</th>
-                              <th>MID</th>
-                              <th>ARN / RRN</th>
-                              <th>Dispute Status</th>
-                              <th>TXN Ref. Number</th>
-                              <th>Remaining Days</th>
-                              <th>Action</th>
+                            <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Ticket ID</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Txn Currency</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Amount</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Current Status</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>TAT</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Action</th>
                             </tr>
                           </thead>
                           <tbody>
                             {merchantDisputes.filter(cb => !cb.merchantAction).map(cb => (
-                              <tr key={cb.id}>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.caseId}</td>
-                                <td>{formatDateDisp(cb.createdDate)}</td>
-                                <td><span className="badge badge-new">{cb.product}</span></td>
-                                <td>{renderStatusBadge(cb.mStatus)}</td>
-                                <td>{cb.userName}</td>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.userId}</td>
-                                <td className="mono">{cb.rrn}</td>
-                                <td>{renderSubBadge(cb.mSubStatus)}</td>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.txnId}</td>
-                                <td><span style={{ color: 'var(--red)', fontWeight: '700' }}>{Math.max(0, 10 - cb.aging)}d</span></td>
-                                <td>
-                                  <button className="ta-btn" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('action1'); }}>
-                                    Take Action
+                              <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
+                                <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>INR</td>
+                                <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{cb.txnAmt}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.mStatus}</td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
+                                    {cb.aging}d
+                                  </span>
+                                </td>
+                                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5e35b1', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                    👁
                                   </button>
                                 </td>
                               </tr>
                             ))}
                             {merchantDisputes.filter(cb => !cb.merchantAction).length === 0 && (
-                              <tr><td colSpan="11" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>✅ No pending documents</td></tr>
+                              <tr><td colSpan="10" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>✅ No pending documents</td></tr>
                             )}
                           </tbody>
                         </table>
@@ -1646,37 +1605,39 @@ function MerchantPortal({
                       <div className="tbl-wrap">
                         <table>
                           <thead>
-                            <tr>
-                              <th>Ticket ID</th>
-                              <th>Dispute Date</th>
-                              <th>Scheme</th>
-                              <th>Dispute Type</th>
-                              <th>Merchant Name</th>
-                              <th>MID</th>
-                              <th>ARN / RRN</th>
-                              <th>Dispute Status</th>
-                              <th>TXN Ref.</th>
-                              <th>Remaining Days</th>
-                              <th>Visa Status</th>
+                            <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Ticket ID</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Txn Currency</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Amount</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Current Status</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>TAT</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Action</th>
                             </tr>
                           </thead>
                           <tbody>
                             {merchantDisputes.filter(cb => cb.merchantAction === 'evidence').map(cb => (
-                              <tr key={cb.id}>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.caseId}</td>
-                                <td>{formatDateDisp(cb.createdDate)}</td>
-                                <td><span className="badge badge-new">{cb.product}</span></td>
-                                <td>{renderStatusBadge(cb.mStatus)}</td>
-                                <td>{cb.userName}</td>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.userId}</td>
-                                <td className="mono">{cb.rrn}</td>
-                                <td>{renderSubBadge(cb.mSubStatus)}</td>
-                                <td className="mono" style={{ fontSize: '11px' }}>{cb.txnId}</td>
-                                <td><span style={{ color: cb.aging > 4 ? 'var(--red)' : 'var(--yellow)', fontWeight: '700' }}>{Math.max(0, 10 - cb.aging)}d</span></td>
-                                <td>
-                                  {cb.visaPending
-                                    ? <span className="badge badge-visa">🌐 Pending Visa</span>
-                                    : <span className="badge badge-progress">⏳ Acquirer Review</span>}
+                              <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
+                                <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>INR</td>
+                                <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{cb.txnAmt}</td>
+                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.mStatus}</td>
+                                <td style={{ padding: '12px 16px' }}>
+                                  <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
+                                    {cb.aging}d
+                                  </span>
+                                </td>
+                                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5e35b1', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                    👁
+                                  </button>
                                 </td>
                               </tr>
                             ))}
@@ -1710,6 +1671,144 @@ function MerchantPortal({
           )}
         </main>
       </div>
+
+      {activeModal === 'disputeDetails' && (
+        <div className="overlay open">
+          {(() => {
+            const cb = chargebacks.find(c => c.id === targetDisputeId) || {};
+            return (
+              <div className="modal" style={{ width: '90%', maxWidth: '1100px', padding: '0', borderRadius: '4px', overflow: 'hidden', fontFamily: 'Arial, sans-serif', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+                <div style={{ padding: '12px 20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                  <h2 style={{ fontSize: '14px', fontWeight: 'bold', margin: 0, color: '#000' }}>{cb.id}</h2>
+                  <button onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#9e9e9e' }}>&times;</button>
+                </div>
+                
+                <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
+                  {/* Original Transaction Details */}
+                  <div style={{ padding: '12px 20px', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
+                    <span>Original Transaction Details</span>
+                    <span style={{ fontWeight: 'normal', color: '#757575' }}>Transaction Date & Time <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
+                    {/* Col 1 */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Ticket ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>AR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>RR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Txn Currency <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Location <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>India</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Country <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>India</strong></div>
+                    </div>
+                    {/* Col 2 */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Transaction Ref. Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.txnId}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>MID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.userId}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Card Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>457704******3989</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Amount <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.txnAmt}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>City <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>-</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Zip code <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>-</strong></div>
+                    </div>
+                    {/* Col 3 */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Merchant Name <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.userName}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>TID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>10515104</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Approval Code <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>021838</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Address <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>-</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>State <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>-</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Request ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>-</strong></div>
+                    </div>
+                  </div>
+
+                  {/* Dispute Details */}
+                  <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
+                    <span>Dispute Details</span>
+                    <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>VISA</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Dispute Reason Code <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>13.1</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}><span style={{ color: '#9e9e9e' }}>Source Currency Code (Alpha) <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Destination Amount <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.txnAmt}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Remaining Days <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.aging}</strong></div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Dispute Type <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px', textTransform: 'uppercase'}}>{cb.mSubStatus || cb.mStatus}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Dispute Description <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>13.1-Services Not Provided or Merchandise Not Received</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}><span style={{ color: '#9e9e9e' }}>Source Amount <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.txnAmt}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Re-presentment Received Date Credit <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>-</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Dispute Amount (INR) <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.txnAmt}</strong></div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Current Status <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.mStatus}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '40px' }}><span style={{ color: '#9e9e9e' }}>Destination Currency Code (Alpha) <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Last Remarks <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.merchantAction || '-'}</strong></div>
+                    </div>
+                  </div>
+
+                  {/* Previous Documents */}
+                  {reportTab !== 'doc-pending' && (
+                    <>
+                      <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#000' }}>
+                        <span>Previous Documents</span>
+                        <button style={{ background: '#5e35b1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Download All Docs</button>
+                      </div>
+                      
+                      <div style={{ padding: '20px', display: 'flex', gap: '16px', overflowX: 'auto', background: '#fff' }}>
+                        {[1, 2, 3, 4].map(i => (
+                          <div key={i} style={{ width: '120px', height: '80px', border: '2px solid #e0e0e0', borderTop: '4px solid #d1c4e9', borderRadius: '4px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d1c4e9', background: '#fafafa' }}>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10 }}>
+                  {reportTab === 'doc-pending' ? (
+                    <>
+                      <div style={{ flex: 1 }}>
+                        <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', width: '250px', outline: 'none' }}>
+                          <option value="full">Dispute Accepted - Full</option>
+                          <option value="partial">Dispute Accepted - Partial</option>
+                          <option value="declined">Dispute Declined</option>
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #5e35b1', background: '#fff', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Cancel</button>
+                        <button style={{ padding: '6px 16px', border: 'none', background: '#5e35b1', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Submit</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {cb.merchantAction === 'rejected' && cb.adminAction === null && (
+                          <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('remarks'); }}>
+                            Review
+                          </button>
+                        )}
+                        {cb.mStatus.includes('Arbitration') && !cb.adminAction && (
+                          <button className="btn btn-sm" style={{ background: 'var(--purple)', color: '#fff' }} onClick={() => { setActiveModal('arbitration'); }}>
+                            Arb Decision
+                          </button>
+                        )}
+                        {(cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Accepted')) && cb.mSubStatus !== 'Refund Success' && cb.mSubStatus !== 'Refund On Hold' && (
+                          <button className="btn btn-sm btn-success" onClick={() => { setActiveModal('refund'); }}>
+                            Refund
+                          </button>
+                        )}
+                      </div>
+                      <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #5e35b1', background: '#fff', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Cancel</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Action Modals */}
       {activeModal === 'action1' && (
@@ -3467,6 +3566,8 @@ function PartnerPortal({
   const [filterStatus, setFilterStatus] = useState('');
   const [filterScheme, setFilterScheme] = useState('');
   const [activeTab, setActiveTab] = useState('dispute-mgmt');
+  const [activeModal, setActiveModal] = useState(null);
+  const [targetDisputeId, setTargetDisputeId] = useState(null);
 
   // Partner sees all disputes (they represent all merchants)
   const allDisputes = chargebacks;
@@ -3699,43 +3800,42 @@ function PartnerPortal({
                   <div className="search-panel-actions">
                     <button className="btn btn-secondary" onClick={() => { setFilterFrom(DEFAULT_FROM); setFilterTo(TODAY_STR); setFilterStatus(''); setFilterScheme(''); }}>Reset</button>
                     <button className="btn btn-primary" onClick={() => showToast('Disputes filtered!')}>Search</button>
-                  </div>
-                </div>
-
-                <div className="tbl-card" style={{ overflow: 'visible' }}>
-                  <div className="report-tabs" style={{ padding: '0 16px' }}>
-                    <div className={`report-tab ${activeTab === 'dispute-mgmt' ? 'active' : ''}`} onClick={() => setActiveTab('dispute-mgmt')}>Dispute Management</div>
-                    <div className={`report-tab ${activeTab === 'doc-pending' ? 'active' : ''}`} onClick={() => setActiveTab('doc-pending')}>Document Pending from Merchant</div>
-                    <div className={`report-tab ${activeTab === 'doc-verification' ? 'active' : ''}`} onClick={() => setActiveTab('doc-verification')}>Document Pending for Verification</div>
-                  </div>
-                  <div className="tbl-toolbar">
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{filteredDisputes.length} records</span>
-                    <div className="tbl-space"></div>
-                  </div>
-                  <div className="tbl-wrap">
                     <table>
                       <thead>
-                        <tr>
-                          <th>Ticket ID</th><th>Dispute Date</th><th>Aggregator</th><th>Scheme</th>
-                          <th>Dispute Type</th><th>Merchant Name</th><th>MID</th><th>ARN / RRN</th>
-                          <th>Dispute Status</th><th>TXN Ref.</th><th>Remaining Days</th><th>Visa</th>
+                        <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Ticket ID</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Txn Currency</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Amount</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Current Status</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>TAT</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredDisputes.map(cb => (
-                          <tr key={cb.id}>
-                            <td className="mono" style={{ fontSize: '11px' }}>{cb.caseId}</td>
-                            <td>{formatDateDisp(cb.createdDate)}</td>
-                            <td>{cb.product === 'VISA' ? 'NPCI' : 'Acquirer'}</td>
-                            <td><span className="badge badge-new">{cb.product}</span></td>
-                            <td>{renderStatusBadge(cb.mStatus)}</td>
-                            <td>{cb.userName}</td>
-                            <td className="mono" style={{ fontSize: '11px' }}>{cb.userId}</td>
-                            <td className="mono">{cb.rrn}</td>
-                            <td>{renderSubBadge(cb.mSubStatus)}</td>
-                            <td className="mono" style={{ fontSize: '11px' }}>{cb.txnId}</td>
-                            <td><span style={{ color: cb.aging > 4 ? 'var(--red)' : cb.aging > 2 ? 'var(--yellow)' : 'var(--green)', fontWeight: '700' }}>{Math.max(0, 10 - cb.aging)}d</span></td>
-                            <td>{cb.visaPending ? <span className="badge badge-visa">🌐 Visa</span> : '—'}</td>
+                          <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
+                            <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                            <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
+                            <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
+                            <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
+                            <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
+                            <td style={{ padding: '12px 16px', color: '#333' }}>INR</td>
+                            <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{cb.txnAmt}</td>
+                            <td style={{ padding: '12px 16px', color: '#333' }}>{cb.mStatus}</td>
+                            <td style={{ padding: '12px 16px' }}>
+                              <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
+                                {cb.aging}d
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5e35b1', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                👁
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
