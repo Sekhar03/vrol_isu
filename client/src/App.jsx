@@ -219,6 +219,7 @@ export default function App() {
     setView('selector');
     localStorage.removeItem('isu_currentUser');
     localStorage.removeItem('isu_view');
+    showToast('Logged out successfully');
   };
 
   const resetAllSessions = async () => {
@@ -824,13 +825,15 @@ function MerchantPortal({
           {darkMode ? '☀️' : '🌙'}
         </button>
         <button className="hdr-bell">🔔<span className="notif-dot"></span></button>
-        <div className="hdr-user" onClick={resetAllSessions}>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={handleLogout} title="Log out">
+          Logout
+        </button>
+        <div className="hdr-user" title={currentUser.name}>
           <div className="avatar">🌐</div>
           <div>
             <div className="hdr-uname">{currentUser.name}</div>
             <div className="hdr-urole">Merchant</div>
           </div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>▾</span>
         </div>
       </header>
 
@@ -874,8 +877,8 @@ function MerchantPortal({
 
           </div>
           <div style={{ marginTop: 'auto', padding: '16px' }}>
-            <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={handleLogout}>
-              ← Back to Portal Select
+            <button type="button" className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={handleLogout}>
+              Logout
             </button>
           </div>
         </nav>
@@ -2736,20 +2739,22 @@ function AdminPortal({
     <div className="app" id="adminApp">
       <header className="app-header">
         <button className="hdr-hamburger" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>☰</button>
-        <div className="hdr-logo"><div class="hl-text">iServeU<sup>®</sup></div></div>
+        <div className="hdr-logo"><div className="hl-text">iServeU<sup>®</sup></div></div>
         <span className="admin-badge">ADMIN</span>
         <div className="hdr-space"></div>
         <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Dark/Light Mode">
           {darkMode ? '☀️' : '🌙'}
         </button>
         <button className="hdr-bell">🔔<span className="notif-dot"></span></button>
-        <div className="hdr-user" onClick={resetAllSessions}>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={handleLogout} title="Log out">
+          Logout
+        </button>
+        <div className="hdr-user" title={currentUser.name}>
           <div className="avatar" style={{ background: '#1e293b', color: '#fff' }}>KD</div>
           <div>
             <div className="hdr-uname">{currentUser.name}</div>
             <div className="hdr-urole">Admin / FRM</div>
           </div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>▾</span>
         </div>
       </header>
 
@@ -2784,9 +2789,12 @@ function AdminPortal({
             </div>
 
           </div>
-          <div style={{ marginTop: 'auto', padding: '16px' }}>
-            <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={handleLogout}>
-              ← Back to Portal Select
+          <div style={{ marginTop: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button type="button" className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={handleLogout}>
+              Logout
+            </button>
+            <button type="button" className="btn btn-secondary btn-sm" style={{ width: '100%', fontSize: '12px' }} onClick={resetAllSessions}>
+              Reset demo data
             </button>
           </div>
         </nav>
@@ -3843,13 +3851,15 @@ function PartnerPortal({
         <div className="hdr-space"></div>
         <button className="theme-toggle-btn" onClick={toggleTheme}>{darkMode ? '☀️' : '🌙'}</button>
         <button className="hdr-bell">🔔<span className="notif-dot"></span></button>
-        <div className="hdr-user" onClick={resetAllSessions}>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={handleLogout} title="Log out">
+          Logout
+        </button>
+        <div className="hdr-user" title={currentUser.name}>
           <div className="avatar" style={{ background: '#7c3aed' }}>AM</div>
           <div>
             <div className="hdr-uname">{currentUser.name}</div>
             <div className="hdr-urole">Partner</div>
           </div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>▾</span>
         </div>
       </header>
 
@@ -3867,8 +3877,8 @@ function PartnerPortal({
 
           </div>
           <div style={{ marginTop: 'auto', padding: '16px' }}>
-            <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={handleLogout}>
-              ← Back to Portal Select
+            <button type="button" className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={handleLogout}>
+              Logout
             </button>
           </div>
         </nav>
