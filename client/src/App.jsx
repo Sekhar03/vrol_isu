@@ -745,12 +745,7 @@ function MerchantPortal({
             >
               <span className="si">📋</span> Dispute Management
             </div>
-            <div 
-              className={`sb-item ${activePage === 'm-vamp' ? 'active' : ''}`} 
-              onClick={() => setActivePage('m-vamp')}
-            >
-              <span className="si">📈</span> VAMP Status & Calculator
-            </div>
+
             <div 
               className={`sb-item ${disputeMenuOpen ? 'open' : ''}`} 
               onClick={() => setDisputeMenuOpen(!disputeMenuOpen)}
@@ -771,12 +766,7 @@ function MerchantPortal({
                 <span className="ssi">📅</span> Dispute Respond By Date
               </div>
             </div>
-            <div 
-              className={`sb-item ${activePage === 'm-reports' ? 'active' : ''}`} 
-              onClick={() => setActivePage('m-reports')}
-            >
-              <span className="si">📄</span> Reports
-            </div>
+
           </div>
           <div style={{ marginTop: 'auto', padding: '16px' }}>
             <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={() => setView('selector')}>
@@ -1709,54 +1699,7 @@ function MerchantPortal({
             </div>
           )}
 
-          {/* VAMP Status & Calculator */}
-          {activePage === 'm-vamp' && (
-            <div className="page active">
-              <div className="page-inner">
-                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px' }}>VAMP Status & Calculator</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div style={{ background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)' }}>
-                    <h4>Current VAMP Status</h4>
-                    <div style={{ marginTop: '16px', display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                      <span style={{ fontSize: '32px', fontWeight: '800', color: 'var(--brand)' }}>0.85%</span>
-                      <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '6px' }}>Safe (Limit: 2.2%)</span>
-                    </div>
-                    <div style={{ marginTop: '20px', background: '#eee', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ background: 'var(--brand)', height: '100%', width: '38%' }}></div>
-                    </div>
-                  </div>
-                  <div style={{ background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)' }}>
-                    <h4>VAMP Calculator</h4>
-                    <p style={{fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px'}}>Project your future ratio based on expected volume.</p>
-                    <div className="mf"><label>Expected Sales Volume (Total Txns)</label><input type="number" className="mfi" placeholder="e.g. 5000" /></div>
-                    <div className="mf" style={{marginTop: '10px'}}><label>Expected Disputes</label><input type="number" className="mfi" placeholder="e.g. 15" /></div>
-                    <button className="btn btn-outline" style={{marginTop: '16px', width: '100%'}} onClick={() => showToast('Calculated Projected VAMP: 0.30%')}>Calculate</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Merchant Reports & Templates */}
-          {activePage === 'm-reports' && (
-            <div className="page active">
-              <div className="page-inner">
-                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px' }}>Reports & Rebuttal Templates</h3>
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                  <button className="btn btn-primary" onClick={() => showToast('Dispute History Exported')}>Export Dispute History</button>
-                  <button className="btn btn-secondary" onClick={() => showToast('VAMP History Exported')}>Export VAMP History</button>
-                </div>
-                <div style={{ background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)' }}>
-                  <h4>Manage Rebuttal Templates</h4>
-                  <ul style={{ paddingLeft: '20px', marginTop: '16px', fontSize: '14px', lineHeight: '1.8' }}>
-                    <li>Template 1: Services Not Provided (Standard Rebuttal) <button style={{background:'none', border:'none', color:'var(--brand)', cursor:'pointer'}}>[Edit]</button></li>
-                    <li>Template 2: Duplicate Processing (Standard Rebuttal) <button style={{background:'none', border:'none', color:'var(--brand)', cursor:'pointer'}}>[Edit]</button></li>
-                  </ul>
-                  <button className="btn btn-outline" style={{marginTop: '16px'}}>+ Add New Template</button>
-                </div>
-              </div>
-            </div>
-          )}
         </main>
       </div>
 
@@ -2727,24 +2670,14 @@ function AdminPortal({
             >
               <span className="si">⚙️</span> Visa VROL Webhook Status
             </div>
-            <div 
-              className={`sb-item ${activePage === 'a-vamp' ? 'active' : ''}`}
-              onClick={() => setActivePage('a-vamp')}
-            >
-              <span className="si">📈</span> VAMP Compliance
-            </div>
+
             <div 
               className={`sb-item ${activePage === 'a-merchant' ? 'active' : ''}`}
               onClick={() => setActivePage('a-merchant')}
             >
               <span className="si">👥</span> Merchant Management
             </div>
-            <div 
-              className={`sb-item ${activePage === 'a-config' ? 'active' : ''}`}
-              onClick={() => setActivePage('a-config')}
-            >
-              <span className="si">🛠️</span> Configuration
-            </div>
+
           </div>
           <div style={{ marginTop: 'auto', padding: '16px' }}>
             <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={() => setView('selector')}>
@@ -3376,39 +3309,7 @@ function AdminPortal({
             </div>
           )}
 
-          {/* VAMP Compliance */}
-          {activePage === 'a-vamp' && (
-            <div className="page active">
-              <div className="page-inner">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '20px', fontWeight: '700' }}>VAMP Compliance Dashboard</h3>
-                  <button className="btn btn-primary" onClick={() => showToast('Exported VAMP Report')}>Export Report</button>
-                </div>
-                <div className="table-responsive">
-                  <table className="data-table">
-                    <thead><tr><th>Merchant ID</th><th>Name</th><th>Dispute Count</th><th>Sales Vol</th><th>VAMP Ratio</th><th>Status</th></tr></thead>
-                    <tbody>
-                      {users.filter(u => u.role === 'merchant').map(m => {
-                        const mCb = chargebacks.filter(c => c.userName === m.username).length;
-                        const ratio = mCb > 0 ? ((mCb / 1000) * 100).toFixed(2) : '0.00';
-                        const isBreaching = parseFloat(ratio) >= 2.2;
-                        return (
-                          <tr key={m.username}>
-                            <td>{m.id || 'M-'+Math.floor(Math.random()*1000)}</td>
-                            <td>{m.name}</td>
-                            <td>{mCb}</td>
-                            <td>1,000</td>
-                            <td style={{ color: isBreaching ? 'red' : 'inherit', fontWeight: isBreaching ? 'bold' : 'normal' }}>{ratio}%</td>
-                            <td>{isBreaching ? <span className="badge badge-lost">Breaching</span> : <span className="badge badge-won">Safe</span>}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {/* Merchant Management */}
           {activePage === 'a-merchant' && (
@@ -3436,25 +3337,7 @@ function AdminPortal({
             </div>
           )}
 
-          {/* System Configuration */}
-          {activePage === 'a-config' && (
-            <div className="page active">
-              <div className="page-inner">
-                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px' }}>System Configuration</h3>
-                <div style={{ background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)' }}>
-                  <h4>VROL API Settings</h4>
-                  <div className="mf" style={{ marginTop: '16px' }}><label>API Key</label><input type="password" value="*****************" className="mfi" readOnly /></div>
-                  <div className="mf"><label>Webhook URL</label><input type="text" value="https://api.iserveu.in/vrol/webhook" className="mfi" readOnly /></div>
-                  <button className="btn btn-primary" onClick={() => showToast('Settings Updated')}>Update Connection</button>
-                </div>
-                <div style={{ background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)', marginTop: '20px' }}>
-                  <h4>Alert Rules & Roles</h4>
-                  <p style={{fontSize: '13px', color: 'var(--text-muted)'}}>Manage reason code mappings and user permissions here.</p>
-                  <button className="btn btn-outline" style={{marginTop: '10px'}} onClick={() => showToast('Opened role manager')}>Manage Roles</button>
-                </div>
-              </div>
-            </div>
-          )}
+
         </main>
       </div>
 
@@ -3784,15 +3667,11 @@ function PartnerPortal({
             <div className={`sb-item ${activePage === 'p-dashboard' ? 'active' : ''}`} onClick={() => setActivePage('p-dashboard')}>
               <span className="si">⊞</span> Portfolio Analytics
             </div>
-            <div className={`sb-item ${activePage === 'p-batch' ? 'active' : ''}`} onClick={() => setActivePage('p-batch')}>
-              <span className="si">🗂️</span> Batch Submissions
-            </div>
+
             <div className={`sb-item ${activePage === 'p-controls' ? 'active' : ''}`} onClick={() => setActivePage('p-controls')}>
               <span className="si">👥</span> Merchant Controls
             </div>
-            <div className={`sb-item ${activePage === 'p-config' ? 'active' : ''}`} onClick={() => setActivePage('p-config')}>
-              <span className="si">🛠️</span> Bulk Config & API
-            </div>
+
           </div>
           <div style={{ marginTop: 'auto', padding: '16px' }}>
             <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={() => setView('selector')}>
@@ -4071,25 +3950,7 @@ function PartnerPortal({
             </div>
           )}
 
-          {/* Batch Submissions */}
-          {activePage === 'p-batch' && (
-            <div className="page active">
-              <div className="page-inner">
-                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px' }}>Batch Submissions (VROL)</h3>
-                <div style={{ background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)' }}>
-                  <h4>Run Batch Representment</h4>
-                  <p style={{fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px'}}>Submit representments to Visa on behalf of multiple merchants simultaneously.</p>
-                  <div className="mf"><label>Upload Batch File (.csv)</label><input type="file" className="mfi" /></div>
-                  <button className="btn btn-primary" style={{marginTop: '16px'}} onClick={() => showToast('Batch processed successfully!')}>Run Batch</button>
-                </div>
-                <div style={{ marginTop: '20px', background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)' }}>
-                  <h4>Incoming Webhook Events</h4>
-                  <p style={{fontSize: '13px', color: 'var(--text-muted)'}}>Monitoring live VROL events.</p>
-                  <div style={{ padding: '10px', background: '#f5f5f5', borderRadius: '4px', marginTop: '10px', fontSize: '12px', fontFamily: 'monospace' }}>[System] Listening for Visa webhooks...</div>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {/* Merchant Controls */}
           {activePage === 'p-controls' && (
@@ -4125,31 +3986,7 @@ function PartnerPortal({
             </div>
           )}
 
-          {/* Bulk Config */}
-          {activePage === 'p-config' && (
-            <div className="page active">
-              <div className="page-inner">
-                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px' }}>Bulk Configuration & API Keys</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                  <div style={{ background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)' }}>
-                    <h4>API Key Management</h4>
-                    <p style={{fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px'}}>Issue new API keys for merchants in your portfolio.</p>
-                    <div className="mf"><label>Merchant</label><select className="mfi-sel"><option>All Merchants</option><option>Myntra India</option></select></div>
-                    <button className="btn btn-outline" style={{marginTop: '16px'}} onClick={() => showToast('API Keys Generated')}>Generate Key</button>
-                  </div>
-                  <div style={{ background: 'var(--card)', padding: '20px', borderRadius: 'var(--radius)' }}>
-                    <h4>Bulk Services Toggle</h4>
-                    <p style={{fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px'}}>Apply configuration changes across multiple merchants.</p>
-                    <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                      <label style={{display: 'flex', alignItems: 'center', gap: '8px'}}><input type="checkbox" /> Enable Order Insight (Verifi)</label>
-                      <label style={{display: 'flex', alignItems: 'center', gap: '8px'}}><input type="checkbox" /> Enable RDR Auto-Decisioning</label>
-                    </div>
-                    <button className="btn btn-primary" style={{marginTop: '16px'}} onClick={() => showToast('Bulk configs applied')}>Apply Config</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+
         </main>
       </div>
     </div>
