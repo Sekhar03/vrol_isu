@@ -3079,14 +3079,161 @@ function AdminPortal({
           {/* Admin Webhook Status */}
           {activePage === 'a-webhook' && (
             <div className="page active" id="a-webhook">
-              <div className="page-inner">
-                <div className="page-hdr"><div><h1>Visa VROL Webhook Status</h1><p>Monitor incoming dispute status updates from Visa Network</p></div></div>
-                <div className="tbl-card">
-                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📡</div>
-                    <h3>Webhook Monitoring Active</h3>
-                    <p>Waiting for incoming events from Visa VROL API...</p>
+              <div style={{ padding: '32px 40px', background: '#f8f9fd', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
+                <div style={{ marginBottom: '32px' }}>
+                  <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#1a237e', marginBottom: '8px' }}>VISA VROL Webhook Status</h1>
+                  <p style={{ color: '#78909c', fontSize: '14px', margin: 0 }}>Real-time incoming webhook gateway for integration with the Principal Acquirer from Visa Resolve on Liability (VROL) system.</p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                  <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#e1f5fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#03a9f4' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#b0bec5', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>TOTAL RECEIVED FEED</div>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#263238' }}>6 <span style={{fontSize: '16px', fontWeight: '600'}}>Events</span></div>
+                    </div>
                   </div>
+
+                  <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#e8f5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4caf50' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#b0bec5', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>SUCCESS DELIVERIES</div>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#4caf50' }}>4</div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#fff3e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff9800' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#b0bec5', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>WARNING ALERTS</div>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#ff9800' }}>1</div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#ffebee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f44336' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#b0bec5', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>FAILED DISPATCHES</div>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#f44336' }}>1</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                  <div style={{ padding: '20px 24px', borderBottom: '1px solid #eef2f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#455a64', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>VROL WEBHOOK DELIVERY LOGS</h3>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <select style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #e0e0e0', color: '#78909c', outline: 'none', fontSize: '13px' }}>
+                        <option>All Types</option>
+                      </select>
+                      <select style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #e0e0e0', color: '#78909c', outline: 'none', fontSize: '13px' }}>
+                        <option>All Statuses</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>WEBHOOK ID</th>
+                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>VROL EVENT / TIME</th>
+                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>DISPUTE TYPE</th>
+                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>MERCHANT / AMOUNT</th>
+                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>RESPONSE CODE</th>
+                        <th style={{ textAlign: 'right', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>PAYLOAD</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px solid #f5f5f5' }}>
+                        <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '600', color: '#263238' }}>WH-VISA-551029</td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>DisputeCreatedEvent</div>
+                          <div style={{ fontSize: '11px', color: '#b0bec5' }}>2024-05-26 10:14:02</div>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <span style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', background: '#fff3e0', color: '#f57c00' }}>Chargeback</span>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>Nike India</div>
+                          <div style={{ fontSize: '12px', color: '#78909c' }}>INR 14,999</div>
+                        </td>
+                        <td style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: '#4caf50' }}>200 OK</td>
+                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                          <button style={{ padding: '6px 16px', background: '#1a237e', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <span>&gt;_</span> INSPECT
+                          </button>
+                        </td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #f5f5f5' }}>
+                        <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '600', color: '#263238' }}>WH-VISA-551030</td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>PreArbitrationFili...</div>
+                          <div style={{ fontSize: '11px', color: '#b0bec5' }}>2024-05-15 10:15:02</div>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <span style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', background: '#e0f7fa', color: '#00acc1' }}>Pre-Arbitration</span>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>Steam Games</div>
+                          <div style={{ fontSize: '12px', color: '#78909c' }}>INR 3,250</div>
+                        </td>
+                        <td style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: '#4caf50' }}>201 OK</td>
+                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                          <button style={{ padding: '6px 16px', background: '#1a237e', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <span>&gt;_</span> INSPECT
+                          </button>
+                        </td>
+                      </tr>
+                      <tr style={{ borderBottom: '1px solid #f5f5f5' }}>
+                        <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '600', color: '#263238' }}>WH-VISA-551031</td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>ArbitrationCaseFil...</div>
+                          <div style={{ fontSize: '11px', color: '#b0bec5' }}>2024-05-02 10:10:01</div>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <span style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', background: '#f3e5f5', color: '#8e24aa' }}>Arbitration</span>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>Reliance Retail</div>
+                          <div style={{ fontSize: '12px', color: '#78909c' }}>INR 22,450</div>
+                        </td>
+                        <td style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: '#4caf50' }}>200 OK</td>
+                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                          <button style={{ padding: '6px 16px', background: '#1a237e', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <span>&gt;_</span> INSPECT
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '600', color: '#263238' }}>WH-VISA-551032</td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>RetrievalRequestIn...</div>
+                          <div style={{ fontSize: '11px', color: '#b0bec5' }}>2024-05-01 10:00:03</div>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <span style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', background: '#e0f2f1', color: '#00897b' }}>Retrieval Request</span>
+                        </td>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>Nike India</div>
+                          <div style={{ fontSize: '12px', color: '#78909c' }}>INR 8,599</div>
+                        </td>
+                        <td style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: '#4caf50' }}>200 OK</td>
+                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                          <button style={{ padding: '6px 16px', background: '#1a237e', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <span>&gt;_</span> INSPECT
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
