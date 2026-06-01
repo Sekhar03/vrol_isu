@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // API BASE URL
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function App() {
+  const isInitialized = useRef(false);
+
   // Navigation: 'selector' | 'merchant' | 'admin' | 'partner'
   const [view, setView] = useState(() => {
     try {
@@ -37,6 +39,19 @@ export default function App() {
       return null;
     }
   });
+
+  // Safety: if currentUser becomes null but view is a portal, reset to selector
+  // Use isInitialized to avoid triggering on the very first render
+  useEffect(() => {
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      return;
+    }
+    if (!currentUser && view !== 'selector') {
+      setView('selector');
+      localStorage.setItem('isu_view', 'selector');
+    }
+  }, [currentUser, view]);
   
   // Toast state
   const [toastMsg, setToastMsg] = useState({ text: '', type: '' });
@@ -154,25 +169,25 @@ export default function App() {
       loggedView = u.role;
       showToast(`Logged in as ${u.name} (${u.role})`);
     } else {
-      // Fallback for Vercel demo if API fetch failed
-      if (username === 'masteruser' && password === 'Test@2026') {
-        loggedUser = { username: 'masteruser', name: 'masteruser', role: 'merchant' };
-        loggedView = 'merchant';
-        showToast('Logged in as masteruser (Merchant)');
-      } else if (username === 'Test@Ad' && password === 'Test@2027') {
-        loggedUser = { username: 'Test@Ad', name: 'Krishna Das', role: 'admin' };
-        loggedView = 'admin';
-        showToast('Logged in as Krishna Das (Admin)');
-      } else if (username === 'partneruser' && password === 'Test@2028') {
-        loggedUser = { username: 'partneruser', name: 'Arjun Mehta (Partner)', role: 'partner' };
-        loggedView = 'partner';
-        showToast('Logged in as Arjun Mehta (Partner)');
+      // Fallback credentials (used when API is slow or unavailable)
+      const fallbacks = {
+        'masteruser':  { pw: 'Test@2026', user: { username: 'masteruser',  name: 'masteruser',            role: 'merchant' } },
+        'Test@isu':    { pw: 'Test@2026', user: { username: 'Test@isu',    name: 'Test@isu',              role: 'merchant' } },
+        'Test@Ad':     { pw: 'Test@2027', user: { username: 'Test@Ad',     name: 'Krishna Das',           role: 'admin'    } },
+        'partneruser': { pw: 'Test@2028', user: { username: 'partneruser', name: 'Arjun Mehta (Partner)', role: 'partner'  } },
+      };
+      const match = fallbacks[username];
+      if (match && match.pw === password) {
+        loggedUser = match.user;
+        loggedView = match.user.role;
+        showToast(`Logged in as ${match.user.name} (${match.user.role})`);
       } else {
-        alert('Invalid username or password');
+        showToast('Invalid username or password', 'error');
         return;
       }
     }
 
+    // Set both together, then persist — avoids any race between state and effect
     setCurrentUser(loggedUser);
     setView(loggedView);
     localStorage.setItem('isu_currentUser', JSON.stringify(loggedUser));
@@ -201,8 +216,8 @@ export default function App() {
 
   return (
     <>
-      {/* Safety guard: if view is not selector but currentUser is missing, show login */}
-      {(view === 'selector' || !currentUser) && (
+      {/* Show login only when view is selector */}
+      {view === 'selector' && (
         <LoginForm handleLogin={handleLogin} toggleTheme={toggleTheme} darkMode={darkMode} />
       )}
       
