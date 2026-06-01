@@ -15,7 +15,7 @@
     <div class="hdr-logo"><div class="hl-text">iServeU<sup>®</sup></div></div>
     <span class="admin-badge">ADMIN</span>
     <div class="hdr-space"></div>
-    <div class="hdr-wallet"><span class="wi">💳</span><span class="wl">Wallet:</span><span class="wa" id="aWalletAmt">₹ 2,45,800</span></div>
+    
     <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
     <button class="hdr-bell">🔔<span class="notif-dot"></span></button>
     <div class="hdr-user" onclick="doLogout()">
@@ -369,9 +369,9 @@ const daysAgo = n => { let d=new Date(TODAY); d.setDate(d.getDate()-n); return f
 const fmtDisp = s => { if(!s)return ''; let d=new Date(s); return d.getDate().toString().padStart(2,'0')+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getFullYear(); };
 
 const DEFAULT_USERS = {
-  'Test@isu':  {pass:'Test@2026', role:'merchant', name:'masteruser', wallet:'₹ 964.35'},
-  'masteruser':{pass:'Test@2026', role:'merchant', name:'masteruser', wallet:'₹ 964.35'},
-  'Test@Ad':   {pass:'Test@2027', role:'admin',    name:'Krishna Das', wallet:'₹ 2,45,800'},
+  'Test@isu':  {pass:'Test@2026', role:'merchant', name:'masteruser'},
+  'masteruser':{pass:'Test@2026', role:'merchant', name:'masteruser'},
+  'Test@Ad':   {pass:'Test@2027', role:'admin',    name:'Krishna Das'},
 };
 
 let USERS = JSON.parse(localStorage.getItem('isu_users')) || DEFAULT_USERS;
@@ -385,9 +385,9 @@ const DEFAULT_CHARGEBACKS = [
     respondByDate: fmtDate(new Date(TODAY.getTime()+86400000)),
     mStatus:'Chargeback Raise', mSubStatus:'Chargeback New',
     adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
-    txnAmt:1000, adjAmt:1000, leinAmt:0, glNo:'354422',
+    txnAmt:1000, adjAmt:1000, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'832927*****',
-    walletStatus:'Debited', product:'VISA', aging:1,
+    product:'VISA', aging:1,
     merchantAction:null, adminAction:null,
     timeline:[
       {by:'iServeU', time: daysAgo(1)+' 10:30 AM', title:'Dispute Raised', remarks:'', file:null},
@@ -402,9 +402,9 @@ const DEFAULT_CHARGEBACKS = [
     respondByDate: fmtDate(new Date(TODAY.getTime()+2*86400000)),
     mStatus:'Chargeback Raise', mSubStatus:'Chargeback New',
     adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
-    txnAmt:3000, adjAmt:3000, leinAmt:0, glNo:'354422',
+    txnAmt:3000, adjAmt:3000, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'832927*****',
-    walletStatus:'Debited', product:'VISA', aging:2,
+    product:'VISA', aging:2,
     merchantAction:null, adminAction:null,
     timeline:[{by:'iServeU', time: daysAgo(2)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null}]
   },
@@ -416,9 +416,9 @@ const DEFAULT_CHARGEBACKS = [
     respondByDate: fmtDate(new Date(TODAY.getTime()+86400000)),
     mStatus:'Chargeback Raise', mSubStatus:'Chargeback Lost',
     adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
-    txnAmt:1500, adjAmt:1500, leinAmt:100, glNo:'354422',
+    txnAmt:1500, adjAmt:1500, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'397927*****',
-    walletStatus:'Debited', product:'VISA', aging:3,
+    product:'VISA', aging:3,
     merchantAction:'rejected', adminAction:'declined',
     chargbackId:'CommonVISA17268', adminName:'nsdladmin',
     rejectReason:'Based on internal investigation and transaction monitoring, this case exhibits patterns consistent with suspicious or unauthorized activity.',
@@ -436,9 +436,9 @@ const DEFAULT_CHARGEBACKS = [
     respondByDate: fmtDate(new Date(TODAY.getTime()+3*86400000)),
     mStatus:'Pre-Arbitration Raise', mSubStatus:'Chargeback New',
     adjType:'Pre-Arbitration Raise', remitter:'AXB', beneficiary:'FIP',
-    txnAmt:2500, adjAmt:2500, leinAmt:0, glNo:'354422',
+    txnAmt:2500, adjAmt:2500, glNo:'354422',
     currency:'USD', reasonCode:'4808', pan:'832927*****',
-    walletStatus:'Debited', product:'VISA', aging:4,
+    product:'VISA', aging:4,
     merchantAction:null, adminAction:null,
     timeline:[{by:'iServeU', time: daysAgo(4)+' 08:30 AM', title:'Dispute Raised', remarks:'', file:null}]
   },
@@ -450,9 +450,9 @@ const DEFAULT_CHARGEBACKS = [
     respondByDate: daysAgo(0),
     mStatus:'Chargeback Raise', mSubStatus:'Chargeback in Progress',
     adjType:'Chargeback Raise', remitter:'AXB', beneficiary:'FIP',
-    txnAmt:500, adjAmt:500, leinAmt:500, glNo:'354422',
+    txnAmt:500, adjAmt:500, glNo:'354422',
     currency:'Rupees', reasonCode:'1', pan:'832927*****',
-    walletStatus:'Hold', product:'VISA', aging:5,
+    product:'VISA', aging:5,
     merchantAction:'accepted', adminAction:null,
     timeline:[
       {by:'iServeU', time: daysAgo(5)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null},
@@ -467,9 +467,9 @@ const DEFAULT_CHARGEBACKS = [
     respondByDate: fmtDate(new Date(TODAY.getTime()+4*86400000)),
     mStatus:'Arbitration Raise', mSubStatus:'Chargeback New',
     adjType:'Arbitration Raise', remitter:'AXB', beneficiary:'FIP',
-    txnAmt:3000, adjAmt:3000, leinAmt:0, glNo:'354422',
+    txnAmt:3000, adjAmt:3000, glNo:'354422',
     currency:'USD', reasonCode:'4808', pan:'832927*****',
-    walletStatus:'Debited', product:'VISA', aging:5,
+    product:'VISA', aging:5,
     merchantAction:null, adminAction:null,
     timeline:[{by:'iServeU', time: daysAgo(5)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null}]
   }    ,{
@@ -479,9 +479,9 @@ const DEFAULT_CHARGEBACKS = [
       createdDate: daysAgo(2), txnDate: daysAgo(5), adjDate: daysAgo(2), respondByDate: fmtDate(new Date(TODAY.getTime() + 5 * 86400000)),
       mStatus: 'VROL Inquiry', mSubStatus: 'Chargeback New',
       adjType: 'Chargeback Raise', remitter: 'HDFC', beneficiary: 'FIP',
-      txnAmt: 5000, adjAmt: 5000, leinAmt: 5000, glNo: '354435',
+      txnAmt: 5000, adjAmt: 5000, glNo: '354435',
       currency: 'Rupees', reasonCode: '10.4', pan: '416001*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 2,
+      product: 'VISA', aging: 2,
       merchantAction: null, adminAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(2) + ' 10:00 AM', title: 'VROL Inquiry Initiated', remarks: 'Visa raised inquiry for potential fraud.', file: null }
@@ -494,9 +494,9 @@ const DEFAULT_CHARGEBACKS = [
       createdDate: daysAgo(5), txnDate: daysAgo(10), adjDate: daysAgo(5), respondByDate: daysAgo(1),
       mStatus: 'VROL Chargeback', mSubStatus: 'Chargeback in Progress',
       adjType: 'Chargeback Raise', remitter: 'SBI', beneficiary: 'FIP',
-      txnAmt: 3500, adjAmt: 3500, leinAmt: 3500, glNo: '354436',
+      txnAmt: 3500, adjAmt: 3500, glNo: '354436',
       currency: 'Rupees', reasonCode: '13.1', pan: '426001*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 5,
+      product: 'VISA', aging: 5,
       merchantAction: 'evidence', adminAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(5) + ' 11:00 AM', title: 'VROL Chargeback Received', remarks: 'First chargeback initiated by issuer.', file: null }
@@ -509,9 +509,9 @@ const DEFAULT_CHARGEBACKS = [
       createdDate: daysAgo(15), txnDate: daysAgo(20), adjDate: daysAgo(15), respondByDate: daysAgo(2),
       mStatus: 'VROL Pre-Arbitration', mSubStatus: 'Chargeback in Progress',
       adjType: 'Pre-Arbitration Raise', remitter: 'AXIS', beneficiary: 'FIP',
-      txnAmt: 7500, adjAmt: 7500, leinAmt: 7500, glNo: '354437',
+      txnAmt: 7500, adjAmt: 7500, glNo: '354437',
       currency: 'Rupees', reasonCode: '10.4', pan: '436001*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 15,
+      product: 'VISA', aging: 15,
       merchantAction: 'evidence', adminAction: 'considered', visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(15) + ' 12:00 PM', title: 'VROL Pre-Arbitration Raised', remarks: 'Issuer declined evidence, pushed to pre-arb.', file: null }
@@ -524,9 +524,9 @@ const DEFAULT_CHARGEBACKS = [
       createdDate: daysAgo(30), txnDate: daysAgo(40), adjDate: daysAgo(30), respondByDate: daysAgo(5),
       mStatus: 'VROL Arbitration', mSubStatus: 'Chargeback Lost',
       adjType: 'Arbitration Raise', remitter: 'ICICI', beneficiary: 'FIP',
-      txnAmt: 10000, adjAmt: 10000, leinAmt: 0, glNo: '354438',
+      txnAmt: 10000, adjAmt: 10000, glNo: '354438',
       currency: 'Rupees', reasonCode: '10.5', pan: '446001*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 30,
+      product: 'VISA', aging: 30,
       merchantAction: 'evidence', adminAction: 'declined', visaPending: false,
       timeline: [
         { by: 'iServeU', time: daysAgo(30) + ' 01:00 PM', title: 'VROL Arbitration Lost', remarks: 'Visa Arbitration panel ruled in favor of cardholder.', file: null }
@@ -536,11 +536,8 @@ const DEFAULT_CHARGEBACKS = [
 
 let chargebacks = JSON.parse(localStorage.getItem('isu_chargebacks')) || DEFAULT_CHARGEBACKS;
 
-const DEFAULT_LEDGER = [
-  { id: 'ADJ001', merchant: 'masteruser', type: 'Credit', amount: 500, date: daysAgo(5), remarks: 'Reversal of erroneous chargeback debit' },
-  { id: 'ADJ002', merchant: 'masteruser', type: 'Debit', amount: 200, date: daysAgo(3), remarks: 'Processing fee adjustment' }
-];
-let ledger = JSON.parse(localStorage.getItem('isu_ledger')) || DEFAULT_LEDGER;
+
+
 
 // AUTO-SET ACTIVE ADMIN SESSION FOR admin.html
 let currentUser = { username: 'Test@Ad', ...USERS['Test@Ad'] };
@@ -566,13 +563,7 @@ function paginateData(data, type) {
   return { paginated, start, end, total, totalPages };
 }
 
-function updateHeaderWallet() {
-  const user = USERS[currentUser.username];
-  if (user) {
-    currentUser.wallet = user.wallet;
-    const aWallet = document.getElementById('aWalletAmt');
-    if (aWallet) aWallet.textContent = user.wallet;
-  }
+function updateHeaderWallet() {}
 }
 
 function renderPaginationControls(containerId, type, totalCount) {
@@ -621,7 +612,7 @@ function resetAdminPageAndRender() {
 function saveState() {
   localStorage.setItem('isu_chargebacks', JSON.stringify(chargebacks));
   localStorage.setItem('isu_users', JSON.stringify(USERS));
-  localStorage.setItem('isu_ledger', JSON.stringify(ledger));
+  
   updateHeaderWallet();
 }
 
@@ -645,7 +636,7 @@ function doLogout(){
   if(confirm('Are you sure you want to reset session? (You will remain on the admin portal, but localStorage data resets to default)')){
     localStorage.removeItem('isu_chargebacks');
     localStorage.removeItem('isu_users');
-    localStorage.removeItem('isu_ledger');
+    
     location.reload();
   }
 }
@@ -761,7 +752,7 @@ function renderAdminCb(){
           <div class="expand-grid">
             <div class="eg-item"><div class="ek">Terminal ID</div><div class="ev">${cb.terminalId}</div></div>
             <div class="eg-item"><div class="ek">Remitter Mobile</div><div class="ev">${cb.remMobile}</div></div>
-            <div class="eg-item"><div class="ek">Hold Status</div><div class="ev">${cb.leinAmt>0?'HOLD ACTIVE':'NO HOLD'}</div></div>
+            
             <div class="eg-item"><div class="ek">Product / Scheme</div><div class="ev">${cb.product}</div></div>
             <div class="eg-item"><div class="ek">Merchant Action</div><div class="ev">${cb.merchantAction||'—'}</div></div>
             <div class="eg-item"><div class="ek">Admin Review Action</div><div class="ev">${cb.adminAction||'—'}</div></div>
@@ -881,7 +872,9 @@ function doAdminConsider(){
   if(cb){
     cb.adminAction='considered';
     cb.mSubStatus='Chargeback in Progress';
-    cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Representment Submitted to Card Network',remarks:'Merchant proof considered satisfactory. Representing to network.',file:null});
+    const fileInput = document.getElementById('adminEvidenceFile');
+    const fileName = (fileInput && fileInput.files.length > 0) ? fileInput.files[0].name : null;
+    cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Representment Submitted to Card Network',remarks:'Merchant proof considered satisfactory. Representing to network.',file:fileName});
     saveState();
     loadAdminDashboard();
     renderAdminPending();
@@ -1127,12 +1120,10 @@ function processUpload(){
         beneficiary: 'FIP',
         txnAmt: txnAmt,
         adjAmt: txnAmt,
-        leinAmt: 0,
         glNo: glNo,
         currency: 'Rupees',
         reasonCode: '1',
         pan: '832927*****',
-        walletStatus: 'Debited',
         product: product,
         aging: 0,
         merchantAction: null,

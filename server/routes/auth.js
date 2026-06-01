@@ -40,9 +40,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(1), txnDate: dA(5), adjDate: dA(1), respondByDate: dL(8),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback New',
       adjType: 'Chargeback Raise', remitter: 'AXB', beneficiary: 'FIP',
-      txnAmt: 1000, adjAmt: 1000, leinAmt: 0, glNo: '354422',
+      txnAmt: 1000, adjAmt: 1000, glNo: '354422',
       currency: 'Rupees', reasonCode: '4808', pan: '832927*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 1,
+      product: 'VISA', aging: 1,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(1) + ' 10:30 AM', title: 'Dispute Raised by iServeU', remarks: 'Chargeback initiated for VISA txn', file: null },
@@ -57,9 +57,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(2), txnDate: dA(6), adjDate: dA(2), respondByDate: dL(7),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback New',
       adjType: 'Chargeback Raise', remitter: 'AXB', beneficiary: 'FIP',
-      txnAmt: 3000, adjAmt: 3000, leinAmt: 0, glNo: '354422',
+      txnAmt: 3000, adjAmt: 3000, glNo: '354422',
       currency: 'Rupees', reasonCode: '4808', pan: '832927*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 2,
+      product: 'VISA', aging: 2,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(2) + ' 09:00 AM', title: 'Dispute Raised by iServeU', remarks: 'Customer reported unauthorized debit of Rs.3000', file: null }
@@ -73,9 +73,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(10), txnDate: dA(15), adjDate: dA(10), respondByDate: dA(2),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback Lost',
       adjType: 'Chargeback Raise', remitter: 'AXB', beneficiary: 'FIP',
-      txnAmt: 1500, adjAmt: 1500, leinAmt: 100, glNo: '354422',
+      txnAmt: 1500, adjAmt: 1500, glNo: '354422',
       currency: 'Rupees', reasonCode: '4808', pan: '397927*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 10,
+      product: 'VISA', aging: 10,
       merchantAction: 'rejected', adminAction: 'declined', visaPending: false,
       chargbackId: 'CommonVISA17268', adminName: 'Krishna Das',
       rejectReason: 'Transaction log confirms delivery of service to registered customer mobile. Dispute ruled in acquirer favour by NPCI.',
@@ -93,9 +93,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(4), txnDate: dA(8), adjDate: dA(4), respondByDate: dL(3),
       mStatus: 'Pre-Arbitration Raise', mSubStatus: 'Chargeback New',
       adjType: 'Pre-Arbitration Raise', remitter: 'HDFC', beneficiary: 'FIP',
-      txnAmt: 2500, adjAmt: 2500, leinAmt: 0, glNo: '354423',
+      txnAmt: 2500, adjAmt: 2500, glNo: '354423',
       currency: 'Rupees', reasonCode: '4853', pan: '456712*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 4,
+      product: 'VISA', aging: 4,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(4) + ' 08:30 AM', title: 'Pre-Arbitration Raised', remarks: 'Escalated to Pre-Arb stage after initial chargeback rejection', file: null }
@@ -109,9 +109,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(5), txnDate: dA(9), adjDate: dA(5), respondByDate: dL(2),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback in Progress',
       adjType: 'Chargeback Raise', remitter: 'ICICI', beneficiary: 'FIP',
-      txnAmt: 500, adjAmt: 500, leinAmt: 500, glNo: '354422',
+      txnAmt: 500, adjAmt: 500, glNo: '354422',
       currency: 'Rupees', reasonCode: '1', pan: '832927*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 5,
+      product: 'VISA', aging: 5,
       merchantAction: 'evidence', adminAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: dA(5) + ' 09:00 AM', title: 'Dispute Raised', remarks: 'Customer dispute: service not received', file: null },
@@ -126,9 +126,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(6), txnDate: dA(10), adjDate: dA(6), respondByDate: dL(4),
       mStatus: 'Arbitration Raise', mSubStatus: 'Chargeback New',
       adjType: 'Arbitration Raise', remitter: 'AXIS', beneficiary: 'FIP',
-      txnAmt: 3000, adjAmt: 3000, leinAmt: 0, glNo: '354424',
+      txnAmt: 3000, adjAmt: 3000, glNo: '354424',
       currency: 'Rupees', reasonCode: '4808', pan: '545454*****',
-      walletStatus: 'Debited', product: 'Mastercard', aging: 6,
+      product: 'Mastercard', aging: 6,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(6) + ' 08:00 AM', title: 'Arbitration Raised', remarks: 'Escalated to Mastercard Arbitration panel after Pre-Arb failure', file: null },
@@ -143,9 +143,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(20), txnDate: dA(25), adjDate: dA(20), respondByDate: dA(10),
       mStatus: 'Chargeback Raise', mSubStatus: 'Refund Success',
       adjType: 'Chargeback Raise', remitter: 'SBI', beneficiary: 'FIP',
-      txnAmt: 8500, adjAmt: 8500, leinAmt: 0, glNo: '354425',
+      txnAmt: 8500, adjAmt: 8500, glNo: '354425',
       currency: 'Rupees', reasonCode: '4853', pan: '411234*****',
-      walletStatus: 'Refunded', product: 'VISA', aging: 20,
+      product: 'VISA', aging: 20,
       merchantAction: 'rejected', adminAction: 'considered', visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(20) + ' 10:00 AM', title: 'Dispute Raised', remarks: 'Customer claims item not received', file: null },
@@ -162,9 +162,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(15), txnDate: dA(20), adjDate: dA(15), respondByDate: dA(5),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback Won',
       adjType: 'Chargeback Raise', remitter: 'BOI', beneficiary: 'FIP',
-      txnAmt: 4200, adjAmt: 4200, leinAmt: 0, glNo: '354426',
+      txnAmt: 4200, adjAmt: 4200, glNo: '354426',
       currency: 'Rupees', reasonCode: '4808', pan: '607080*****',
-      walletStatus: 'Credited', product: 'Rupay', aging: 15,
+      product: 'Rupay', aging: 15,
       merchantAction: 'rejected', adminAction: 'considered', visaPending: true,
       timeline: [
         { by: 'iServeU', time: dA(15) + ' 08:00 AM', title: 'Dispute Raised', remarks: 'Rupay chargeback: duplicate transaction claim', file: null },
@@ -181,9 +181,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(3), txnDate: dA(7), adjDate: dA(3), respondByDate: dL(5),
       mStatus: 'Fraud Chargeback Raise', mSubStatus: 'Chargeback in Progress',
       adjType: 'Fraud Chargeback Raise', remitter: 'PNB', beneficiary: 'FIP',
-      txnAmt: 12000, adjAmt: 12000, leinAmt: 12000, glNo: '354427',
+      txnAmt: 12000, adjAmt: 12000, glNo: '354427',
       currency: 'Rupees', reasonCode: '4863', pan: '522222*****',
-      walletStatus: 'Hold', product: 'Mastercard', aging: 3,
+      product: 'Mastercard', aging: 3,
       merchantAction: 'evidence', adminAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: dA(3) + ' 07:00 AM', title: 'Fraud Chargeback Raised', remarks: 'High-value card fraud. Lien placed on Rs.12,000', file: null },
@@ -198,9 +198,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(7), txnDate: dA(12), adjDate: dA(7), respondByDate: dL(1),
       mStatus: 'Differed Chargeback Raise', mSubStatus: 'Chargeback Resubmit',
       adjType: 'Differed Chargeback Raise', remitter: 'KOTAK', beneficiary: 'FIP',
-      txnAmt: 750, adjAmt: 750, leinAmt: 0, glNo: '354422',
+      txnAmt: 750, adjAmt: 750, glNo: '354422',
       currency: 'Rupees', reasonCode: '4808', pan: '832900*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 7,
+      product: 'VISA', aging: 7,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(7) + ' 09:30 AM', title: 'Deferred Chargeback Raised', remarks: 'Initial CB returned by NPCI — resubmitting', file: null },
@@ -215,9 +215,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(1), txnDate: dA(4), adjDate: dA(1), respondByDate: dL(9),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback New',
       adjType: 'Chargeback Raise', remitter: 'YES BANK', beneficiary: 'FIP',
-      txnAmt: 5600, adjAmt: 5600, leinAmt: 0, glNo: '354428',
+      txnAmt: 5600, adjAmt: 5600, glNo: '354428',
       currency: 'Rupees', reasonCode: '4853', pan: '411111*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 1,
+      product: 'VISA', aging: 1,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(1) + ' 11:00 AM', title: 'VISA Chargeback Raised', remarks: 'Customer claims hotel booking cancelled but charged', file: null }
@@ -231,9 +231,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(2), txnDate: dA(5), adjDate: dA(2), respondByDate: dL(6),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback New',
       adjType: 'Chargeback Raise', remitter: 'CANARA', beneficiary: 'FIP',
-      txnAmt: 1800, adjAmt: 1800, leinAmt: 0, glNo: '354429',
+      txnAmt: 1800, adjAmt: 1800, glNo: '354429',
       currency: 'Rupees', reasonCode: '4808', pan: '607001*****',
-      walletStatus: 'Debited', product: 'Rupay', aging: 2,
+      product: 'Rupay', aging: 2,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(2) + ' 10:00 AM', title: 'Rupay Chargeback Raised', remarks: 'Customer: EMI deducted but subscription not activated', file: null }
@@ -247,9 +247,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(18), txnDate: dA(22), adjDate: dA(18), respondByDate: dA(8),
       mStatus: 'Pre-Arbitration Raise', mSubStatus: 'Refund On Hold',
       adjType: 'Pre-Arbitration Raise', remitter: 'IDFC', beneficiary: 'FIP',
-      txnAmt: 9900, adjAmt: 9900, leinAmt: 9900, glNo: '354430',
+      txnAmt: 9900, adjAmt: 9900, glNo: '354430',
       currency: 'Rupees', reasonCode: '4853', pan: '400001*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 18,
+      product: 'VISA', aging: 18,
       merchantAction: 'rejected', adminAction: 'considered', visaPending: true,
       timeline: [
         { by: 'iServeU', time: dA(18) + ' 09:00 AM', title: 'Pre-Arbitration Raised', remarks: 'Escalated after failed chargeback representation', file: null },
@@ -265,9 +265,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(25), txnDate: dA(30), adjDate: dA(25), respondByDate: dA(15),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback Lost',
       adjType: 'Chargeback Raise', remitter: 'BOB', beneficiary: 'FIP',
-      txnAmt: 6700, adjAmt: 6700, leinAmt: 0, glNo: '354431',
+      txnAmt: 6700, adjAmt: 6700, glNo: '354431',
       currency: 'Rupees', reasonCode: '4808', pan: '545454*****',
-      walletStatus: 'Debited', product: 'Mastercard', aging: 25,
+      product: 'Mastercard', aging: 25,
       merchantAction: 'rejected', adminAction: 'declined', visaPending: false,
       rejectReason: 'Mastercard dispute resolution team ruled in favour of cardholder. Service log did not match claimed delivery date.',
       timeline: [
@@ -284,9 +284,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(6), txnDate: dA(10), adjDate: dA(6), respondByDate: dL(1),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback Won',
       adjType: 'Chargeback Raise', remitter: 'UNION', beneficiary: 'FIP',
-      txnAmt: 2200, adjAmt: 2200, leinAmt: 0, glNo: '354422',
+      txnAmt: 2200, adjAmt: 2200, glNo: '354422',
       currency: 'Rupees', reasonCode: '4808', pan: '832927*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 6,
+      product: 'VISA', aging: 6,
       merchantAction: 'rejected', adminAction: 'auto-accepted', visaPending: true,
       timeline: [
         { by: 'iServeU', time: dA(6) + ' 08:00 AM', title: 'Dispute Raised', remarks: 'Customer disputes VISA double debit', file: null },
@@ -302,9 +302,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(0), txnDate: dA(2), adjDate: dA(0), respondByDate: dL(10),
       mStatus: 'Fraud Chargeback Raise', mSubStatus: 'Chargeback New',
       adjType: 'Fraud Chargeback Raise', remitter: 'KARUR', beneficiary: 'FIP',
-      txnAmt: 15000, adjAmt: 15000, leinAmt: 15000, glNo: '354432',
+      txnAmt: 15000, adjAmt: 15000, glNo: '354432',
       currency: 'Rupees', reasonCode: '4863', pan: '400222*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 0,
+      product: 'VISA', aging: 0,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(0) + ' 06:00 AM', title: 'Fraud Chargeback Raised — HIGH VALUE', remarks: 'High-value card fraud alert. Immediate lien placed on Rs.15,000.', file: null }
@@ -318,9 +318,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(12), txnDate: dA(16), adjDate: dA(12), respondByDate: dA(4),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback Won',
       adjType: 'Chargeback Raise', remitter: 'IOB', beneficiary: 'FIP',
-      txnAmt: 3300, adjAmt: 3300, leinAmt: 0, glNo: '354422',
+      txnAmt: 3300, adjAmt: 3300, glNo: '354422',
       currency: 'Rupees', reasonCode: '4808', pan: '832927*****',
-      walletStatus: 'Credited', product: 'VISA', aging: 12,
+      product: 'VISA', aging: 12,
       merchantAction: 'rejected', adminAction: 'considered', visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(12) + ' 09:00 AM', title: 'Dispute Raised', remarks: 'Customer disputes Rs.3300 VISA debit', file: null },
@@ -337,9 +337,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(3), txnDate: dA(6), adjDate: dA(3), respondByDate: dL(4),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback in Progress',
       adjType: 'Chargeback Raise', remitter: 'SYNDICATE', beneficiary: 'FIP',
-      txnAmt: 900, adjAmt: 900, leinAmt: 900, glNo: '354433',
+      txnAmt: 900, adjAmt: 900, glNo: '354433',
       currency: 'Rupees', reasonCode: '4808', pan: '607001*****',
-      walletStatus: 'Hold', product: 'Rupay', aging: 3,
+      product: 'Rupay', aging: 3,
       merchantAction: 'accepted', adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(3) + ' 10:30 AM', title: 'Rupay Chargeback Raised', remarks: 'Customer reports recharge failed but amount debited', file: null },
@@ -354,9 +354,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(4), txnDate: dA(8), adjDate: dA(4), respondByDate: dL(2),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback in Progress',
       adjType: 'Chargeback Raise', remitter: 'BANDHAN', beneficiary: 'FIP',
-      txnAmt: 7200, adjAmt: 7200, leinAmt: 7200, glNo: '354434',
+      txnAmt: 7200, adjAmt: 7200, glNo: '354434',
       currency: 'Rupees', reasonCode: '4853', pan: '512345*****',
-      walletStatus: 'Hold', product: 'Mastercard', aging: 4,
+      product: 'Mastercard', aging: 4,
       merchantAction: 'rejected', adminAction: null, visaPending: false,
       rejectReason: 'Service was fully rendered. Customer received goods at doorstep on 15/05/2026. Attached courier tracking reference.',
       timeline: [
@@ -372,9 +372,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(0), txnDate: dA(1), adjDate: dA(0), respondByDate: dL(10),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback New',
       adjType: 'Chargeback Raise', remitter: 'FEDERAL', beneficiary: 'FIP',
-      txnAmt: 4500, adjAmt: 4500, leinAmt: 0, glNo: '354435',
+      txnAmt: 4500, adjAmt: 4500, glNo: '354435',
       currency: 'Rupees', reasonCode: '4808', pan: '416001*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 0,
+      product: 'VISA', aging: 0,
       merchantAction: null, adminAction: null, visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(0) + ' 08:30 AM', title: 'VISA Chargeback Raised — Fresh', remarks: 'New chargeback received from VISA acquirer network', file: null }
@@ -386,9 +386,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(2), txnDate: dA(5), adjDate: dA(2), respondByDate: dL(5),
       mStatus: 'VROL Inquiry', mSubStatus: 'Chargeback New',
       adjType: 'Chargeback Raise', remitter: 'HDFC', beneficiary: 'FIP',
-      txnAmt: 5000, adjAmt: 5000, leinAmt: 5000, glNo: '354435',
+      txnAmt: 5000, adjAmt: 5000, glNo: '354435',
       currency: 'Rupees', reasonCode: '10.4', pan: '416001*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 2,
+      product: 'VISA', aging: 2,
       merchantAction: null, adminAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: dA(2) + ' 10:00 AM', title: 'VROL Inquiry Initiated', remarks: 'Visa raised inquiry for potential fraud.', file: null }
@@ -401,9 +401,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(5), txnDate: dA(10), adjDate: dA(5), respondByDate: dA(1),
       mStatus: 'VROL Chargeback', mSubStatus: 'Chargeback in Progress',
       adjType: 'Chargeback Raise', remitter: 'SBI', beneficiary: 'FIP',
-      txnAmt: 3500, adjAmt: 3500, leinAmt: 3500, glNo: '354436',
+      txnAmt: 3500, adjAmt: 3500, glNo: '354436',
       currency: 'Rupees', reasonCode: '13.1', pan: '426001*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 5,
+      product: 'VISA', aging: 5,
       merchantAction: 'evidence', adminAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: dA(5) + ' 11:00 AM', title: 'VROL Chargeback Received', remarks: 'First chargeback initiated by issuer.', file: null }
@@ -416,9 +416,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(15), txnDate: dA(20), adjDate: dA(15), respondByDate: dA(2),
       mStatus: 'VROL Pre-Arbitration', mSubStatus: 'Chargeback in Progress',
       adjType: 'Pre-Arbitration Raise', remitter: 'AXIS', beneficiary: 'FIP',
-      txnAmt: 7500, adjAmt: 7500, leinAmt: 7500, glNo: '354437',
+      txnAmt: 7500, adjAmt: 7500, glNo: '354437',
       currency: 'Rupees', reasonCode: '10.4', pan: '436001*****',
-      walletStatus: 'Hold', product: 'VISA', aging: 15,
+      product: 'VISA', aging: 15,
       merchantAction: 'evidence', adminAction: 'considered', visaPending: true,
       timeline: [
         { by: 'iServeU', time: dA(15) + ' 12:00 PM', title: 'VROL Pre-Arbitration Raised', remarks: 'Issuer declined evidence, pushed to pre-arb.', file: null }
@@ -431,9 +431,9 @@ const buildSeedData = (TODAY) => {
       createdDate: dA(30), txnDate: dA(40), adjDate: dA(30), respondByDate: dA(5),
       mStatus: 'VROL Arbitration', mSubStatus: 'Chargeback Lost',
       adjType: 'Arbitration Raise', remitter: 'ICICI', beneficiary: 'FIP',
-      txnAmt: 10000, adjAmt: 10000, leinAmt: 0, glNo: '354438',
+      txnAmt: 10000, adjAmt: 10000, glNo: '354438',
       currency: 'Rupees', reasonCode: '10.5', pan: '446001*****',
-      walletStatus: 'Debited', product: 'VISA', aging: 30,
+      product: 'VISA', aging: 30,
       merchantAction: 'evidence', adminAction: 'declined', visaPending: false,
       timeline: [
         { by: 'iServeU', time: dA(30) + ' 01:00 PM', title: 'VROL Arbitration Lost', remarks: 'Visa Arbitration panel ruled in favor of cardholder.', file: null }

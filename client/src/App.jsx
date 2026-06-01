@@ -2084,8 +2084,8 @@ function AdminPortal({
         by: 'nsdladmin',
         time: new Date().toLocaleString(),
         title: 'Internal Team Considered – Represented NPCI UDIR',
-        remarks: 'Merchant representations verified. Routing represented claim to NPCI URCS switch.',
-        file: null
+        remarks: 'Merchant representations verified. Routing represented claim to Visa VROL.',
+        file: evidenceFiles?.adminUpload?.name || null
       };
 
       const response = await fetch(`${API_URL}/disputes/${targetDisputeId}`, {
@@ -3259,6 +3259,10 @@ function AdminPortal({
                       </div>
                       <div style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>Merchant Justification Remarks</div>
                       <div className="remarks-reason">{cb.rejectReason}</div>
+                      <div style={{ marginTop: '15px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px', display: 'block' }}>Admin Evidence Upload (Optional)</label>
+                        <input type="file" className="form-control" onChange={(e) => setEvidenceFiles({ ...evidenceFiles, adminUpload: e.target.files[0] })} />
+                      </div>
                     </div>
                   ) : (
                     <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No merchant representation logs found.</div>
