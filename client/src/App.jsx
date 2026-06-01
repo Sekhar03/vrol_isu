@@ -2887,68 +2887,70 @@ function AdminPortal({
                 <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
               </div>
               <div className="page-inner">
-                <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
-                  <legend style={{ padding: '0 8px', color: '#5e35b1', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                    {/* Col 1 */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#5e35b1' }}>📅</span>
-                        <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="From Date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
+                {adminTab === 'management' && (
+                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
+                    <legend style={{ padding: '0 8px', color: '#5e35b1', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                      {/* Col 1 */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#5e35b1' }}>📅</span>
+                          <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="From Date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
+                        </div>
+                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
+                          <option value="">Bank</option>
+                          <option value="RBL Bank Ltd" selected>RBL Bank Ltd</option>
+                        </select>
+                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                          <option value="">Dispute Status</option>
+                          <option>Chargeback Raise</option>
+                          <option>Pre-Arbitration Raise</option>
+                          <option>Arbitration Raise</option>
+                          <option>VROL Inquiry</option>
+                          <option>VROL Chargeback</option>
+                          <option>VROL Pre-Arbitration</option>
+                          <option>VROL Arbitration</option>
+                          <option>Fraud Chargeback Raise</option>
+                          <option>Differed Chargeback Raise</option>
+                        </select>
                       </div>
-                      <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
-                        <option value="">Bank</option>
-                        <option value="RBL Bank Ltd" selected>RBL Bank Ltd</option>
-                      </select>
-                      <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                        <option value="">Dispute Status</option>
-                        <option>Chargeback Raise</option>
-                        <option>Pre-Arbitration Raise</option>
-                        <option>Arbitration Raise</option>
-                        <option>VROL Inquiry</option>
-                        <option>VROL Chargeback</option>
-                        <option>VROL Pre-Arbitration</option>
-                        <option>VROL Arbitration</option>
-                        <option>Fraud Chargeback Raise</option>
-                        <option>Differed Chargeback Raise</option>
-                      </select>
-                    </div>
-                    {/* Col 2 */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#5e35b1' }}>📅</span>
-                        <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="To Date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
+                      {/* Col 2 */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#5e35b1' }}>📅</span>
+                          <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="To Date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
+                        </div>
+                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
+                          <option value="">Aggregator</option>
+                        </select>
+                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
+                          <option value="">Search By</option>
+                        </select>
                       </div>
-                      <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
-                        <option value="">Aggregator</option>
-                      </select>
-                      <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
-                        <option value="">Search By</option>
-                      </select>
+                      {/* Col 3 */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSubStatus} onChange={(e) => setFilterSubStatus(e.target.value)}>
+                          <option value="">Dispute Type</option>
+                          <option>Chargeback New</option>
+                          <option>Chargeback in Progress</option>
+                          <option>Chargeback Resubmit</option>
+                          <option>Chargeback Won</option>
+                          <option>Chargeback Lost</option>
+                          <option>Refund Success</option>
+                          <option>Refund On Hold</option>
+                        </select>
+                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
+                          <option value="">Scheme</option>
+                        </select>
+                        <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="Search" value={filterRrn} onChange={(e) => setFilterRrn(e.target.value)} />
+                      </div>
                     </div>
-                    {/* Col 3 */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                      <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSubStatus} onChange={(e) => setFilterSubStatus(e.target.value)}>
-                        <option value="">Dispute Type</option>
-                        <option>Chargeback New</option>
-                        <option>Chargeback in Progress</option>
-                        <option>Chargeback Resubmit</option>
-                        <option>Chargeback Won</option>
-                        <option>Chargeback Lost</option>
-                        <option>Refund Success</option>
-                        <option>Refund On Hold</option>
-                      </select>
-                      <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
-                        <option value="">Scheme</option>
-                      </select>
-                      <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="Search" value={filterRrn} onChange={(e) => setFilterRrn(e.target.value)} />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                      <button style={{ padding: '8px 24px', border: '1px solid #5e35b1', background: 'transparent', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={resetAdminCb}>Reset</button>
+                      <button style={{ padding: '8px 24px', border: 'none', background: '#5e35b1', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={filterAdminCb}>Search</button>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                    <button style={{ padding: '8px 24px', border: '1px solid #5e35b1', background: 'transparent', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={resetAdminCb}>Reset</button>
-                    <button style={{ padding: '8px 24px', border: 'none', background: '#5e35b1', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={filterAdminCb}>Search</button>
-                  </div>
-                </fieldset>
+                  </fieldset>
+                )}
 
                 <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
