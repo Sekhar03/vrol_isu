@@ -2496,11 +2496,6 @@ function AdminPortal({
         <div className="hdr-logo"><div class="hl-text">iServeU<sup>®</sup></div></div>
         <span className="admin-badge">ADMIN</span>
         <div className="hdr-space"></div>
-        <div className="hdr-wallet">
-          <span className="wi">💳</span>
-          <span className="wl">Wallet:</span>
-          <span className="wa" id="aWalletAmt">{formatINR(currentUser.walletBalance)}</span>
-        </div>
         <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Dark/Light Mode">
           {darkMode ? '☀️' : '🌙'}
         </button>
@@ -2526,30 +2521,16 @@ function AdminPortal({
               <span className="si">⊞</span> Dashboard
             </div>
             <div 
-              className={`sb-item ${disputeMenuOpen ? 'open' : ''}`}
-              onClick={() => setDisputeMenuOpen(!disputeMenuOpen)}
+              className={`sb-item ${activePage === 'a-view-cb' ? 'active' : ''}`}
+              onClick={() => { setAVcPage(1); setActivePage('a-view-cb'); }}
             >
-              <span className="si">📋</span> Dispute Management <span className="arr">▾</span>
+              <span className="si">📋</span> Dispute Management
             </div>
-            <div className={`sb-sub ${disputeMenuOpen ? 'open' : ''}`}>
-              <div 
-                className={`sb-sub-item ${activePage === 'a-chargeback' || activePage === 'a-raise-cb' || activePage === 'a-view-cb' ? 'active' : ''}`}
-                onClick={() => setActivePage('a-chargeback')}
-              >
-                <span className="ssi">⚖️</span> Chargeback
-              </div>
-              <div 
-                className={`sb-sub-item ${activePage === 'a-lein' ? 'active' : ''}`}
-                onClick={() => setActivePage('a-lein')}
-              >
-                <span className="ssi">🔒</span> LEIN Amount
-              </div>
-              <div 
-                className={`sb-sub-item ${activePage === 'a-credit' ? 'active' : ''}`}
-                onClick={() => setActivePage('a-credit')}
-              >
-                <span className="ssi">💳</span> Credit Adjustment
-              </div>
+            <div 
+              className={`sb-item ${activePage === 'a-webhook' ? 'active' : ''}`}
+              onClick={() => setActivePage('a-webhook')}
+            >
+              <span className="si">⚙️</span> Visa VROL Webhook Status
             </div>
           </div>
           <div style={{ marginTop: 'auto', padding: '16px' }}>
@@ -2572,37 +2553,57 @@ function AdminPortal({
                   <div className="wb-date">{new Date().toLocaleDateString('en-IN')}</div>
                 </div>
 
-                <div className="stats-grid" id="adminDashStats">
-                  <div className="stat-card received">
-                    <div className="stat-icon">📥</div>
-                    <div>
-                      <div className="stat-val">{formatINR(stats.totalAmt)}</div>
-                      <div className="stat-lbl">Total Disputes</div>
-                      <div className="stat-cnt">Count: {stats.totalCount}</div>
+                <h3 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: '700' }}>Dispute Dashboard</h3>
+                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                  <div className="stat-card" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Dispute Received</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '28px', fontWeight: '800', lineHeight: '1', color: 'var(--text)' }}>{stats.totalCount}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>Claims log</span>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '600' }}>{formatINR(stats.totalAmt)}</div>
+                    <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--brand)' }}>+12.5%</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-light)' }}>vs last month</span>
                     </div>
                   </div>
-                  <div className="stat-card open">
-                    <div className="stat-icon">🔄</div>
-                    <div>
-                      <div className="stat-val">{formatINR(stats.openAmt)}</div>
-                      <div className="stat-lbl">Open / Pending</div>
-                      <div className="stat-cnt">Count: {stats.openCount}</div>
+                  
+                  <div className="stat-card" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Dispute Open</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '28px', fontWeight: '800', lineHeight: '1', color: 'var(--yellow)' }}>{stats.openCount}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>In SLA flight</span>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '600' }}>{formatINR(stats.openAmt)}</div>
+                    <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--yellow)' }}>-4.2%</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-light)' }}>vs last month</span>
                     </div>
                   </div>
-                  <div className="stat-card lost">
-                    <div className="stat-icon">❌</div>
-                    <div>
-                      <div className="stat-val">{formatINR(stats.lostAmt)}</div>
-                      <div className="stat-lbl">Disputes Lost</div>
-                      <div className="stat-cnt">Count: {stats.lostCount}</div>
+                  
+                  <div className="stat-card" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Dispute Lost</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '28px', fontWeight: '800', lineHeight: '1', color: 'var(--red)' }}>{stats.lostCount}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>Auto-TAT/Conceded</span>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '600' }}>{formatINR(stats.lostAmt)}</div>
+                    <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--red)' }}>+2.1%</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-light)' }}>vs last month</span>
                     </div>
                   </div>
-                  <div className="stat-card won">
-                    <div className="stat-icon">✅</div>
-                    <div>
-                      <div className="stat-val">{formatINR(stats.wonAmt)}</div>
-                      <div className="stat-lbl">Disputes Won</div>
-                      <div className="stat-cnt">Count: {stats.wonCount}</div>
+                  
+                  <div className="stat-card" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Dispute Won</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '28px', fontWeight: '800', lineHeight: '1', color: 'var(--green)' }}>{stats.wonCount}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>Re-presentments won</span>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '600' }}>{formatINR(stats.wonAmt)}</div>
+                    <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--green)' }}>+8.4%</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-light)' }}>vs last month</span>
                     </div>
                   </div>
                 </div>
@@ -2623,9 +2624,6 @@ function AdminPortal({
                     </button>
                     <button className="btn btn-secondary qa-btn" style={{ marginTop: '8px' }} onClick={() => { setAVcPage(1); setActivePage('a-view-cb'); }}>
                       📋 View All Chargebacks
-                    </button>
-                    <button className="btn btn-secondary qa-btn" style={{ marginTop: '8px' }} onClick={() => setActivePage('a-lein')}>
-                      🔒 Manage LEIN Amounts
                     </button>
                   </div>
                 </div>
@@ -3055,176 +3053,16 @@ function AdminPortal({
             </div>
           )}
 
-          {/* Admin LEIN Amount holds */}
-          {activePage === 'a-lein' && (
-            <div className="page active" id="a-lein">
+          {/* Admin Webhook Status */}
+          {activePage === 'a-webhook' && (
+            <div className="page active" id="a-webhook">
               <div className="page-inner">
-                <div className="page-hdr"><div><h1>LEIN Amount Holds</h1><p>Audit hold balances placed on merchant wallets</p></div></div>
-                <div className="filter-card">
-                  <div className="filter-row">
-                    <div className="filter-group"><label>From Date</label><input type="date" className="fi-date" /></div>
-                    <div className="filter-group"><label>To Date</label><input type="date" className="fi-date" /></div>
-                    <div className="filter-group"><label>Merchant ID</label><input type="text" className="fi-text" placeholder="Merchant ID" /></div>
-                    <button className="btn btn-primary" onClick={() => showToast('Hold history refreshed', 'warning')}>Search</button>
-                  </div>
-                </div>
+                <div className="page-hdr"><div><h1>Visa VROL Webhook Status</h1><p>Monitor incoming dispute status updates from Visa Network</p></div></div>
                 <div className="tbl-card">
-                  <div className="tbl-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Merchant ID</th>
-                          <th>Merchant Name</th>
-                          <th>LEIN Amount</th>
-                          <th>Hold Since</th>
-                          <th>Chargeback RRN</th>
-                          <th>Status</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="mono">2222257001642755</td>
-                          <td>masteruser</td>
-                          <td><strong>₹100.00</strong></td>
-                          <td>{daysAgoFmt(5)}</td>
-                          <td className="mono">609315655333</td>
-                          <td><span className="badge badge-progress">Hold Active</span></td>
-                          <td><button className="btn btn-sm btn-secondary" onClick={() => showToast('Viewing hold audit logs...', 'warning')}>View</button></td>
-                        </tr>
-                        <tr>
-                          <td className="mono">2222257001642755</td>
-                          <td>masteruser</td>
-                          <td><strong>₹100.00</strong></td>
-                          <td>{daysAgoFmt(2)}</td>
-                          <td className="mono">609315298417</td>
-                          <td><span className="badge badge-progress">Hold Active</span></td>
-                          <td><button className="btn btn-sm btn-secondary" onClick={() => showToast('Viewing hold audit logs...', 'warning')}>View</button></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Admin Credit Adjustment Portal */}
-          {activePage === 'a-credit' && (
-            <div className="page active" id="a-credit">
-              <div className="page-inner">
-                <div className="page-hdr">
-                  <div>
-                    <h1>Credit Adjustment Portal</h1>
-                    <p>Execute financial adjustments on merchant wallets and log entries</p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px', alignItems: 'start' }}>
-                  <div className="filter-card" style={{ marginBottom: 0 }}>
-                    <h3 style={{ marginBottom: '16px', fontSize: '15px', fontWeight: '700', color: 'var(--text)' }}>New Wallet Adjustment</h3>
-                    
-                    <div className="mf">
-                      <label>Target Merchant <span className="req">*</span></label>
-                      <select 
-                        className="mfi" 
-                        style={{ height: '38px' }}
-                        value={adjMerchant}
-                        onChange={(e) => setAdjMerchant(e.target.value)}
-                      >
-                        <option value="">Select Merchant</option>
-                        {users.filter(u => u.role === 'merchant').map(u => (
-                          <option key={u._id} value={u.username}>{u.name} ({u.username})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="mf">
-                      <label>Adjustment Type <span className="req">*</span></label>
-                      <div className="radio-opts" style={{ marginTop: '8px', marginBottom: '8px' }}>
-                        <label className="radio-opt">
-                          <input type="radio" name="adjType" value="Credit" checked={adjType === 'Credit'} onChange={() => setAdjType('Credit')} /> Credit (+)
-                        </label>
-                        <label className="radio-opt">
-                          <input type="radio" name="adjType" value="Debit" checked={adjType === 'Debit'} onChange={() => setAdjType('Debit')} /> Debit (-)
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="mf">
-                      <label>Amount (INR) <span className="req">*</span></label>
-                      <input 
-                        type="number" 
-                        className="mfi" 
-                        placeholder="Enter adjustment amount" 
-                        value={adjAmount}
-                        onChange={(e) => setAdjAmount(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="mf">
-                      <label>Remarks / Purpose <span className="req">*</span></label>
-                      <textarea 
-                        className="mfi mfi-area" 
-                        placeholder="State financial adjustment reason..." 
-                        value={adjRemarks}
-                        onChange={(e) => setAdjRemarks(e.target.value)}
-                      />
-                    </div>
-
-                    <button className="btn btn-primary" style={{ width: '100%', marginTop: '8px', height: '40px' }} onClick={handleAdjustmentSubmit}>
-                      Submit Adjustment
-                    </button>
-                  </div>
-
-                  <div className="tbl-card">
-                    <div className="tbl-toolbar">
-                      <span style={{ fontSize: '14px', fontWeight: '700' }}>Adjustment Ledger History Logs</span>
-                    </div>
-                    <div className="tbl-wrap">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>ID</th>
-                            <th>Merchant</th>
-                            <th>Type</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th>Remarks</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {ledger.length > 0 ? (
-                            ledger.map(item => (
-                              <tr key={item._id}>
-                                <td className="mono">{item.id}</td>
-                                <td><strong>{item.merchant}</strong></td>
-                                <td>
-                                  <span className={`badge ${item.type === 'Credit' ? 'badge-won' : 'badge-lost'}`}>
-                                    {item.type}
-                                  </span>
-                                </td>
-                                <td>
-                                  <strong style={{ color: item.type === 'Credit' ? 'var(--green)' : 'var(--red)' }}>
-                                    {item.type === 'Credit' ? '+' : '-'} {formatINR(item.amount)}
-                                  </strong>
-                                </td>
-                                <td>{formatDateDisp(item.date)}</td>
-                                <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item.remarks}>
-                                  {item.remarks}
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="6" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                No ledger adjustment logs found.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📡</div>
+                    <h3>Webhook Monitoring Active</h3>
+                    <p>Waiting for incoming events from Visa VROL API...</p>
                   </div>
                 </div>
               </div>
