@@ -1676,7 +1676,7 @@ function MerchantPortal({
                         <table>
                           <thead>
                             <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Ticket ID</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
@@ -1729,7 +1729,7 @@ function MerchantPortal({
                         <table>
                           <thead>
                             <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Ticket ID</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
@@ -1785,7 +1785,7 @@ function MerchantPortal({
                         <table>
                           <thead>
                             <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Ticket ID</th>
+                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
                               <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
@@ -1874,7 +1874,7 @@ function MerchantPortal({
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
                     {/* Col 1 */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Ticket ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>AR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>RR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Txn Currency <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
@@ -2189,7 +2189,12 @@ function AdminPortal({
   })();
   const [filterFrom, setFilterFrom] = useState(DEFAULT_FROM);
   const [filterTo, setFilterTo] = useState(TODAY_STR);
+  
+  // Dashboard date filters
+  const [dashFilterFrom, setDashFilterFrom] = useState(DEFAULT_FROM);
+  const [dashFilterTo, setDashFilterTo] = useState(TODAY_STR);
 
+  const [filterSearchBy, setFilterSearchBy] = useState('');
   const [aVcSearchInput, setAVcSearchInput] = useState('');
 
   // Pagination view chargebacks
@@ -2244,6 +2249,7 @@ function AdminPortal({
     setFilterMid('');
     setFilterStatus('');
     setFilterSubStatus('');
+    setFilterSearchBy('');
     setFilterFrom(DEFAULT_FROM);
     setFilterTo(TODAY_STR);
     setAVcSearchInput('');
@@ -2252,16 +2258,24 @@ function AdminPortal({
 
   // Compute stats
   const getAdminDashboardStats = () => {
-    const totalCount = chargebacks.length;
-    const totalAmt = chargebacks.reduce((sum, c) => sum + c.txnAmt, 0);
+    let list = chargebacks;
+    if (dashFilterFrom) {
+      list = list.filter(cb => cb.createdDate >= dashFilterFrom);
+    }
+    if (dashFilterTo) {
+      list = list.filter(cb => cb.createdDate <= dashFilterTo);
+    }
 
-    const openList = chargebacks.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold'));
+    const totalCount = list.length;
+    const totalAmt = list.reduce((sum, c) => sum + c.txnAmt, 0);
+
+    const openList = list.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold'));
     const openAmt = openList.reduce((sum, c) => sum + c.txnAmt, 0);
 
-    const lostList = chargebacks.filter(cb => cb.mSubStatus.includes('Lost'));
+    const lostList = list.filter(cb => cb.mSubStatus.includes('Lost'));
     const lostAmt = lostList.reduce((sum, c) => sum + c.txnAmt, 0);
 
-    const wonList = chargebacks.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success'));
+    const wonList = list.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success'));
     const wonAmt = wonList.reduce((sum, c) => sum + c.txnAmt, 0);
 
     return {
@@ -2280,7 +2294,14 @@ function AdminPortal({
   // Filters admin disputes list
   const getFilteredAdmin = () => {
     let list = chargebacks.filter(cb => {
-      if (filterRrn && !cb.rrn.includes(filterRrn)) return false;
+      if (filterRrn) {
+        if (filterSearchBy === 'Txn ID' && !cb.txnId.includes(filterRrn)) return false;
+        if (filterSearchBy === 'RRN' && !cb.rrn.includes(filterRrn)) return false;
+        if (filterSearchBy === 'TID' && !cb.tid?.includes(filterRrn)) return false;
+        if (filterSearchBy === 'MID' && !cb.userId.includes(filterRrn)) return false;
+        if (filterSearchBy === 'Case ID' && !cb.caseId?.includes(filterRrn) && !cb.id?.includes(filterRrn)) return false;
+        if (!filterSearchBy && !cb.rrn.includes(filterRrn) && !cb.txnId.includes(filterRrn) && !cb.userId.includes(filterRrn) && !cb.id?.includes(filterRrn)) return false;
+      }
       if (filterStatus && cb.mStatus !== filterStatus) return false;
       if (filterSubStatus && cb.mSubStatus !== filterSubStatus) return false;
       if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
@@ -2882,8 +2903,35 @@ function AdminPortal({
                   <div className="wb-date">{new Date().toLocaleDateString('en-IN')}</div>
                 </div>
 
-                <h3 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: '700' }}>Dispute Dashboard</h3>
-                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>Dispute Dashboard</h3>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#5e35b1', fontSize: '14px' }}>📅</span>
+                      <input type="date" style={{ padding: '8px 12px 8px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }} value={dashFilterFrom} onChange={(e) => setDashFilterFrom(e.target.value)} />
+                    </div>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>to</span>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#5e35b1', fontSize: '14px' }}>📅</span>
+                      <input type="date" style={{ padding: '8px 12px 8px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }} value={dashFilterTo} onChange={(e) => setDashFilterTo(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px' }}>
+                  <div className="stat-card" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Total Transactions</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '28px', fontWeight: '800', lineHeight: '1', color: 'var(--text)' }}>{stats.totalCount}</span>
+                      <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>Overall</span>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '600' }}>{formatINR(stats.totalAmt)}</div>
+                    <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--brand)' }}>+5.2%</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-light)' }}>vs last month</span>
+                    </div>
+                  </div>
+
                   <div className="stat-card" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>Dispute Received</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '8px' }}>
@@ -2936,85 +2984,6 @@ function AdminPortal({
                     </div>
                   </div>
                 </div>
-
-                <div className="qa-grid">
-                  <div className="qa-card">
-                    <h4>Chargeback TAT Status</h4>
-                    <div className="tat-row"><span>Chargeback (10 days iSU)</span><span className="tat-ok">6 within TAT</span></div>
-                    <div className="tat-row"><span>Deferred CB (10 days iSU)</span><span className="tat-ok">4 within TAT</span></div>
-                    <div className="tat-row"><span>Fraud CB (25 days iSU)</span><span className="tat-warn">2 near expiry</span></div>
-                    <div className="tat-row"><span>Pre-Arbitration (4 days)</span><span className="tat-over">1 overdue</span></div>
-                    <div className="tat-row"><span>Arbitration (10 days iSU)</span><span className="tat-ok">2 within TAT</span></div>
-                  </div>
-                  <div className="qa-card">
-                    <h4>Quick Actions</h4>
-
-                    <button className="btn btn-secondary qa-btn" style={{ marginTop: '8px' }} onClick={() => { setAVcPage(1); setActivePage('a-view-cb'); }}>
-                      📋 View All Chargebacks
-                    </button>
-                  </div>
-                </div>
-
-                <div className="tbl-card">
-                  <div className="tbl-toolbar">
-                    <span style={{ fontSize: '14px', fontWeight: '700' }}>Pending Merchant Representation Reviews</span>
-                    <div className="tbl-space"></div>
-                    <span style={{ color: 'var(--brand)', fontWeight: '600', fontSize: '13px' }}>
-                      {pendingReviews.length} awaiting review
-                    </span>
-                  </div>
-                  <div className="tbl-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>RRN</th>
-                          <th>Beneficiary</th>
-                          <th>Txn Amount</th>
-                          <th>Adj Type</th>
-                          <th>Status</th>
-                          <th>Sub Status</th>
-                          <th>Raised Date</th>
-                          <th>Aging</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pendingReviews.length > 0 ? (
-                          pendingReviews.map(cb => (
-                            <tr key={cb.id}>
-                              <td className="mono">{cb.rrn}</td>
-                              <td>{cb.beneficiary}</td>
-                              <td><strong>{formatINR(cb.txnAmt)}</strong></td>
-                              <td>{cb.adjType}</td>
-                              <td>{renderStatusBadge(cb.mStatus)}</td>
-                              <td>{renderSubBadge(cb.mSubStatus)}</td>
-                              <td>{formatDateDisp(cb.createdDate)}</td>
-                              <td>
-                                <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
-                                  {cb.aging}d
-                                </span>
-                              </td>
-                              <td>
-                                <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}>
-                                  Review
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan="9">
-                              <div className="no-data" style={{ padding: '24px' }}>
-                                <div style={{ fontSize: '30px', marginBottom: '8px' }}>✅</div>
-                                <p>No pending merchant representations awaiting review.</p>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -3060,21 +3029,19 @@ function AdminPortal({
                           <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#5e35b1' }}>📅</span>
                           <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="From Date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
                         </div>
-                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
-                          <option value="">Bank</option>
-                          <option value="RBL Bank Ltd" selected>RBL Bank Ltd</option>
-                        </select>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '10px', fontSize: '11px', color: '#9e9e9e' }}>Aggregator</span>
+                          <input type="text" readOnly value="ISU" style={{ width: '100%', padding: '10px 10px 10px 70px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: '#f5f5f5', cursor: 'not-allowed' }} />
+                        </div>
                         <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                           <option value="">Dispute Status</option>
-                          <option>Chargeback Raise</option>
-                          <option>Pre-Arbitration Raise</option>
-                          <option>Arbitration Raise</option>
-                          <option>VROL Inquiry</option>
-                          <option>VROL Chargeback</option>
-                          <option>VROL Pre-Arbitration</option>
-                          <option>VROL Arbitration</option>
-                          <option>Fraud Chargeback Raise</option>
-                          <option>Differed Chargeback Raise</option>
+                          <option value="Dispute Won Partially">Dispute Won Partially</option>
+                          <option value="Dispute Won Fully">Dispute Won Fully</option>
+                          <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
+                          <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
+                          <option value="Document Rejected">Document Rejected</option>
+                          <option value="Document Pending Verification">Document Pending Verification</option>
+                          <option value="Document Pending from Merchant">Document Pending from Merchant</option>
                         </select>
                       </div>
                       {/* Col 2 */}
@@ -3083,28 +3050,29 @@ function AdminPortal({
                           <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#5e35b1' }}>📅</span>
                           <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="To Date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
                         </div>
-                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
-                          <option value="">Aggregator</option>
-                        </select>
-                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '10px', fontSize: '11px', color: '#9e9e9e' }}>Scheme</span>
+                          <input type="text" readOnly value="Visa" style={{ width: '100%', padding: '10px 10px 10px 60px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: '#f5f5f5', cursor: 'not-allowed' }} />
+                        </div>
+                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
                           <option value="">Search By</option>
+                          <option value="Txn ID">Transaction ID (Txn ID)</option>
+                          <option value="RRN">RRN</option>
+                          <option value="TID">TID</option>
+                          <option value="MID">MID</option>
+                          <option value="Case ID">Case ID</option>
                         </select>
                       </div>
                       {/* Col 3 */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSubStatus} onChange={(e) => setFilterSubStatus(e.target.value)}>
                           <option value="">Dispute Type</option>
-                          <option>Chargeback New</option>
-                          <option>Chargeback in Progress</option>
-                          <option>Chargeback Resubmit</option>
-                          <option>Chargeback Won</option>
-                          <option>Chargeback Lost</option>
-                          <option>Refund Success</option>
-                          <option>Refund On Hold</option>
+                          <option value="Chargeback">Chargeback</option>
+                          <option value="Pre-Arbitration">Pre-Arbitration</option>
+                          <option value="Retrieval Request">Retrieval Request</option>
+                          <option value="Arbitration">Arbitration</option>
                         </select>
-                        <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
-                          <option value="">Scheme</option>
-                        </select>
+                        <div style={{ height: '38px' }}></div> {/* Empty space to align with the rest */}
                         <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="Search" value={filterRrn} onChange={(e) => setFilterRrn(e.target.value)} />
                       </div>
                     </div>
@@ -3135,7 +3103,7 @@ function AdminPortal({
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                       <thead style={{ borderBottom: '1px solid #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Ticket ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Bank</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Aggregator</th>
@@ -3660,7 +3628,7 @@ function AdminPortal({
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
                     {/* Col 1 */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Ticket ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>AR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>RR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Txn Currency <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
@@ -4178,7 +4146,7 @@ function PartnerPortal({
                     <table>
                       <thead>
                         <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Ticket ID</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
@@ -4350,7 +4318,7 @@ function PartnerPortal({
                       
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Ticket ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>AR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>RR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Txn Currency <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
