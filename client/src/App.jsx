@@ -1008,7 +1008,7 @@ function MerchantPortal({
               <div className="page-inner">
                 <div className="page-hdr">
                   <div>
-                    <h1>Action Required: Upcoming Deadlines</h1>
+                    <h1>Disputes by Respond By Date</h1>
                     <p>Represent your dispute cases before the response deadlines</p>
                   </div>
                 </div>
@@ -1214,7 +1214,7 @@ function MerchantPortal({
               <div className="page-inner">
                 <div className="page-hdr">
                   <div>
-                    <h1>Recent Dispute Activity</h1>
+                    <h1>Disputes by Raised Date</h1>
                     <p>Audit historical disputes sorted by the date they were raised</p>
                   </div>
                 </div>
@@ -1483,7 +1483,7 @@ function MerchantPortal({
               <div className="page-inner">
                 <div className="page-hdr">
                   <div>
-                    <h1>Dispute Resolution Center</h1>
+                    <h1>📋 Dispute Management</h1>
                     <p>Monitor, respond to, and resolve your dispute cases</p>
                   </div>
                 </div>
@@ -1898,7 +1898,7 @@ function MerchantPortal({
       {activeModal === 'action2' && (
         <div className="overlay open">
           <div className="modal">
-            <div className="modal-hdr"><h3>Dispute Representation</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
+            <div className="modal-hdr"><h3>Ticket Representation Action</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
             <div className="modal-body">
               <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '14px' }}>Choose Action</div>
               <div style={{ position: 'relative', marginBottom: '16px' }}>
@@ -1936,7 +1936,7 @@ function MerchantPortal({
       {activeModal === 'contest' && (
         <div className="overlay open">
           <div className="modal modal-lg">
-            <div className="modal-hdr"><h3>Submit Representation &amp; Evidence</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
+            <div className="modal-hdr"><h3>Represent Dispute &amp; Submit Evidence</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
             <div className="modal-body">
               <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Selected Action</div>
               <div className="radio-opts" style={{ marginBottom: '16px' }}>
@@ -2807,7 +2807,7 @@ function AdminPortal({
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>Admin Overview</h3>
+                  <h3 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>Dispute Dashboard</h3>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#50BDC9', fontSize: '14px' }}>📅</span>
@@ -3593,7 +3593,7 @@ function AdminPortal({
             if (!cb) return null;
             return (
               <div className="modal">
-                <div className="modal-hdr"><h3>Evidence &amp; Remarks Review</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
+                <div className="modal-hdr"><h3>Remarks &amp; Evidence Review</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
                 <div className="modal-body">
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                     <div><div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '3px' }}>RRN</div><div style={{ fontWeight: 700, fontFamily: 'monospace' }}>{cb.rrn}</div></div>
@@ -3647,7 +3647,7 @@ function AdminPortal({
             if (!cb) return null;
             return (
               <div className="modal">
-                <div className="modal-hdr"><h3>NPCI Arbitration Ruling</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
+                <div className="modal-hdr"><h3>Arbitration Decision (NPCI)</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
                 <div className="modal-body">
                   <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '14px' }}>Select outcome based on card scheme ruling received via email:</p>
                   <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '12px' }}>
@@ -3673,7 +3673,7 @@ function AdminPortal({
             if (!cb) return null;
             return (
               <div className="modal">
-                <div className="modal-hdr"><h3>Refund Processing</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
+                <div className="modal-hdr"><h3>Acquiring Refund Processing</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
                 <div className="modal-body">
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
                     <div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>RRN</div><div style={{ fontWeight: 700, fontFamily: 'monospace' }}>{cb.rrn}</div></div>
@@ -4010,7 +4010,7 @@ function PartnerPortal({
             <div className="page active">
               <div className="page-inner">
                 <div className="page-hdr">
-                  <div><h1>Visa Escalation Management</h1><p>Disputes forwarded to Visa by acquirer on behalf of partner</p></div>
+                  <div><h1>🌐 Visa Escalations</h1><p>Disputes forwarded to Visa by acquirer on behalf of partner</p></div>
                 </div>
                 <div className="tbl-card">
                   <div className="tbl-toolbar">
