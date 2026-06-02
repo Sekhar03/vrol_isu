@@ -4056,7 +4056,7 @@ function PartnerPortal({
                     <table>
                       <thead>
                         <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
                           <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
@@ -4070,7 +4070,7 @@ function PartnerPortal({
                       <tbody>
                         {filteredDisputes.map(cb => (
                           <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                            <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                             <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                             <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
                             <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
