@@ -869,11 +869,7 @@ function MerchantPortal({
         <button className="hdr-hamburger" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>☰</button>
         <div className="hdr-logo"><div className="hl-text">iServeU<sup>®</sup></div></div>
         <div className="hdr-space"></div>
-        <div className="hdr-wallet">
-          <span className="wi">💳</span>
-          <span className="wl">Wallet:</span>
-          <span className="wa">{formatINR(currentUser.walletBalance)}</span>
-        </div>
+
         <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Dark/Light Mode">
           {darkMode ? '☀️' : '🌙'}
         </button>
