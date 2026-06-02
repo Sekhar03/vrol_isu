@@ -1612,7 +1612,7 @@ function MerchantPortal({
                           <tbody>
                             {reportData.filtered.slice(0, 10).map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                                <td style={{ padding: '12px 16px', color: '#50BDC9', fontWeight: '600' }}>{cb.caseId}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
@@ -1626,7 +1626,7 @@ function MerchantPortal({
                                   </span>
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5e35b1', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
                                     👁
                                   </button>
                                 </td>
@@ -1665,7 +1665,7 @@ function MerchantPortal({
                           <tbody>
                             {merchantDisputes.filter(cb => !cb.merchantAction).map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                                <td style={{ padding: '12px 16px', color: '#50BDC9', fontWeight: '600' }}>{cb.caseId}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
@@ -1679,7 +1679,7 @@ function MerchantPortal({
                                   </span>
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5e35b1', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
                                     👁
                                   </button>
                                 </td>
@@ -1721,7 +1721,7 @@ function MerchantPortal({
                           <tbody>
                             {merchantDisputes.filter(cb => cb.merchantAction === 'evidence').map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                                <td style={{ padding: '12px 16px', color: '#50BDC9', fontWeight: '600' }}>{cb.caseId}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                                 <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
@@ -1735,7 +1735,7 @@ function MerchantPortal({
                                   </span>
                                 </td>
                                 <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5e35b1', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
                                     👁
                                   </button>
                                 </td>
@@ -1855,7 +1855,7 @@ function MerchantPortal({
                     <>
                       <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#000' }}>
                         <span>Previous Documents</span>
-                        <button style={{ background: '#5e35b1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Download All Docs</button>
+                        <button style={{ background: '#50BDC9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Download All Docs</button>
                       </div>
                       
                       <div style={{ padding: '20px', display: 'flex', gap: '16px', overflowX: 'auto', background: '#fff' }}>
@@ -1870,7 +1870,7 @@ function MerchantPortal({
                 
                 <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10 }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #5e35b1', background: '#fff', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                    <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
                     {getActionBtn(cb)}
                   </div>
                 </div>
@@ -2824,12 +2824,12 @@ function AdminPortal({
                   <h3 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>Dispute Dashboard</h3>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#5e35b1', fontSize: '14px' }}>📅</span>
+                      <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#50BDC9', fontSize: '14px' }}>📅</span>
                       <input type="date" style={{ padding: '8px 12px 8px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }} value={dashFilterFrom} onChange={(e) => setDashFilterFrom(e.target.value)} />
                     </div>
                     <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>to</span>
                     <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#5e35b1', fontSize: '14px' }}>📅</span>
+                      <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#50BDC9', fontSize: '14px' }}>📅</span>
                       <input type="date" style={{ padding: '8px 12px 8px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }} value={dashFilterTo} onChange={(e) => setDashFilterTo(e.target.value)} />
                     </div>
                   </div>
@@ -2938,12 +2938,12 @@ function AdminPortal({
               <div className="page-inner">
                 {adminTab === 'management' && (
                   <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
-                    <legend style={{ padding: '0 8px', color: '#5e35b1', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
+                    <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
                       {/* Col 1 */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div style={{ position: 'relative' }}>
-                          <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#5e35b1' }}>📅</span>
+                          <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#50BDC9' }}>📅</span>
                           <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="From Date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
                         </div>
                         <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
@@ -2963,7 +2963,7 @@ function AdminPortal({
                       {/* Col 2 */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div style={{ position: 'relative' }}>
-                          <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#5e35b1' }}>📅</span>
+                          <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#50BDC9' }}>📅</span>
                           <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="To Date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
                         </div>
                         <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
@@ -2992,8 +2992,8 @@ function AdminPortal({
                       </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                      <button style={{ padding: '8px 24px', border: '1px solid #5e35b1', background: 'transparent', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={resetAdminCb}>Reset</button>
-                      <button style={{ padding: '8px 24px', border: 'none', background: '#5e35b1', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={filterAdminCb}>Search</button>
+                      <button style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: 'transparent', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={resetAdminCb}>Reset</button>
+                      <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={filterAdminCb}>Search</button>
                     </div>
                   </fieldset>
                 )}
@@ -3062,7 +3062,7 @@ function AdminPortal({
                                           onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}
                                           title="View Details"
                                         >
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5e35b1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#50BDC9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                             <circle cx="12" cy="12" r="3"></circle>
                                           </svg>
@@ -3507,7 +3507,7 @@ function AdminPortal({
                     <>
                       <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#000' }}>
                         <span>Previous Documents</span>
-                        <button style={{ background: '#5e35b1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Download All Docs</button>
+                        <button style={{ background: '#50BDC9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Download All Docs</button>
                       </div>
                       
                       <div style={{ padding: '20px', display: 'flex', gap: '16px', overflowX: 'auto', background: '#fff' }}>
@@ -3540,8 +3540,8 @@ function AdminPortal({
                         </button>
                       </div>
                       <div style={{ display: 'flex', gap: '12px' }}>
-                        <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #5e35b1', background: '#fff', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Cancel</button>
-                        <button style={{ padding: '6px 16px', border: 'none', background: '#5e35b1', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Submit</button>
+                        <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Cancel</button>
+                        <button style={{ padding: '6px 16px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Submit</button>
                       </div>
                     </>
                   ) : adminTab === 'verification-pending' && isPendingVerification(cb) ? (
@@ -3560,7 +3560,7 @@ function AdminPortal({
                           Escalate to Pre-Arb
                         </button>
                       </div>
-                      <button type="button" onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #5e35b1', background: '#fff', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                      <button type="button" onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
                     </>
                   ) : (
                     <>
@@ -3589,7 +3589,7 @@ function AdminPortal({
                           </button>
                         )}
                       </div>
-                      <button type="button" onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #5e35b1', background: '#fff', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                      <button type="button" onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
                     </>
                   )}
                 </div>
@@ -3992,7 +3992,7 @@ function PartnerPortal({
                       <tbody>
                         {filteredDisputes.map(cb => (
                           <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '12px 16px', color: '#5e35b1', fontWeight: '600' }}>{cb.caseId}</td>
+                            <td style={{ padding: '12px 16px', color: '#50BDC9', fontWeight: '600' }}>{cb.caseId}</td>
                             <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
                             <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
                             <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
@@ -4005,7 +4005,7 @@ function PartnerPortal({
                               </span>
                             </td>
                             <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5e35b1', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
                                 👁
                               </button>
                             </td>
@@ -4194,7 +4194,7 @@ function PartnerPortal({
                       {/* Previous Documents */}
                       <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#000' }}>
                         <span>Previous Documents</span>
-                        <button style={{ background: '#5e35b1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => showToast('Documents downloaded', 'success')}>Download All Docs</button>
+                        <button style={{ background: '#50BDC9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => showToast('Documents downloaded', 'success')}>Download All Docs</button>
                       </div>
                       
                       <div style={{ padding: '20px', display: 'flex', gap: '16px', overflowX: 'auto', background: '#fff' }}>
@@ -4206,7 +4206,7 @@ function PartnerPortal({
                     </div>
                     
                     <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0 }}>
-                      <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #5e35b1', background: '#fff', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
+                      <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
                     </div>
                   </div>
                 );
@@ -4261,7 +4261,7 @@ function PartnerPortal({
                     </div>
                     
                     <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0 }}>
-                      <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #5e35b1', background: '#fff', color: '#5e35b1', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
+                      <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
                     </div>
                   </div>
                 );
