@@ -1751,21 +1751,7 @@ function MerchantPortal({
                   )}
                 </div>
 
-                {/* Charts row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' }}>
-                  <div className="tbl-card" style={{ padding: '20px' }}>
-                    <h4 style={{ marginBottom: '16px', fontSize: '15px', fontWeight: '700' }}>Disputes by Scheme</h4>
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-                      <BarChart providerData={reportData.providers} />
-                    </div>
-                  </div>
-                  <div className="tbl-card" style={{ padding: '20px' }}>
-                    <h4 style={{ marginBottom: '16px', fontSize: '15px', fontWeight: '700' }}>Resolution Outcome (Won vs Lost)</h4>
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-                      <DonutChart dataSegments={reportData.outcomes} darkMode={darkMode} />
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </div>
           )}
