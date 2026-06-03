@@ -104,6 +104,9 @@ const buildSeedData = (TODAY) => {
       currency: 'Rupees', reasonCode: '1', pan: '832927*****',
       product: 'VISA', aging: 5,
       merchantAction: 'evidence', adminAction: null, visaPending: true,
+      documents: [
+        { id: 'doc_cb005_1', filename: 'EvidenceSubmitted.pdf', uploadedAt: dA(3) + 'T11:45:00Z', status: 'Pending Review' }
+      ],
       timeline: [
         { by: 'iServeU', time: dA(5) + ' 09:00 AM', title: 'Dispute Raised', remarks: 'Customer dispute: service not received', file: null },
         { by: 'masteruser', time: dA(3) + ' 11:45 AM', title: 'Evidence Submitted by masteruser (Partner Representation)', remarks: 'Delivery proof submitted — Evidence forwarded to Acquirer on behalf of Partner for Visa consideration.', file: 'EvidenceSubmitted.pdf' }
@@ -349,6 +352,10 @@ const buildSeedData = (TODAY) => {
       currency: 'Rupees', reasonCode: '4853', pan: '512345*****',
       product: 'Mastercard', aging: 4,
       merchantAction: 'rejected', adminAction: null, visaPending: false,
+      documents: [
+        { id: 'doc_cb019_1', filename: 'CourierReceipt.pdf', uploadedAt: dA(3) + 'T15:00:00Z', status: 'Pending Review' },
+        { id: 'doc_cb019_2', filename: 'Merchant_Evidence.pdf', uploadedAt: dA(3) + 'T15:02:00Z', status: 'Pending Review' }
+      ],
       rejectReason: 'Service was fully rendered. Customer received goods at doorstep on 15/05/2026. Attached courier tracking reference.',
       timeline: [
         { by: 'iServeU', time: dA(4) + ' 08:00 AM', title: 'Mastercard Chargeback Raised', remarks: 'Customer claims goods not received', file: null },
