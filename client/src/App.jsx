@@ -2317,7 +2317,7 @@ function AdminPortal({
     setExpandedRowIds(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Review consider representment (Admin says to win and sends to Visa)
+  // Review consider representment
   const handleConsider = async (disputeId) => {
     const id = disputeId || targetDisputeId;
     if (!id) return;
@@ -2325,8 +2325,8 @@ function AdminPortal({
       const entry = {
         by: 'nsdladmin',
         time: new Date().toLocaleString(),
-        title: 'Admin Claims Win - Evidence Sent to Visa',
-        remarks: 'Admin decided to fight for a win. Merchant evidence verified and routed to Visa for final decision.',
+        title: 'Internal Team Considered – Represented NPCI UDIR',
+        remarks: 'Merchant representations verified. Routing represented claim to Visa VROL.',
         file: evidenceFiles?.adminUpload?.name || null
       };
 
@@ -3538,7 +3538,7 @@ function AdminPortal({
                           Review Evidence
                         </button>
                         <button type="button" className="btn btn-sm btn-success" onClick={() => handleConsider(cb.id)}>
-                          ✓ Submit Evidence to Visa (Fight to Win)
+                          ✓ Consider (Represent to Visa)
                         </button>
                         <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDecline(cb.id)}>
                           ✕ Decline &amp; Re-route Merchant
@@ -3558,7 +3558,7 @@ function AdminPortal({
                               Review Evidence
                             </button>
                             <button type="button" className="btn btn-sm btn-success" onClick={() => handleConsider(cb.id)}>
-                              Submit Evidence to Visa (Fight to Win)
+                              Consider
                             </button>
                             <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDecline(cb.id)}>
                               Decline
@@ -3627,7 +3627,7 @@ function AdminPortal({
                 <div className="modal-footer" style={{ justifyContent: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
                   {isPendingVerification(cb) ? (
                     <>
-                      <button type="button" className="btn btn-success" style={{ flex: 1, minWidth: '140px' }} onClick={() => handleConsider(cb.id)}>Submit Evidence to Visa (Fight to Win)</button>
+                      <button type="button" className="btn btn-success" style={{ flex: 1, minWidth: '140px' }} onClick={() => handleConsider(cb.id)}>Consider (Represent Case)</button>
                       <button type="button" className="btn btn-danger" style={{ flex: 1, minWidth: '140px' }} onClick={() => handleDecline(cb.id)}>Decline (Re-Route Merchant)</button>
                       <button type="button" className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
                     </>
