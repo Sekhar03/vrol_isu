@@ -3510,34 +3510,9 @@ function AdminPortal({
                 
                 <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10, flexWrap: 'wrap', gap: '12px' }}>
                   {adminTab === 'merchant-pending' ? (
-                    <>
-                      <div style={{ flex: 1 }}>
-                        <select 
-                          style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', width: '250px', outline: 'none' }}
-                          value={adminDisputeAction}
-                          onChange={(e) => setAdminDisputeAction(e.target.value)}
-                        >
-                          <option value="full">Dispute Accepted - Full</option>
-                          <option value="partial">Dispute Accepted - Partial</option>
-                          <option value="declined">Dispute Declined</option>
-                        </select>
-                        <button className="btn btn-sm" style={{ background: 'var(--purple)', color: '#fff', marginLeft: '12px' }} onClick={() => { setActiveModal('arbitration'); }}>
-                          Enter Visa Ruling
-                        </button>
-                      </div>
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Cancel</button>
-                        <button onClick={() => {
-                          if (adminDisputeAction === 'full') {
-                            handleVisaAccept(cb.id);
-                          } else if (adminDisputeAction === 'partial') {
-                            setActiveModal('acceptPartially');
-                          } else if (adminDisputeAction === 'declined') {
-                            handleDecline(cb.id);
-                          }
-                        }} style={{ padding: '6px 16px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Submit</button>
-                      </div>
-                    </>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                      <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                    </div>
                   ) : adminTab === 'verification-pending' && isPendingVerification(cb) ? (
                     <>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', flex: 1 }}>
