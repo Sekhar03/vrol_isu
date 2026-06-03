@@ -2448,8 +2448,8 @@ function AdminPortal({
       const entry = {
         by: 'nsdladmin',
         time: new Date().toLocaleString(),
-        title: 'Arbitration Lost (NPCI Decision)',
-        remarks: 'Ruling in favor of cardholder. Dispute lost. Held ledger debited permanently.',
+        title: 'Loss Accepted & Sent to Visa',
+        remarks: 'Admin accepted the loss. Status sent to Visa for processing. Through Visa, the merchant refund will be processed.',
         file: null
       };
 
@@ -2459,6 +2459,7 @@ function AdminPortal({
         body: JSON.stringify({
           adminAction: 'lost',
           mSubStatus: 'Chargeback Lost',
+          visaPending: true,
           timelineEntry: entry
         })
       });
@@ -3656,9 +3657,11 @@ function AdminPortal({
                     <div style={{ fontWeight: 700, marginTop: '2px' }}>Amount: {formatINR(cb.adjAmt)}</div>
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button className="btn btn-success" style={{ flex: 1 }} onClick={handleArbitrationWon}>Arbitration WON (Credit Merchant)</button>
-                  <button className="btn btn-danger" style={{ flex: 1 }} onClick={handleArbitrationLost}>Arbitration LOST (Confirm Debit)</button>
+                <div className="modal-footer" style={{ flexWrap: 'wrap' }}>
+                  <button className="btn btn-danger" style={{ flex: 1, minWidth: '100%' }} onClick={handleArbitrationLost}>Accept Loss & Send to Visa</button>
+                  <div style={{ width: '100%', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px', marginTop: '8px' }}>
+                    Note: Admin cannot decide "Won" status. Final "Won" resolution will be provided by Visa.
+                  </div>
                 </div>
               </div>
             );
