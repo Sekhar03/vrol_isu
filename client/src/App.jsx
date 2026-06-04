@@ -3020,20 +3020,29 @@ function AdminPortal({
     setUploadResult(null);
   };
 
-  const downloadSampleTemplate = () => {
-    const headers = ['RRN', 'Txn ID', 'Txn Amount', 'TXN Date', 'Bene Mobile', 'GL No', 'Product'];
+  const downloadVrolSampleTemplate = () => {
+    const headers = [
+      'Visa Case Number', 'Dispute ID', 'Chargeback Number', 'ARN', 'RRN', 'STAN', 
+      'MID', 'Merchant Name', 'Transaction Date', 'Settlement Date', 
+      'Transaction Amount', 'Dispute Amount', 'Currency', 'Reason Code', 
+      'Reason Description', 'Dispute Category', 'Card BIN', 'Last 4 Digits'
+    ];
     const rows = [
-      ['609315655333', '8768994', '500', new Date(new Date().getTime() - 5*86400000).toISOString().split('T')[0], '9348909106', '354422', 'VISA'],
-      ['609315298417', '8768995', '1200', new Date(new Date().getTime() - 3*86400000).toISOString().split('T')[0], '9348909107', '354422', 'VISA']
+      [
+        'CASE000001', 'DSP1001', 'CB-5541', '12345678901234567890123', '6093156553', '001234',
+        'ISU', 'Acme Corp', '2023-10-01', '2023-10-02', 
+        '1000.00', '1000.00', 'INR', '10.4', 
+        'Other Fraud - Card Absent Environment', 'Fraud', '411111', '1111'
+      ]
     ];
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", "iserveu_chargeback_sample.csv");
+    link.setAttribute("download", "VROL_Dispute_Sample.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast('Sample template downloaded');
+    showToast('VROL Sample template downloaded');
   };
 
   // Submit Credit adjustment
@@ -3275,6 +3284,12 @@ function AdminPortal({
                       style={{ padding: '10px 24px', background: '#4a148c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
                     >
                       Upload File
+                    </button>
+                    <button 
+                      onClick={downloadVrolSampleTemplate}
+                      style={{ padding: '10px 24px', background: 'transparent', color: '#4a148c', border: '1px solid #4a148c', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                      Download Sample
                     </button>
                   </div>
                 </div>
