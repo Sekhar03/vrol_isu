@@ -719,20 +719,26 @@ const buildSeedData = (TODAY) => {
         { by: 'iServeU', time: dA(8) + ' 03:00 PM', title: 'Refund Processed', remarks: 'Rs.1,600 refunded to cardholder. Merchant wallet debited.', file: 'RefundReceipt.pdf' }
       ]
     },
-    // CB040 — VISA · New · Fresh (today)
+    // CB040 — VISA · Document Rejected
     {
       id: 'CB040', caseId: 'CASE000040', userName: 'masteruser', userId: '2575789089',
       rrn: '6677889900', txnId: '400003', terminalId: '5692003',
       beneMobile: '9100003003', remMobile: '9200003003',
       createdDate: dA(0), txnDate: dA(0), adjDate: dA(0), respondByDate: dL(10),
-      mStatus: 'Dispute_Received', mSubStatus: 'Pending_Merchant_Response',
+      mStatus: 'Document Pending from Merchant', mSubStatus: 'Action Required',
       adjType: 'Chargeback Raise', remitter: 'FEDERAL', beneficiary: 'FIP',
       txnAmt: 9200, adjAmt: 9200, glNo: '354456',
       currency: 'Rupees', reasonCode: '10.4', pan: '416400*****',
       product: 'VISA', aging: 0,
-      merchantAction: null, acquirerAction: null, visaPending: false,
+      merchantAction: 'rejected', acquirerAction: 'request_info', visaPending: false,
+      rejectReason: 'The provided document is blurry. Please upload a clear copy of the invoice.',
+      documents: [
+        { id: 'doc_cb040_1', filename: 'Blurry_Invoice.pdf', uploadedAt: dA(0) + 'T11:00:00Z', status: 'Rejected', rejectionRemarks: 'The provided document is blurry. Please upload a clear copy of the invoice.', uploadedBy: 'Merchant', rejectedAt: dA(0) + 'T12:00:00Z' }
+      ],
       timeline: [
-        { by: 'iServeU', time: dA(0) + ' 10:45 AM', title: 'Fresh VISA Chargeback Received', remarks: 'New dispute received from VISA acquirer. Immediate action required within 10 days.', file: null }
+        { by: 'iServeU', time: dA(0) + ' 10:45 AM', title: 'Fresh VISA Chargeback Received', remarks: 'New dispute received from VISA acquirer.', file: null },
+        { by: 'masteruser', time: dA(0) + ' 11:00 AM', title: 'Evidence Submitted', remarks: 'Merchant uploaded evidence.', file: 'Blurry_Invoice.pdf' },
+        { by: 'Admin', time: dA(0) + ' 12:00 PM', title: 'Documents Rejected', remarks: 'Admin requested clear invoice.', file: null }
       ]
     }
   ];

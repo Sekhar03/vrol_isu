@@ -1904,7 +1904,7 @@ function MerchantPortal({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Current Status <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.mStatus}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '40px' }}><span style={{ color: '#9e9e9e' }}>Destination Currency Code (Alpha) <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Last Remarks <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rejectReason || '-'}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Admin Remarks <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rejectReason || '-'}</strong></div>
                     </div>
                   </div>
 
