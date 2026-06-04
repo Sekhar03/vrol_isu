@@ -3126,6 +3126,12 @@ function AdminPortal({
             >
               <span className="si">📋</span> Dispute Management
             </div>
+            <div 
+              className={`sb-item ${activePage === 'a-vrol-import' ? 'active' : ''}`}
+              onClick={() => setActivePage('a-vrol-import')}
+            >
+              <span className="si">📤</span> VROL Import Center
+            </div>
           </div>
         </nav>
 
@@ -3242,7 +3248,19 @@ function AdminPortal({
                   </div>
                 </div>
 
-                {/* VROL Import Center */}
+
+
+              </div>
+            </div>
+          )}
+
+          {/* Admin VROL Import Center */}
+          {activePage === 'a-vrol-import' && (
+            <div className="page active" id="a-vrol-import">
+              <div className="view-chargeback-header">
+                <span className="vc-breadcrumb">Dispute Management / <span>VROL Import Center</span></span>
+              </div>
+              <div className="page-inner">
                 <div style={{ marginTop: '32px', background: 'var(--card)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-md)' }}>
                   <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>VROL Import Center</h3>
                   <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>Upload VROL Dispute, Pre-Arbitration, Arbitration, or Settlement files (CSV/XLSX).</p>
@@ -3293,7 +3311,6 @@ function AdminPortal({
                     </button>
                   </div>
                 </div>
-
               </div>
             </div>
           )}
