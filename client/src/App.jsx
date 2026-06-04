@@ -3348,6 +3348,12 @@ function AdminPortal({
                           </select>
                         </div>
                         <div style={{ height: '0px' }}></div>
+                        {filterSearchBy && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search {filterSearchBy}</label>
+                            <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder={`Enter ${filterSearchBy}`} value={filterRrn} onChange={(e) => setFilterRrn(e.target.value)} />
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
@@ -4431,6 +4437,12 @@ function PartnerPortal({
                         <option value="Case ID">Case ID</option>
                       </select>
                     </div>
+                    {filterSearchBy && (
+                      <div className="sp-field">
+                        <label>Search {filterSearchBy}</label>
+                        <input type="text" className="sp-input" placeholder={`Enter ${filterSearchBy}`} value={filterSearchText} onChange={(e) => setFilterSearchText(e.target.value)} />
+                      </div>
+                    )}
                     <div className="sp-field" style={{ visibility: 'hidden' }}></div>
                   </div>
                   <div className="search-panel-actions">
