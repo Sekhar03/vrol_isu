@@ -3117,15 +3117,6 @@ function AdminPortal({
             >
               <span className="si">📋</span> Dispute Management
             </div>
-            <div 
-              className={`sb-item ${activePage === 'a-webhook' ? 'active' : ''}`}
-              onClick={() => setActivePage('a-webhook')}
-            >
-              <span className="si">⚙️</span> Visa VROL Webhook Status
-            </div>
-
-
-
           </div>
         </nav>
 
@@ -3241,6 +3232,53 @@ function AdminPortal({
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--green)' }}>{formatINR(stats.wonAmt)}</div>
                   </div>
                 </div>
+
+                {/* VROL Import Center */}
+                <div style={{ marginTop: '32px', background: 'var(--card)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-md)' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>VROL Import Center</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>Upload VROL Dispute, Pre-Arbitration, Arbitration, or Settlement files (CSV/XLSX).</p>
+                  
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <input 
+                      type="file" 
+                      id="vrolUploadInput" 
+                      accept=".csv, .xlsx" 
+                      style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: '4px' }}
+                    />
+                    <button 
+                      onClick={async () => {
+                        const fileInput = document.getElementById('vrolUploadInput');
+                        if (!fileInput.files || fileInput.files.length === 0) {
+                          showToast('Please select a file to upload', 'error');
+                          return;
+                        }
+                        const file = fileInput.files[0];
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('uploadedBy', currentUser?.name || 'Admin');
+
+                        showToast('Uploading VROL file...', 'warning');
+                        try {
+                          const res = await fetch(`${API_URL}/vrol/upload`, {
+                            method: 'POST',
+                            body: formData
+                          });
+                          if (!res.ok) throw new Error('Upload failed');
+                          const data = await res.json();
+                          showToast(`Successfully processed ${data.recordsProcessed || 0} records! Notifications sent to merchants.`);
+                          fileInput.value = '';
+                        } catch (err) {
+                          console.error('VROL Upload error:', err);
+                          showToast('Failed to upload VROL file. Ensure backend is running.', 'error');
+                        }
+                      }}
+                      style={{ padding: '10px 24px', background: '#4a148c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                    >
+                      Upload File
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
@@ -3503,113 +3541,6 @@ function AdminPortal({
               </div>
             </div>
           )}
-
-          {/* Admin Webhook Status */}
-          {activePage === 'a-webhook' && (
-            <div className="page active" id="a-webhook">
-              <div style={{ padding: '32px 40px', background: '#f8f9fd', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-                <div style={{ marginBottom: '32px' }}>
-                  <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#1a237e', marginBottom: '8px' }}>VISA VROL Webhook Status</h1>
-                  <p style={{ color: '#78909c', fontSize: '14px', margin: 0 }}>Real-time incoming webhook gateway for integration with the Principal Acquirer from Visa Resolve on Liability (VROL) system.</p>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
-                  <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#e1f5fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#03a9f4' }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#b0bec5', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>TOTAL RECEIVED FEED</div>
-                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#263238' }}>12 <span style={{fontSize: '16px', fontWeight: '600'}}>Events</span></div>
-                    </div>
-                  </div>
-
-                  <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#e8f5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4caf50' }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#b0bec5', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>SUCCESS DELIVERIES</div>
-                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#4caf50' }}>4</div>
-                    </div>
-                  </div>
-
-                  <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#fff3e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff9800' }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#b0bec5', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>WARNING ALERTS</div>
-                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#ff9800' }}>1</div>
-                    </div>
-                  </div>
-
-                  <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: '#ffebee', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f44336' }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '12px', fontWeight: '700', color: '#b0bec5', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>FAILED DISPATCHES</div>
-                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#f44336' }}>1</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #eef2f6', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                  <div style={{ padding: '20px 24px', borderBottom: '1px solid #eef2f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#455a64', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>VROL WEBHOOK DELIVERY LOGS</h3>
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <select style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #e0e0e0', color: '#78909c', outline: 'none', fontSize: '13px' }}>
-                        <option>All Types</option>
-                      </select>
-                      <select style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #e0e0e0', color: '#78909c', outline: 'none', fontSize: '13px' }}>
-                        <option>All Statuses</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr>
-                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>WEBHOOK ID</th>
-                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>VROL EVENT / TIME</th>
-                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>DISPUTE TYPE</th>
-                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>MERCHANT / AMOUNT</th>
-                        <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>RESPONSE CODE</th>
-                        <th style={{ textAlign: 'right', padding: '16px 24px', fontSize: '11px', color: '#b0bec5', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>PAYLOAD</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {webhookData.map((wh, idx) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                          <td style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '600', color: '#263238' }}>{wh.id}</td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>{wh.event}</div>
-                            <div style={{ fontSize: '11px', color: '#b0bec5' }}>{wh.time}</div>
-                          </td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <span style={{ padding: '6px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: '700', background: wh.typeBg, color: wh.typeColor }}>{wh.typeLabel}</span>
-                          </td>
-                          <td style={{ padding: '16px 24px' }}>
-                            <div style={{ fontSize: '13px', fontWeight: '600', color: '#546e7a', marginBottom: '4px' }}>{wh.merchant}</div>
-                            <div style={{ fontSize: '12px', color: '#78909c' }}>{wh.amount}</div>
-                          </td>
-                          <td style={{ padding: '16px 24px', fontSize: '12px', fontWeight: '700', color: wh.statusColor }}>{wh.status}</td>
-                          <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                            <button onClick={() => { setTargetWebhook(wh); setActiveModal('webhookInspect'); }} style={{ padding: '6px 16px', background: '#1a237e', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                              <span>&gt;_</span> INSPECT
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-
 
 
 
