@@ -668,7 +668,7 @@ function MerchantPortal({
   const renderSubBadge = (s) => {
     const m = {
       'Chargeback New': 'badge-new',
-      'Chargeback Lost': 'badge-lost',
+      'CASE_CLOSED': 'badge-lost',
       'Chargeback in Progress': 'badge-progress',
       'Chargeback Resubmit': 'badge-resubmit',
       'Chargeback Won': 'badge-won',
@@ -679,10 +679,10 @@ function MerchantPortal({
   };
 
   const getActionBtn = (cb) => {
-    if (cb.visaPending || cb.mSubStatus === 'Submitted to Visa') return <span className="badge badge-won" style={{background: '#e3f2fd', color: '#1976d2'}}>Submitted to Visa</span>;
-    if (cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost') return <span className="badge badge-resubmit">Accepted (Lost)</span>;
-    if (cb.mSubStatus === 'Document Pending Verification') return <span className="badge badge-progress">Pending Admin Verification</span>;
-    if (cb.mSubStatus === 'Document Pending from Merchant' || cb.mSubStatus === 'Pending') {
+    if (cb.visaPending) return <span className="badge badge-won" style={{background: '#e3f2fd', color: '#1976d2'}}>Submitted to Visa</span>;
+    if (cb.resolution === 'Lost' || cb.mSubStatus === 'CASE_CLOSED') return <span className="badge badge-resubmit">Accepted (Lost)</span>;
+    if (cb.mSubStatus === 'UNDER_REVIEW') return <span className="badge badge-progress">Pending Admin Verification</span>;
+    if (cb.mSubStatus === 'ACTION_REQUIRED' || cb.mSubStatus === 'Pending') {
       return (
         <button className="ta-btn" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('action1'); }}>
           Take Action
@@ -1611,8 +1611,8 @@ function MerchantPortal({
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                         <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                         <option value="Document Rejected">Document Rejected</option>
-                        <option value="Document Pending Verification">Document Pending Verification</option>
-                        <option value="Document Pending from Merchant">Document Pending from Merchant</option>
+                        <option value="UNDER_REVIEW">Document Pending Verification</option>
+                        <option value="ACTION_REQUIRED">Document Pending from Merchant</option>
                       </select>
                     </div>
                     <div className="sp-field">
@@ -2432,7 +2432,7 @@ function AdminPortal({
   const renderSubBadge = (s) => {
     const m = {
       'Chargeback New': 'badge-new',
-      'Chargeback Lost': 'badge-lost',
+      'CASE_CLOSED': 'badge-lost',
       'Chargeback in Progress': 'badge-progress',
       'Chargeback Resubmit': 'badge-resubmit',
       'Chargeback Won': 'badge-won',
@@ -2793,7 +2793,7 @@ function AdminPortal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           acquirerAction: 'lost',
-          mSubStatus: 'Chargeback Lost',
+          mSubStatus: 'CASE_CLOSED',
           visaPending: true,
           timelineEntry: entry
         })
@@ -3305,8 +3305,8 @@ function AdminPortal({
                             <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                             <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                             <option value="Document Rejected">Document Rejected</option>
-                            <option value="Document Pending Verification">Document Pending Verification</option>
-                            <option value="Document Pending from Merchant">Document Pending from Merchant</option>
+                            <option value="UNDER_REVIEW">Document Pending Verification</option>
+                            <option value="ACTION_REQUIRED">Document Pending from Merchant</option>
                           </select>
                         </div>
                       </div>
@@ -3750,7 +3750,7 @@ function AdminPortal({
                                 setActiveModal(null); refreshAllData();
                               }}>Chargeback Won</button>
                               <button className="btn btn-sm btn-danger" onClick={async () => {
-                                await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'Chargeback Lost', resolution: 'Lost', visaPending: false }) });
+                                await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'CASE_CLOSED', resolution: 'Lost', visaPending: false }) });
                                 setActiveModal(null); refreshAllData();
                               }}>Chargeback Lost</button>
                             </div>
@@ -4079,7 +4079,7 @@ function AdminPortal({
                             setActiveModal(null); refreshAllData();
                           }}>Chargeback Won</button>
                           <button className="btn btn-sm btn-danger" style={{ flex: 1 }} onClick={async () => {
-                            await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'Chargeback Lost', resolution: 'Lost', visaPending: false }) });
+                            await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'CASE_CLOSED', resolution: 'Lost', visaPending: false }) });
                             setActiveModal(null); refreshAllData();
                           }}>Chargeback Lost</button>
                         </div>
@@ -4242,7 +4242,7 @@ function PartnerPortal({
     return <span className={`badge ${m[s] || 'badge-new'}`}>{s}</span>;
   };
   const renderSubBadge = (s) => {
-    const m = { 'Chargeback New': 'badge-new', 'Chargeback Lost': 'badge-lost', 'Chargeback in Progress': 'badge-progress', 'Chargeback Resubmit': 'badge-resubmit', 'Chargeback Won': 'badge-won', 'Refund Success': 'badge-won', 'Refund On Hold': 'badge-progress' };
+    const m = { 'Chargeback New': 'badge-new', 'CASE_CLOSED': 'badge-lost', 'Chargeback in Progress': 'badge-progress', 'Chargeback Resubmit': 'badge-resubmit', 'Chargeback Won': 'badge-won', 'Refund Success': 'badge-won', 'Refund On Hold': 'badge-progress' };
     return <span className={`badge ${m[s] || 'badge-pending'}`}>{s}</span>;
   };
 
@@ -4426,8 +4426,8 @@ function PartnerPortal({
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                         <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                         <option value="Document Rejected">Document Rejected</option>
-                        <option value="Document Pending Verification">Document Pending Verification</option>
-                        <option value="Document Pending from Merchant">Document Pending from Merchant</option>
+                        <option value="UNDER_REVIEW">Document Pending Verification</option>
+                        <option value="ACTION_REQUIRED">Document Pending from Merchant</option>
                       </select>
                     </div>
                     <div className="sp-field">
