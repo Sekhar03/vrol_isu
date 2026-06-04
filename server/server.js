@@ -54,6 +54,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/users', require('./routes/auth'));
 app.use('/api/disputes', require('./routes/disputes'));
 app.use('/api/ledger', require('./routes/ledger'));
+app.use('/api/vrol', require('./routes/vrol'));
 const PORT = process.env.PORT || 5000;
 
 if (require.main === module) {

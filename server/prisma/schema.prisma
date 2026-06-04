@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(MERCHANT)
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  merchantId String?
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MERCHANT
+}
+
+model Merchant {
+  id        String   @id @default(uuid())
+  name      String
+  mid       String   @unique
+  tid       String?
+  users     User[]
+  disputes  Dispute[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Dispute {
+  id                 String   @id @default(uuid())
+  visaCaseNumber     String?  @unique
+  disputeId          String   @unique
+  chargebackNumber   String?
+  arn                String?
+  rrn                String?
+  stan               String?
+  
+  merchantId         String
+  merchant           Merchant @relation(fields: [merchantId], references: [id])
+  
+  transactionDate    DateTime?
+  settlementDate     DateTime?
+  transactionAmount  Float?
+  disputeAmount      Float?
+  currency           String?
+  
+  reasonCode         String?
+  reasonDescription  String?
+  disputeCategory    String?
+  
+  status             DisputeStatus @default(DISPUTE_RECEIVED)
+  
+  cardBin            String?
+  last4Digits        String?
+  country            String?
+  channel            String?
+  
+  disputeDueDate     DateTime?
+  representmentDueDate DateTime?
+  preArbitrationDueDate DateTime?
+  arbitrationDueDate DateTime?
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  evidences          Evidence[]
+  auditLogs          AuditLog[]
+}
+
+enum DisputeStatus {
+  DISPUTE_RECEIVED
+  MERCHANT_ACTION_REQUIRED
+  EVIDENCE_SUBMITTED
+  UNDER_ADMIN_REVIEW
+  DOCUMENT_REQUESTED
+  READY_FOR_VROL_SUBMISSION
+  REPRESENTMENT_SUBMITTED
+  MERCHANT_WON
+  PRE_ARBITRATION_RECEIVED
+  PRE_ARBITRATION_RESPONSE_SUBMITTED
+  ARBITRATION
+  VISA_FINAL_DECISION
+  SETTLEMENT_PENDING
+  SETTLEMENT_COMPLETED
+  CASE_CLOSED
+  CASE_CLOSED_LOST
+}
+
+model Evidence {
+  id         String   @id @default(uuid())
+  disputeId  String
+  dispute    Dispute  @relation(fields: [disputeId], references: [id])
+  fileName   String
+  fileUrl    String
+  fileType   String
+  uploadedBy String
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  disputeId  String
+  dispute    Dispute  @relation(fields: [disputeId], references: [id])
+  userId     String
+  role       String
+  action     String
+  remarks    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+model FileImport {
+  id         String   @id @default(uuid())
+  fileName   String
+  fileType   String
+  uploadedBy String
+  status     String
+  logs       String?
+  createdAt  DateTime @default(now())
+}
