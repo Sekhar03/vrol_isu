@@ -148,6 +148,8 @@ router.post('/:id/action', async (req, res) => {
       const { rejectedDocs } = req.body;
       dispute.mSubStatus = 'Document Pending from Merchant';
       dispute.acquirerAction = 'request_info';
+      dispute.merchantAction = 'rejected';
+      dispute.rejectReason = comments;
       
       if (Array.isArray(rejectedDocs)) {
         rejectedDocs.forEach(rdoc => {
