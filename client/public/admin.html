@@ -388,7 +388,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:1000, adjAmt:1000, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'832927*****',
     product:'VISA', aging:1,
-    merchantAction:null, adminAction:null,
+    merchantAction:null, acquirerAction:null,
     timeline:[
       {by:'iServeU', time: daysAgo(1)+' 10:30 AM', title:'Dispute Raised', remarks:'', file:null},
       {by:'iServeU', time: daysAgo(1)+' 5:30 PM', title:'Remarks Updated by iServeU', remarks:'Done', file:'disputesamplefile.pdf'},
@@ -405,7 +405,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:3000, adjAmt:3000, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'832927*****',
     product:'VISA', aging:2,
-    merchantAction:null, adminAction:null,
+    merchantAction:null, acquirerAction:null,
     timeline:[{by:'iServeU', time: daysAgo(2)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null}]
   },
   {
@@ -419,8 +419,8 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:1500, adjAmt:1500, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'397927*****',
     product:'VISA', aging:3,
-    merchantAction:'rejected', adminAction:'declined',
-    chargbackId:'CommonVISA17268', adminName:'nsdladmin',
+    merchantAction:'rejected', acquirerAction:'declined',
+    chargbackId:'CommonVISA17268', issuerName:'nsdladmin',
     rejectReason:'Based on internal investigation and transaction monitoring, this case exhibits patterns consistent with suspicious or unauthorized activity.',
     timeline:[
       {by:'iServeU', time: daysAgo(3)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null},
@@ -439,7 +439,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:2500, adjAmt:2500, glNo:'354422',
     currency:'USD', reasonCode:'4808', pan:'832927*****',
     product:'VISA', aging:4,
-    merchantAction:null, adminAction:null,
+    merchantAction:null, acquirerAction:null,
     timeline:[{by:'iServeU', time: daysAgo(4)+' 08:30 AM', title:'Dispute Raised', remarks:'', file:null}]
   },
   {
@@ -453,7 +453,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:500, adjAmt:500, glNo:'354422',
     currency:'Rupees', reasonCode:'1', pan:'832927*****',
     product:'VISA', aging:5,
-    merchantAction:'accepted', adminAction:null,
+    merchantAction:'accepted', acquirerAction:null,
     timeline:[
       {by:'iServeU', time: daysAgo(5)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null},
       {by:'masteruser', time: daysAgo(4)+' 11:45 AM', title:'Merchant Accepted', remarks:'Done', file:null},
@@ -470,7 +470,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:3000, adjAmt:3000, glNo:'354422',
     currency:'USD', reasonCode:'4808', pan:'832927*****',
     product:'VISA', aging:5,
-    merchantAction:null, adminAction:null,
+    merchantAction:null, acquirerAction:null,
     timeline:[{by:'iServeU', time: daysAgo(5)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null}]
   }    ,{
       id: 'CB_VROL_01', caseId: 'CASE_VROL_01', userName: 'masteruser', userId: '2575789089',
@@ -482,7 +482,7 @@ const DEFAULT_CHARGEBACKS = [
       txnAmt: 5000, adjAmt: 5000, glNo: '354435',
       currency: 'Rupees', reasonCode: '10.4', pan: '416001*****',
       product: 'VISA', aging: 2,
-      merchantAction: null, adminAction: null, visaPending: true,
+      merchantAction: null, acquirerAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(2) + ' 10:00 AM', title: 'VROL Inquiry Initiated', remarks: 'Visa raised inquiry for potential fraud.', file: null }
       ]
@@ -497,7 +497,7 @@ const DEFAULT_CHARGEBACKS = [
       txnAmt: 3500, adjAmt: 3500, glNo: '354436',
       currency: 'Rupees', reasonCode: '13.1', pan: '426001*****',
       product: 'VISA', aging: 5,
-      merchantAction: 'evidence', adminAction: null, visaPending: true,
+      merchantAction: 'evidence', acquirerAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(5) + ' 11:00 AM', title: 'VROL Chargeback Received', remarks: 'First chargeback initiated by issuer.', file: null }
       ]
@@ -512,7 +512,7 @@ const DEFAULT_CHARGEBACKS = [
       txnAmt: 7500, adjAmt: 7500, glNo: '354437',
       currency: 'Rupees', reasonCode: '10.4', pan: '436001*****',
       product: 'VISA', aging: 15,
-      merchantAction: 'evidence', adminAction: 'considered', visaPending: true,
+      merchantAction: 'evidence', acquirerAction: 'considered', visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(15) + ' 12:00 PM', title: 'VROL Pre-Arbitration Raised', remarks: 'Issuer declined evidence, pushed to pre-arb.', file: null }
       ]
@@ -527,7 +527,7 @@ const DEFAULT_CHARGEBACKS = [
       txnAmt: 10000, adjAmt: 10000, glNo: '354438',
       currency: 'Rupees', reasonCode: '10.5', pan: '446001*****',
       product: 'VISA', aging: 30,
-      merchantAction: 'evidence', adminAction: 'declined', visaPending: false,
+      merchantAction: 'evidence', acquirerAction: 'declined', visaPending: false,
       timeline: [
         { by: 'iServeU', time: daysAgo(30) + ' 01:00 PM', title: 'VROL Arbitration Lost', remarks: 'Visa Arbitration panel ruled in favor of cardholder.', file: null }
       ]
@@ -700,7 +700,7 @@ function loadAdminDashboard() {
 function renderAdminPending(){
   const tbody=document.getElementById('adminPendingBody');
   if(!tbody) return;
-  const pending=chargebacks.filter(cb=>cb.merchantAction==='rejected'&&cb.adminAction===null);
+  const pending=chargebacks.filter(cb=>cb.merchantAction==='rejected'&&cb.acquirerAction===null);
   const cnt=document.getElementById('pendingCount');
   if(cnt) cnt.textContent=pending.length+' awaiting review';
   tbody.innerHTML=pending.length?pending.map(cb=>`
@@ -755,7 +755,7 @@ function renderAdminCb(){
             
             <div class="eg-item"><div class="ek">Product / Scheme</div><div class="ev">${cb.product}</div></div>
             <div class="eg-item"><div class="ek">Merchant Action</div><div class="ev">${cb.merchantAction||'—'}</div></div>
-            <div class="eg-item"><div class="ek">Admin Review Action</div><div class="ev">${cb.adminAction||'—'}</div></div>
+            <div class="eg-item"><div class="ek">Admin Review Action</div><div class="ev">${cb.acquirerAction||'—'}</div></div>
             ${cb.product === 'VISA' ? `<div class="eg-item"><div class="ek">VROL Case ID</div><div class="ev">${cb.caseId||'—'}</div></div><div class="eg-item"><div class="ek">Visa Reason Code</div><div class="ev">${cb.reasonCode||'—'}</div></div>` : ''}
           </div>
           ${cb.timeline && cb.timeline.length ? `
@@ -778,10 +778,10 @@ function getAdminActions(cb){
   // Expand button is always nice to have
   btns += `<button class="btn btn-sm btn-secondary" onclick="toggleExpand('${cb.id}')" style="margin-right:4px;">👁 Details</button>`;
   
-  if(cb.merchantAction==='rejected'&&cb.adminAction===null){
+  if(cb.merchantAction==='rejected'&&cb.acquirerAction===null){
     btns+=`<button class="btn btn-sm btn-primary" onclick="openAdminRemarks('${cb.id}')" style="margin-right:4px;">Review</button>`;
   }
-  if(cb.mStatus.includes('Arbitration')&&!cb.adminAction){
+  if(cb.mStatus.includes('Arbitration')&&!cb.acquirerAction){
     btns+=`<button class="btn btn-sm" style="background:var(--purple);color:#fff; margin-right:4px;" onclick="openArbitrationModal('${cb.id}')">Arb Decision</button>`;
   }
   if((cb.mSubStatus.includes('Won')||cb.mSubStatus.includes('Accepted')) && cb.mSubStatus !== 'Refund Success' && cb.mSubStatus !== 'Refund On Hold'){
@@ -859,7 +859,7 @@ function openAdminRemarks(id){
     `:`<div style="padding:20px;text-align:center;color:var(--text-muted);">No remarks submitted by merchant yet.</div>`}
   `;
   const footer=document.getElementById('adminRemarksFooter');
-  if(cb.merchantAction==='rejected'&&cb.adminAction===null){
+  if(cb.merchantAction==='rejected'&&cb.acquirerAction===null){
     footer.innerHTML=`<button class="btn btn-success" style="flex:1" onclick="doAdminConsider()">Consider (Represent Case)</button><button class="btn btn-danger" style="flex:1" onclick="doAdminDecline()">Decline (Resubmit to Merchant)</button>`;
   } else {
     footer.innerHTML=`<button class="btn btn-secondary" onclick="closeModal('adminRemarksModal')">Close</button>`;
@@ -870,7 +870,7 @@ function openAdminRemarks(id){
 function doAdminConsider(){
   const cb=chargebacks.find(x=>x.id===currentActionId);
   if(cb){
-    cb.adminAction='considered';
+    cb.acquirerAction='considered';
     cb.mSubStatus='Chargeback in Progress';
     const fileInput = document.getElementById('adminEvidenceFile');
     const fileName = (fileInput && fileInput.files.length > 0) ? fileInput.files[0].name : null;
@@ -887,7 +887,7 @@ function doAdminConsider(){
 function doAdminDecline(){
   const cb=chargebacks.find(x=>x.id===currentActionId);
   if(cb){
-    cb.adminAction='declined';
+    cb.acquirerAction='declined';
     cb.mSubStatus='Chargeback Resubmit';
     cb.merchantAction=null; // Let merchant action again
     cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Dispute Representation Declined',remarks:'Proof insufficient. Re-routed back to merchant to supply additional documentation.',file:null});
@@ -923,7 +923,7 @@ function doArbitrationWon(){
   const cb=chargebacks.find(x=>x.id===currentActionId);
   if(cb){
     cb.mSubStatus='Chargeback Won';
-    cb.adminAction='won';
+    cb.acquirerAction='won';
     cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Arbitration Won',remarks:'NPCI network ruled in favor of merchant. Dispute closed.',file:null});
     
     // Credit merchant's wallet (since they won)
@@ -945,7 +945,7 @@ function doArbitrationLost(){
   const cb=chargebacks.find(x=>x.id===currentActionId);
   if(cb){
     cb.mSubStatus='Chargeback Lost';
-    cb.adminAction='lost';
+    cb.acquirerAction='lost';
     cb.timeline.unshift({by:'nsdladmin',time:new Date().toLocaleString(),title:'Arbitration Lost',remarks:'NPCI network ruled in favor of cardholder. Hold permanently debited.',file:null});
     saveState();
     loadAdminDashboard();
@@ -1127,7 +1127,7 @@ function processUpload(){
         product: product,
         aging: 0,
         merchantAction: null,
-        adminAction: null,
+        acquirerAction: null,
         timeline: [{ by: 'nsdladmin', time: new Date().toLocaleString(), title: 'Dispute Raised via Bulk Upload', remarks: '', file: null }]
       });
       addedCount++;

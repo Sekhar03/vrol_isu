@@ -547,7 +547,7 @@ function MerchantPortal({
   
   const pendingVerificationDisputes = merchantDisputes.filter(cb => 
     (cb.merchantAction === 'evidence' || cb.merchantAction === 'accepted_admin' || cb.merchantAction === 'rejected_admin') && 
-    (cb.adminAction === null || cb.adminAction === 'evidence_uploaded')
+    (cb.acquirerAction === null || cb.acquirerAction === 'evidence_uploaded')
   );
 
   // Dashboard calculations
@@ -1946,14 +1946,14 @@ function MerchantPortal({
                         <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
                       </>
                     )}
-                    {reportTab === 'doc-verification' && (cb.adminAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
+                    {reportTab === 'doc-verification' && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
                       <>
                         <button className="btn btn-danger" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => handleMerchantRejectAdminClick(cb.id)}>Reject Admin Evidence</button>
                         <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => { setActiveModal('contest'); }}>Upload Additional Evidence</button>
                         <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#52c41a', color: '#fff', border: 'none' }} onClick={() => submitMerchantAcceptAdmin(cb.id)}>Accept Admin Evidence</button>
                       </>
                     )}
-                    {reportTab === 'doc-verification' && cb.adminAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
+                    {reportTab === 'doc-verification' && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
                       <span className="badge badge-progress" style={{ padding: '6px 16px', borderRadius: '4px', fontSize: '12px' }}>Pending Admin Verification</span>
                     )}
                     {reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && getActionBtn(cb)}
@@ -2237,7 +2237,7 @@ function AdminPortal({
   const [evidenceFiles, setEvidenceFiles] = useState({ adminUpload: null });
 
   const isPendingVerification = (cb) =>
-    cb && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence') && !cb.adminAction && !cb.visaPending;
+    cb && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence') && !cb.acquirerAction && !cb.visaPending;
 
   const handleAdminEscalate = async (id) => {
     try {
@@ -2319,7 +2319,7 @@ function AdminPortal({
   const stats = getAdminDashboardStats();
 
   // Pending representations
-  const pendingReviews = chargebacks.filter(cb => cb.merchantAction === 'rejected' && cb.adminAction === null);
+  const pendingReviews = chargebacks.filter(cb => cb.merchantAction === 'rejected' && cb.acquirerAction === null);
 
   // Filters admin disputes list
   const getFilteredAdmin = () => {
@@ -2343,7 +2343,7 @@ function AdminPortal({
     if (adminTab === 'merchant-pending') {
       list = list.filter(cb => !cb.merchantAction || cb.merchantAction === 'additional_evidence');
     } else if (adminTab === 'verification-pending') {
-      list = list.filter(cb => (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected') && cb.adminAction === null);
+      list = list.filter(cb => (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected') && cb.acquirerAction === null);
     }
 
     if (aVcSearchInput) {
@@ -2457,7 +2457,7 @@ function AdminPortal({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminAction: 'considered',
+          acquirerAction: 'considered',
           mSubStatus: 'Chargeback in Progress',
           timelineEntry: entry
         })
@@ -2635,7 +2635,7 @@ function AdminPortal({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminAction: 'accepted_docs',
+          acquirerAction: 'accepted_docs',
           timelineEntry: entry
         })
       });
@@ -2737,7 +2737,7 @@ function AdminPortal({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminAction: 'won',
+          acquirerAction: 'won',
           mSubStatus: 'Chargeback Won',
           timelineEntry: entry
         })
@@ -2786,7 +2786,7 @@ function AdminPortal({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminAction: 'lost',
+          acquirerAction: 'lost',
           mSubStatus: 'Chargeback Lost',
           visaPending: true,
           timelineEntry: entry
@@ -2982,7 +2982,7 @@ function AdminPortal({
             remitter: 'AXB', beneficiary: 'FIP',
             txnAmt, adjAmt: txnAmt, leinAmt: 0,
             glNo, currency: 'Rupees', reasonCode: '1', pan: '832927*****',
-            walletStatus: 'Debited', product, aging: 0, merchantAction: null, adminAction: null,
+            walletStatus: 'Debited', product, aging: 0, merchantAction: null, acquirerAction: null,
             timeline: [{ by: 'nsdladmin', time: new Date().toLocaleString(), title: 'Dispute Raised via Bulk Upload', remarks: '', file: null }]
           });
           addedCount++;
@@ -3779,7 +3779,7 @@ function AdminPortal({
                             </button>
                           </>
                         )}
-                        {cb.mStatus.includes('Arbitration') && !cb.adminAction && (
+                        {cb.mStatus.includes('Arbitration') && !cb.acquirerAction && (
                           <button type="button" className="btn btn-sm" style={{ background: 'var(--purple)', color: '#fff' }} onClick={() => { setActiveModal('arbitration'); }}>
                             Arb Decision
                           </button>

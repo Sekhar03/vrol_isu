@@ -1,23 +1,24 @@
 # Visa Chargeback Portal System (vROL) Design
 
-**Executive Summary:** We propose a comprehensive chargeback management portal (“vROL”) for Admin, Merchant, and Partner users, incorporating Visa’s dispute resolution rules and industry standards. The portal will align with Visa’s Dispute Management Guidelines and VROL platform functionality.
+**Executive Summary:** We propose a comprehensive chargeback management portal (“vROL”) for Acquirer/Issuer, Merchant, and Partner users, incorporating Visa’s dispute resolution rules and industry standards. The portal will align with Visa’s Dispute Management Guidelines and VROL platform functionality.
 
 ## 1. User Roles & Responsibilities 
-- **Admin (Platform Administrator):** Full system owner/administrator.
+- **Acquirer/Issuer (Platform Administrator):** Represents the Merchant's processor (Acquirer) or the Cardholder's bank (Issuer) managing the dispute life-cycle.
 - **Merchant:** Represents a business that accepts Visa cards.
 - **Partner:** A partner manages disputes on behalf of one or multiple merchants.
 
 ## 2. Features by Role
-- Case Management (Admin, Merchant, Partner)
+- Case Management (Acquirer/Issuer, Merchant, Partner)
 - Dispute Submission, Evidence Upload, Responses
 - Reporting & Dashboards
-- User Management (Admin only)
-- API/Webhooks (Admin and Partner)
+- User Management (Acquirer/Issuer only)
+- API/Webhooks (Acquirer/Issuer and Partner)
 
 ## 3. Workflow Diagrams
-- Representment (Chargeback Response)
-- Pre-Arbitration (Second Representment Attempt)
-- Arbitration
+- Dispute Notification (Issuer -> Acquirer -> Merchant)
+- Representment (Merchant -> Acquirer -> Issuer)
+- Pre-Arbitration (Issuer counter-evidence)
+- Arbitration (Visa Network Ruling)
 - Retrieval Requests (Information Request)
 - Fraud/Authorization Disputes
 
@@ -39,7 +40,7 @@
 - PCI-DSS v4.0 compliance.
 - Data Protection (GDPR, CCPA).
 - PSD2 European rules support.
-- Visa Rules enforcement (timeframes, responses).
+- Visa Rules enforcement (Strict 30/10 day timeframes, Single loop responses, Evidence formats).
 
 ## 7. Integration Points & APIs
 - Acquirer/Processor Systems (VisaNet, VROL).

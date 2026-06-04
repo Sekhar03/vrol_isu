@@ -444,7 +444,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:1000, adjAmt:1000, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'832927*****',
     product:'VISA', aging:1,
-    merchantAction:null, adminAction:null,
+    merchantAction:null, acquirerAction:null,
     timeline:[
       {by:'iServeU', time: daysAgo(1)+' 10:30 AM', title:'Dispute Raised', remarks:'', file:null},
       {by:'iServeU', time: daysAgo(1)+' 5:30 PM', title:'Remarks Updated by iServeU', remarks:'Done', file:'disputesamplefile.pdf'},
@@ -461,7 +461,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:3000, adjAmt:3000, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'832927*****',
     product:'VISA', aging:2,
-    merchantAction:null, adminAction:null,
+    merchantAction:null, acquirerAction:null,
     timeline:[{by:'iServeU', time: daysAgo(2)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null}]
   },
   {
@@ -475,8 +475,8 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:1500, adjAmt:1500, glNo:'354422',
     currency:'Rupees', reasonCode:'4808', pan:'397927*****',
     product:'VISA', aging:3,
-    merchantAction:'rejected', adminAction:'declined',
-    chargbackId:'CommonVISA17268', adminName:'nsdladmin',
+    merchantAction:'rejected', acquirerAction:'declined',
+    chargbackId:'CommonVISA17268', issuerName:'nsdladmin',
     rejectReason:'Based on internal investigation and transaction monitoring, this case exhibits patterns consistent with suspicious or unauthorized activity.',
     timeline:[
       {by:'iServeU', time: daysAgo(3)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null},
@@ -495,7 +495,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:2500, adjAmt:2500, glNo:'354422',
     currency:'USD', reasonCode:'4808', pan:'832927*****',
     product:'VISA', aging:4,
-    merchantAction:null, adminAction:null,
+    merchantAction:null, acquirerAction:null,
     timeline:[{by:'iServeU', time: daysAgo(4)+' 08:30 AM', title:'Dispute Raised', remarks:'', file:null}]
   },
   {
@@ -509,7 +509,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:500, adjAmt:500, glNo:'354422',
     currency:'Rupees', reasonCode:'1', pan:'832927*****',
     product:'VISA', aging:5,
-    merchantAction:'accepted', adminAction:null,
+    merchantAction:'accepted', acquirerAction:null,
     timeline:[
       {by:'iServeU', time: daysAgo(5)+' 09:00 AM', title:'Dispute Raised', remarks:'', file:null},
       {by:'masteruser', time: daysAgo(4)+' 11:45 AM', title:'Merchant Accepted', remarks:'Done', file:null},
@@ -526,7 +526,7 @@ const DEFAULT_CHARGEBACKS = [
     txnAmt:3000, adjAmt:3000, glNo:'354422',
     currency:'USD', reasonCode:'4808', pan:'832927*****',
     product:'VISA', aging:5,
-    merchantAction:null, adminAction:null,
+    merchantAction:null, acquirerAction:null,
     timeline:[{by:'iServeU', time: daysAgo(5)+' 08:00 AM', title:'Dispute Raised', remarks:'', file:null}]
   }    ,{
       id: 'CB_VROL_01', caseId: 'CASE_VROL_01', userName: 'masteruser', userId: '2575789089',
@@ -538,7 +538,7 @@ const DEFAULT_CHARGEBACKS = [
       txnAmt: 5000, adjAmt: 5000, glNo: '354435',
       currency: 'Rupees', reasonCode: '10.4', pan: '416001*****',
       product: 'VISA', aging: 2,
-      merchantAction: null, adminAction: null, visaPending: true,
+      merchantAction: null, acquirerAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(2) + ' 10:00 AM', title: 'VROL Inquiry Initiated', remarks: 'Visa raised inquiry for potential fraud.', file: null }
       ]
@@ -553,7 +553,7 @@ const DEFAULT_CHARGEBACKS = [
       txnAmt: 3500, adjAmt: 3500, glNo: '354436',
       currency: 'Rupees', reasonCode: '13.1', pan: '426001*****',
       product: 'VISA', aging: 5,
-      merchantAction: 'evidence', adminAction: null, visaPending: true,
+      merchantAction: 'evidence', acquirerAction: null, visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(5) + ' 11:00 AM', title: 'VROL Chargeback Received', remarks: 'First chargeback initiated by issuer.', file: null }
       ]
@@ -568,7 +568,7 @@ const DEFAULT_CHARGEBACKS = [
       txnAmt: 7500, adjAmt: 7500, glNo: '354437',
       currency: 'Rupees', reasonCode: '10.4', pan: '436001*****',
       product: 'VISA', aging: 15,
-      merchantAction: 'evidence', adminAction: 'considered', visaPending: true,
+      merchantAction: 'evidence', acquirerAction: 'considered', visaPending: true,
       timeline: [
         { by: 'iServeU', time: daysAgo(15) + ' 12:00 PM', title: 'VROL Pre-Arbitration Raised', remarks: 'Issuer declined evidence, pushed to pre-arb.', file: null }
       ]
@@ -583,7 +583,7 @@ const DEFAULT_CHARGEBACKS = [
       txnAmt: 10000, adjAmt: 10000, glNo: '354438',
       currency: 'Rupees', reasonCode: '10.5', pan: '446001*****',
       product: 'VISA', aging: 30,
-      merchantAction: 'evidence', adminAction: 'declined', visaPending: false,
+      merchantAction: 'evidence', acquirerAction: 'declined', visaPending: false,
       timeline: [
         { by: 'iServeU', time: daysAgo(30) + ' 01:00 PM', title: 'VROL Arbitration Lost', remarks: 'Visa Arbitration panel ruled in favor of cardholder.', file: null }
       ]
@@ -933,7 +933,7 @@ function buildTableRow(cb, source){
           
           <div class="eg-item"><div class="ek">Product</div><div class="ev">${cb.product}</div></div>
           <div class="eg-item"><div class="ek">Aging</div><div class="ev">${cb.aging} Days</div></div>
-          <div class="eg-item"><div class="ek">Admin Name</div><div class="ev">${cb.adminName||'nsdladmin'}</div></div>
+          <div class="eg-item"><div class="ek">Admin Name</div><div class="ev">${cb.issuerName||'nsdladmin'}</div></div>
           <div class="eg-item"><div class="ek">Updated Date</div><div class="ev">${fmtDisp(cb.adjDate)}</div></div>
         </div>
       </div>

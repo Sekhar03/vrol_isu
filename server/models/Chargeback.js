@@ -32,8 +32,8 @@ const chargebackSchema = new mongoose.Schema({
   txnDate: { type: String, required: true },     // Date string (YYYY-MM-DD)
   adjDate: { type: String, required: true },     // Date string (YYYY-MM-DD)
   respondByDate: { type: String, required: true },// Date string (YYYY-MM-DD)
-  mStatus: { type: String, required: true, default: 'Chargeback' }, // Retrieval, Chargeback, Pre-Arb, Arbitration
-  mSubStatus: { type: String, required: true, default: 'Pending' },
+  mStatus: { type: String, required: true, default: 'Dispute_Received' }, // Retrieval, Chargeback, Pre-Arb, Arbitration
+  mSubStatus: { type: String, required: true, default: 'Pending_Merchant_Response' },
   resolution: { type: String, enum: ['Won', 'Lost', 'Pending'], default: 'Pending' },
   partnerId: { type: String, default: null },
   adjType: { type: String, required: true },
@@ -50,10 +50,11 @@ const chargebackSchema = new mongoose.Schema({
   product: { type: String, default: 'VISA' },
   aging: { type: Number, default: 0 },
   merchantAction: { type: String, default: null },
-  adminAction: { type: String, default: null },
+  acquirerAction: { type: String, default: null },
+  issuerAction: { type: String, default: null },
   rejectReason: { type: String, default: '' },
   chargbackId: { type: String, default: '' },
-  adminName: { type: String, default: 'nsdladmin' },
+  issuerName: { type: String, default: 'nsdladmin' },
   visaPending: { type: Boolean, default: false },
   acceptedAmount: { type: Number, default: 0 },
   documents: [documentEntrySchema],
