@@ -3287,14 +3287,15 @@ function AdminPortal({
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Vendor</label>
-                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
+                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} defaultValue="">
+                            <option value="">Select Vendor</option>
                             <option value="ISU">ISU</option>
                           </select>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Status</label>
                           <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                            <option value="">Dispute Status</option>
+                            <option value="">Select Dispute Status</option>
                             <option value="Dispute Won Partially">Dispute Won Partially</option>
                             <option value="Dispute Won Fully">Dispute Won Fully</option>
                             <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
@@ -3316,14 +3317,15 @@ function AdminPortal({
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Scheme</label>
-                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }}>
+                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} defaultValue="">
+                            <option value="">Select Scheme</option>
                             <option value="Visa">Visa</option>
                           </select>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search By</label>
                           <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
-                            <option value="">Search By</option>
+                            <option value="">Select Search By</option>
                             <option value="Txn ID">Transaction ID (Txn ID)</option>
                             <option value="RRN">RRN</option>
                             <option value="TID">TID</option>
@@ -3338,7 +3340,7 @@ function AdminPortal({
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Type</label>
                           <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSubStatus} onChange={(e) => setFilterSubStatus(e.target.value)}>
-                            <option value="">Dispute Type</option>
+                            <option value="">Select Dispute Type</option>
                             <option value="Chargeback">Chargeback</option>
                             <option value="Pre-Arbitration">Pre-Arbitration</option>
                             <option value="Retrieval Request">Retrieval Request</option>
@@ -3346,10 +3348,6 @@ function AdminPortal({
                           </select>
                         </div>
                         <div style={{ height: '0px' }}></div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search String</label>
-                          <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="Search" value={filterRrn} onChange={(e) => setFilterRrn(e.target.value)} />
-                        </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
@@ -4388,7 +4386,7 @@ function PartnerPortal({
                     <div className="sp-field">
                       <label>Dispute Type</label>
                       <select className="sp-input" value={filterDisputeType} onChange={(e) => setFilterDisputeType(e.target.value)}>
-                        <option value="">Dispute Type</option>
+                        <option value="">Select Dispute Type</option>
                         <option value="Chargeback">Chargeback</option>
                         <option value="Pre-Arbitration">Pre-Arbitration</option>
                         <option value="Retrieval Request">Retrieval Request</option>
@@ -4397,20 +4395,22 @@ function PartnerPortal({
                     </div>
                     <div className="sp-field">
                       <label>Aggregator</label>
-                      <select className="sp-input" value={filterScheme} onChange={(e) => setFilterScheme(e.target.value)}>
+                      <select className="sp-input" defaultValue="">
+                        <option value="">Select Aggregator</option>
                         <option value="ISU">ISU</option>
                       </select>
                     </div>
                     <div className="sp-field">
                       <label>Scheme</label>
-                      <select className="sp-input" value={filterScheme} onChange={(e) => setFilterScheme(e.target.value)}>
+                      <select className="sp-input" defaultValue="">
+                        <option value="">Select Scheme</option>
                         <option value="Visa">Visa</option>
                       </select>
                     </div>
                     <div className="sp-field">
                       <label>Dispute Status</label>
                       <select className="sp-input" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                        <option value="">Dispute Status</option>
+                        <option value="">Select Dispute Status</option>
                         <option value="Dispute Won Partially">Dispute Won Partially</option>
                         <option value="Dispute Won Fully">Dispute Won Fully</option>
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
@@ -4423,17 +4423,13 @@ function PartnerPortal({
                     <div className="sp-field">
                       <label>Search By</label>
                       <select className="sp-input" value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
-                        <option value="">Search By</option>
+                        <option value="">Select Search By</option>
                         <option value="Txn ID">Transaction ID (Txn ID)</option>
                         <option value="RRN">RRN</option>
                         <option value="TID">TID</option>
                         <option value="MID">MID</option>
                         <option value="Case ID">Case ID</option>
                       </select>
-                    </div>
-                    <div className="sp-field">
-                      <label>Search</label>
-                      <input type="text" className="sp-input" placeholder="Search..." value={filterSearchText} onChange={(e) => setFilterSearchText(e.target.value)} />
                     </div>
                     <div className="sp-field" style={{ visibility: 'hidden' }}></div>
                   </div>
