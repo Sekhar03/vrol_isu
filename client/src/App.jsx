@@ -3410,7 +3410,7 @@ function AdminPortal({
                             return (
                               <React.Fragment key={cb.id}>
                                 <tr style={{ borderBottom: '1px solid #f0f0f0', fontSize: '12px', background: 'transparent' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.id.substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.txnDate)}</td>
 
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>iServeU</td>
@@ -3422,7 +3422,7 @@ function AdminPortal({
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.aging}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{cb.userId.substring(0,4)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || '9999').substring(0,4)}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
                                       {adminTab !== 'verification-pending' && (
