@@ -2763,7 +2763,6 @@ function AdminPortal({
     const id = disputeId || targetDisputeId;
     if (!id) return;
     try {
-    try {
       const response = await fetch(`${API_URL}/disputes/${disputeId}/action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-user-role': 'admin', 'x-user-name': currentUser?.username || 'nsdladmin' },
