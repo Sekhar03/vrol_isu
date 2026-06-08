@@ -2844,6 +2844,82 @@ function AdminPortal({
     } catch (err) { showToast('API error', 'error'); }
   };
 
+  const executeVisaWebhookSimulator = async (cb, isWin) => {
+    try {
+      const isPreArb = cb.mStatus === 'Pre-Arbitration Raise' || cb.mStatus === 'VROL Pre-Arbitration';
+      const isArb = cb.mStatus === 'Arbitration Raise' || cb.mStatus === 'VROL Arbitration';
+      
+      let nextStatus = cb.mStatus;
+      let newSubStatus = isWin ? 'Chargeback Won' : 'Chargeback Lost';
+      
+      if (!isWin) {
+         if (!isPreArb && !isArb) {
+             nextStatus = 'Pre-Arbitration Raise';
+             newSubStatus = 'Pre-Arbitration Raised';
+         } else if (isPreArb) {
+             nextStatus = 'Arbitration Raise';
+             newSubStatus = 'Arbitration Raised';
+         } else if (isArb) {
+             newSubStatus = 'Arbitration Lost';
+         }
+      } else {
+         if (isPreArb) newSubStatus = 'Pre-Arbitration Won';
+         else if (isArb) newSubStatus = 'Arbitration Won';
+      }
+
+      const entry = {
+        by: 'visa_webhook',
+        time: new Date().toLocaleString(),
+        title: `Visa Webhook: ${newSubStatus}`,
+        remarks: `Visa simulator triggered a ${isWin ? 'win' : 'loss'} decision.`,
+        file: null
+      };
+
+      const payload = {
+        mStatus: nextStatus,
+        mSubStatus: newSubStatus,
+        visaPending: false,
+        timelineEntry: entry
+      };
+
+      if (isWin || newSubStatus.includes('Lost')) {
+        payload.acquirerAction = isWin ? 'won' : 'lost';
+      } else {
+        payload.acquirerAction = null; 
+      }
+
+      const response = await fetch(`${API_URL}/disputes/${cb.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        if (isWin) {
+          await fetch(`${API_URL}/ledger`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              merchant: cb.userName || 'masteruser',
+              type: 'Credit',
+              amount: cb.adjAmt,
+              remarks: `Visa Decision Won: RRN ${cb.rrn}`
+            })
+          });
+        }
+        
+        setActiveModal(null);
+        showToast(`Visa ruled: ${newSubStatus}`, isWin ? 'success' : 'error');
+        await refreshAllData();
+      } else {
+        showToast('Failed to execute visa simulator', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('API error', 'error');
+    }
+  };
+
   // Arbitration won decision
   const handleArbitrationWon = async () => {
     try {
@@ -3845,7 +3921,7 @@ function AdminPortal({
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                               <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>[Simulator] Trigger Visa Webhook:</span>
                               <button className="btn btn-sm btn-success" onClick={() => executeVisaWebhookSimulator(cb, true)}>
-                                {cb.mStatus === 'Arbitration Raise' ? 'Arbitration Won' : 'Chargeback Won'}
+                                {cb.mStatus === 'Arbitration Raise' ? 'Arbitration Won' : cb.mStatus === 'Pre-Arbitration Raise' ? 'Pre-Arbitration Won' : 'Chargeback Won'}
                               </button>
                               <button className="btn btn-sm btn-danger" onClick={() => executeVisaWebhookSimulator(cb, false)}>
                                 {cb.mStatus === 'Chargeback Raise' ? 'Escalate to Pre-Arb (Lost)' : cb.mStatus === 'Pre-Arbitration Raise' ? 'Escalate to Arbitration (Lost)' : 'Arbitration Lost'}
@@ -4197,7 +4273,7 @@ function AdminPortal({
                         <div style={{ fontSize: '12px', fontWeight: '600', color: '#555', marginBottom: '8px', textAlign: 'center' }}>[Simulator] Trigger Visa Webhook:</div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button className="btn btn-sm btn-success" style={{ flex: 1 }} onClick={() => executeVisaWebhookSimulator(cb, true)}>
-                            {cb.mStatus === 'Arbitration Raise' ? 'Arbitration Won' : 'Chargeback Won'}
+                            {cb.mStatus === 'Arbitration Raise' ? 'Arbitration Won' : cb.mStatus === 'Pre-Arbitration Raise' ? 'Pre-Arbitration Won' : 'Chargeback Won'}
                           </button>
                           <button className="btn btn-sm btn-danger" style={{ flex: 1 }} onClick={() => executeVisaWebhookSimulator(cb, false)}>
                             {cb.mStatus === 'Chargeback Raise' ? 'Escalate to Pre-Arb (Lost)' : cb.mStatus === 'Pre-Arbitration Raise' ? 'Escalate to Arbitration (Lost)' : 'Arbitration Lost'}
