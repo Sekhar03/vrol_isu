@@ -4324,6 +4324,7 @@ function PartnerPortal({
   const [filterDisputeType, setFilterDisputeType] = useState('');
   const [filterSearchBy, setFilterSearchBy] = useState('');
   const [filterSearchText, setFilterSearchText] = useState('');
+  const [filterMerchant, setFilterMerchant] = useState('');
 
   const [activeTab, setActiveTab] = useState('dispute-mgmt');
   const [activeModal, setActiveModal] = useState(null);
@@ -4396,6 +4397,7 @@ function PartnerPortal({
       if (!filterSearchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
     }
     if (filterStatus && cb.mStatus !== filterStatus) return false;
+    if (filterMerchant && !cb.userName?.toLowerCase().includes(filterMerchant.toLowerCase())) return false;
     if (filterDisputeType && !(cb.adjType && cb.adjType.includes(filterDisputeType) && !(filterDisputeType === 'Arbitration' && cb.adjType.includes('Pre-Arbitration')))) return false;
     if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
     if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
@@ -4573,6 +4575,10 @@ function PartnerPortal({
                       </select>
                     </div>
                     <div className="sp-field">
+                      <label>Merchant</label>
+                      <input type="text" className="sp-input" placeholder="Enter Merchant ID/Name" value={filterMerchant} onChange={(e) => setFilterMerchant(e.target.value)} />
+                    </div>
+                    <div className="sp-field">
                       <label>Aggregator</label>
                       <select className="sp-input" defaultValue="">
                         <option value="">Select Aggregator</option>
@@ -4619,7 +4625,7 @@ function PartnerPortal({
                     <div className="sp-field" style={{ visibility: 'hidden' }}></div>
                   </div>
                   <div className="search-panel-actions">
-                    <button className="btn btn-secondary" onClick={() => { setFilterFrom(DEFAULT_FROM); setFilterTo(TODAY_STR); setFilterStatus(''); setFilterScheme(''); setFilterDisputeType(''); setFilterSearchBy(''); setFilterSearchText(''); }}>Reset</button>
+                    <button className="btn btn-secondary" onClick={() => { setFilterFrom(DEFAULT_FROM); setFilterTo(TODAY_STR); setFilterStatus(''); setFilterScheme(''); setFilterDisputeType(''); setFilterSearchBy(''); setFilterSearchText(''); setFilterMerchant(''); }}>Reset</button>
                     <button className="btn btn-primary" onClick={() => showToast('Disputes filtered!')}>Search</button>
                     <table>
                       <thead>
