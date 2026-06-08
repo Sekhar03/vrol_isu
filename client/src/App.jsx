@@ -4398,6 +4398,7 @@ function PartnerPortal({
     }
     if (filterStatus && cb.mStatus !== filterStatus) return false;
     if (filterMerchant && !cb.userName?.toLowerCase().includes(filterMerchant.toLowerCase())) return false;
+    if (filterScheme && cb.product !== filterScheme) return false;
     if (filterDisputeType && !(cb.adjType && cb.adjType.includes(filterDisputeType) && !(filterDisputeType === 'Arbitration' && cb.adjType.includes('Pre-Arbitration')))) return false;
     if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
     if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
@@ -4587,9 +4588,11 @@ function PartnerPortal({
                     </div>
                     <div className="sp-field">
                       <label>Scheme</label>
-                      <select className="sp-input" defaultValue="">
+                      <select className="sp-input" value={filterScheme} onChange={(e) => setFilterScheme(e.target.value)}>
                         <option value="">Select Scheme</option>
                         <option value="Visa">Visa</option>
+                        <option value="Mastercard">Mastercard</option>
+                        <option value="Rupay">Rupay</option>
                       </select>
                     </div>
                     <div className="sp-field">
@@ -4859,7 +4862,7 @@ function PartnerPortal({
                     
                     <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, gap: '12px' }}>
                       <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
-                      {(cb.mSubStatus === 'Chargeback Resubmit' || cb.mSubStatus === 'Chargeback New' || cb.mSubStatus === 'Pending') && !cb.visaPending && (
+                      {(!cb.mSubStatus.includes('Won') && !cb.mSubStatus.includes('Lost') && cb.mSubStatus !== 'Document Rejected') && !cb.visaPending && (
                         <button onClick={() => setActiveModal('partnerUploadEvidence')} style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
                           Upload Evidence on Behalf of Merchant
                         </button>
