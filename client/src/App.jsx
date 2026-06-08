@@ -910,8 +910,8 @@ function MerchantPortal({
         if (reportFilter.searchBy === 'Case ID' && !cb.caseId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
         if (!reportFilter.searchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
       }
-      if (reportFilter.disputeStatus && cb.mStatus !== reportFilter.disputeStatus) return false;
-      if (reportFilter.disputeType && !(cb.adjType && cb.adjType.includes(reportFilter.disputeType) && !(reportFilter.disputeType === 'Arbitration' && cb.adjType.includes('Pre-Arbitration')))) return false;
+      if (reportFilter.disputeStatus && cb.mStatus !== reportFilter.disputeStatus && cb.mSubStatus !== reportFilter.disputeStatus) return false;
+      if (reportFilter.disputeType && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(reportFilter.disputeType) && !(reportFilter.disputeType === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
       if (reportFilter.from && cb.createdDate && cb.createdDate < reportFilter.from) return false;
       if (reportFilter.to && cb.createdDate && cb.createdDate > reportFilter.to) return false;
       return true;
@@ -2471,8 +2471,8 @@ function AdminPortal({
         if (filterSearchBy === 'Merchant Name' && !cb.userName?.toLowerCase().includes(filterRrn.toLowerCase())) return false;
         if (!filterSearchBy && !cb.rrn.includes(filterRrn) && !cb.txnId.includes(filterRrn) && !cb.userId.includes(filterRrn) && !cb.id?.includes(filterRrn) && !cb.userName?.toLowerCase().includes(filterRrn.toLowerCase())) return false;
       }
-      if (filterStatus && cb.mStatus !== filterStatus) return false;
-      if (filterSubStatus && !(cb.adjType && cb.adjType.includes(filterSubStatus) && !(filterSubStatus === 'Arbitration' && cb.adjType.includes('Pre-Arbitration')))) return false;
+      if (filterStatus && cb.mStatus !== filterStatus && cb.mSubStatus !== filterStatus) return false;
+      if (filterSubStatus && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(filterSubStatus) && !(filterSubStatus === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
       if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
       if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
       return true;
@@ -3543,8 +3543,9 @@ function AdminPortal({
               <div className="view-chargeback-header">
                 <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
               </div>
-              <div className="page-inner">
-                {adminTab === 'management' && (
+              <div className="page-inner" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
+                  {adminTab === 'management' && (
                   <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
                     <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
@@ -3649,11 +3650,12 @@ function AdminPortal({
                     onClick={() => { setAdminTab('verification-pending'); setAVcPage(1); }}
                   >Document Pending for Verification</div>
                 </div>
+                </div>
 
-                <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
+                <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent', flex: 1, overflowY: 'auto' }}>
                   <div className="tbl-wrap">
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                      <thead style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
@@ -4472,10 +4474,10 @@ function PartnerPortal({
       if (filterSearchBy === 'Case ID' && !cb.caseId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
       if (!filterSearchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
     }
-    if (filterStatus && cb.mStatus !== filterStatus) return false;
+    if (filterStatus && cb.mStatus !== filterStatus && cb.mSubStatus !== filterStatus) return false;
     if (filterMerchant && !cb.userName?.toLowerCase().includes(filterMerchant.toLowerCase())) return false;
     if (filterScheme && cb.product !== filterScheme) return false;
-    if (filterDisputeType && !(cb.adjType && cb.adjType.includes(filterDisputeType) && !(filterDisputeType === 'Arbitration' && cb.adjType.includes('Pre-Arbitration')))) return false;
+    if (filterDisputeType && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(filterDisputeType) && !(filterDisputeType === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
     if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
     if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
     return true;
