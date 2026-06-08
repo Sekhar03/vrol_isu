@@ -125,6 +125,13 @@ export default function App() {
         }
         return cb;
       });
+      autoLossCbs.sort((a, b) => {
+        const aResolved = a.mStatus.includes('Lost') || a.mStatus.includes('Won');
+        const bResolved = b.mStatus.includes('Lost') || b.mStatus.includes('Won');
+        if (aResolved && !bResolved) return 1;
+        if (!aResolved && bResolved) return -1;
+        return new Date(b.createdDate || b.txnDate) - new Date(a.createdDate || a.txnDate);
+      });
       setChargebacks(autoLossCbs);
     }
     if (Array.isArray(bundle.ledger)) setLedger(bundle.ledger);
@@ -718,6 +725,7 @@ function MerchantPortal({
 
   const getActionBtn = (cb) => {
     if (cb.visaPending) return <span className="badge badge-won" style={{background: '#e3f2fd', color: '#1976d2'}}>Submitted to Visa</span>;
+    if (cb.mStatus.includes('Lost') || cb.mStatus.includes('Won')) return <span className={`badge ${cb.mStatus.includes('Won') ? 'badge-won' : 'badge-resubmit'}`}>{cb.mStatus}</span>;
     if (cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost' || cb.mSubStatus === 'Arbitration Lost') return <span className="badge badge-resubmit">Accepted (Lost)</span>;
     if (cb.mSubStatus === 'Chargeback In Progress' && !cb.visaPending) return <span className="badge badge-progress">Pending Admin Verification</span>;
     if (cb.mSubStatus === 'Chargeback Resubmit' || cb.mSubStatus === 'Pending') {
@@ -1815,7 +1823,7 @@ function MerchantPortal({
                   )}
 
                   {/* Tab: Document Pending from Merchant */}
-                  {reportTab === 'doc-pending' && (
+                  {reportTab === 'doc-pending' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
                     <div>
                       <div className="tbl-toolbar">
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -1966,6 +1974,7 @@ function MerchantPortal({
                     {/* Col 1 */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Visa Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.visaId || '-'}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>AR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>RR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Txn Currency <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
@@ -2056,20 +2065,20 @@ function MerchantPortal({
                 <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10 }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
-                    {reportTab === 'doc-pending' && (
+                    {reportTab === 'doc-pending' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
                       <>
                         <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => { setActiveModal('action2'); }}>Accept Loss</button>
                         <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
                       </>
                     )}
-                    {reportTab === 'doc-verification' && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
+                    {reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
                       <>
                         <button className="btn btn-danger" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => handleMerchantRejectAdminClick(cb.id)}>Reject Admin Evidence</button>
                         <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => { setActiveModal('contest'); }}>Upload Additional Evidence</button>
                         <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#52c41a', color: '#fff', border: 'none' }} onClick={() => submitMerchantAcceptAdmin(cb.id)}>Accept Admin Evidence</button>
                       </>
                     )}
-                    {reportTab === 'doc-verification' && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
+                    {reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
                       <>
                         <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: '#50BDC9', border: '1px solid #50BDC9', background: '#fff' }} onClick={() => { setActiveModal('action2'); }}>Accept Loss</button>
                         <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
@@ -3889,6 +3898,7 @@ function AdminPortal({
                     {/* Col 1 */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Visa Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.visaId || '-'}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>AR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>RR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Txn Currency <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
@@ -4016,7 +4026,7 @@ function AdminPortal({
                             </div>
                           </div>
                         )}
-                        {!cb.visaPending && isPendingVerification(cb) && (
+                        {!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && !cb.visaPending && isPendingVerification(cb) && (
                           <>
                             <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveModal('remarks')}>
                               Review Evidence
@@ -4821,7 +4831,7 @@ function PartnerPortal({
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>👁</button>
-                                      {cb.mSubStatus !== 'Chargeback Won' && cb.mSubStatus !== 'Chargeback Lost' && !cb.visaPending && (
+                                      {!cb.mStatus.includes('Won') && !cb.mStatus.includes('Lost') && !cb.visaPending && (
                                         <>
                                           <button className="btn btn-sm btn-outline" style={{borderColor: '#ef4444', color: '#ef4444'}} onClick={() => { setTargetDisputeId(cb.id); setActiveModal('action2'); }}>Reject</button>
                                           <button className="btn btn-sm btn-outline" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('contest'); }}>Upload Evidence</button>
@@ -4959,6 +4969,7 @@ function PartnerPortal({
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Visa Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.visaId || '-'}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>AR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>RR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Txn Currency <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>INR</strong></div>
