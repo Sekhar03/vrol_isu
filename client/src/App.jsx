@@ -670,9 +670,11 @@ function MerchantPortal({
     const m = {
       'Chargeback New': 'badge-new',
       'Chargeback Lost': 'badge-lost',
-      'Chargeback in Progress': 'badge-progress',
+      'Arbitration Lost': 'badge-lost',
+      'Chargeback In Progress': 'badge-progress',
       'Chargeback Resubmit': 'badge-resubmit',
       'Chargeback Won': 'badge-won',
+      'Arbitration Won': 'badge-won',
       'Refund Success': 'badge-won',
       'Refund On Hold': 'badge-progress'
     };
@@ -681,9 +683,9 @@ function MerchantPortal({
 
   const getActionBtn = (cb) => {
     if (cb.visaPending) return <span className="badge badge-won" style={{background: '#e3f2fd', color: '#1976d2'}}>Submitted to Visa</span>;
-    if (cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost') return <span className="badge badge-resubmit">Accepted (Lost)</span>;
-    if (cb.mSubStatus === 'UNDER_REVIEW') return <span className="badge badge-progress">Pending Admin Verification</span>;
-    if (cb.mSubStatus === 'ACTION_REQUIRED' || cb.mSubStatus === 'Pending') {
+    if (cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost' || cb.mSubStatus === 'Arbitration Lost') return <span className="badge badge-resubmit">Accepted (Lost)</span>;
+    if (cb.mSubStatus === 'Chargeback In Progress' && !cb.visaPending) return <span className="badge badge-progress">Pending Admin Verification</span>;
+    if (cb.mSubStatus === 'Chargeback Resubmit' || cb.mSubStatus === 'Pending') {
       return (
         <button className="ta-btn" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('action1'); }}>
           Take Action
@@ -1675,8 +1677,8 @@ function MerchantPortal({
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                         <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                         <option value="Document Rejected">Document Rejected</option>
-                        <option value="UNDER_REVIEW">Document Pending Verification</option>
-                        <option value="ACTION_REQUIRED">Document Pending from Merchant</option>
+                        <option value="Chargeback In Progress">Document Pending Verification</option>
+                        <option value="Chargeback Resubmit">Document Pending from Merchant</option>
                       </select>
                     </div>
                     <div className="sp-field">
@@ -2761,26 +2763,15 @@ function AdminPortal({
     const id = disputeId || targetDisputeId;
     if (!id) return;
     try {
-      const entry = {
-        by: 'nsdladmin',
-        time: new Date().toLocaleString(),
-        title: 'Merchant Documents Accepted',
-        remarks: 'Admin accepted the merchant\'s submitted documents. (Visa pending final resolution)',
-        file: null
-      };
-
-      const response = await fetch(`${API_URL}/disputes/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          acquirerAction: 'accepted_docs',
-          timelineEntry: entry
-        })
+    try {
+      const response = await fetch(`${API_URL}/disputes/${disputeId}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-role': 'admin', 'x-user-name': currentUser?.username || 'nsdladmin' },
+        body: JSON.stringify({ action: 'visa_accept' })
       });
-
       if (response.ok) {
+        showToast('Accepted Merchant Documents. Case forwarded to Visa.', 'success');
         setActiveModal(null);
-        showToast('Documents accepted successfully');
         await refreshAllData();
       } else {
         showToast('Failed to accept documents', 'error');
@@ -3507,8 +3498,8 @@ function AdminPortal({
                             <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                             <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                             <option value="Document Rejected">Document Rejected</option>
-                            <option value="UNDER_REVIEW">Document Pending Verification</option>
-                            <option value="ACTION_REQUIRED">Document Pending from Merchant</option>
+                            <option value="Chargeback In Progress">Document Pending Verification</option>
+                            <option value="Chargeback Resubmit">Document Pending from Merchant</option>
                           </select>
                         </div>
                       </div>
@@ -3854,14 +3845,12 @@ function AdminPortal({
                             </div>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                               <span style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>[Simulator] Trigger Visa Webhook:</span>
-                              <button className="btn btn-sm btn-success" onClick={async () => {
-                                await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'Chargeback Won', resolution: 'Won', visaPending: false }) });
-                                setActiveModal(null); refreshAllData();
-                              }}>Chargeback Won</button>
-                              <button className="btn btn-sm btn-danger" onClick={async () => {
-                                await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'Chargeback Lost', resolution: 'Lost', visaPending: false }) });
-                                setActiveModal(null); refreshAllData();
-                              }}>Chargeback Lost</button>
+                              <button className="btn btn-sm btn-success" onClick={() => executeVisaWebhookSimulator(cb, true)}>
+                                {cb.mStatus === 'Arbitration Raise' ? 'Arbitration Won' : 'Chargeback Won'}
+                              </button>
+                              <button className="btn btn-sm btn-danger" onClick={() => executeVisaWebhookSimulator(cb, false)}>
+                                {cb.mStatus === 'Chargeback Raise' ? 'Escalate to Pre-Arb (Lost)' : cb.mStatus === 'Pre-Arbitration Raise' ? 'Escalate to Arbitration (Lost)' : 'Arbitration Lost'}
+                              </button>
                             </div>
                           </div>
                         )}
@@ -4208,14 +4197,12 @@ function AdminPortal({
                       <div style={{ width: '100%', borderTop: '1px solid #eee', paddingTop: '12px' }}>
                         <div style={{ fontSize: '12px', fontWeight: '600', color: '#555', marginBottom: '8px', textAlign: 'center' }}>[Simulator] Trigger Visa Webhook:</div>
                         <div style={{ display: 'flex', gap: '8px' }}>
-                          <button className="btn btn-sm btn-success" style={{ flex: 1 }} onClick={async () => {
-                            await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'Chargeback Won', resolution: 'Won', visaPending: false }) });
-                            setActiveModal(null); refreshAllData();
-                          }}>Chargeback Won</button>
-                          <button className="btn btn-sm btn-danger" style={{ flex: 1 }} onClick={async () => {
-                            await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'Chargeback Lost', resolution: 'Lost', visaPending: false }) });
-                            setActiveModal(null); refreshAllData();
-                          }}>Chargeback Lost</button>
+                          <button className="btn btn-sm btn-success" style={{ flex: 1 }} onClick={() => executeVisaWebhookSimulator(cb, true)}>
+                            {cb.mStatus === 'Arbitration Raise' ? 'Arbitration Won' : 'Chargeback Won'}
+                          </button>
+                          <button className="btn btn-sm btn-danger" style={{ flex: 1 }} onClick={() => executeVisaWebhookSimulator(cb, false)}>
+                            {cb.mStatus === 'Chargeback Raise' ? 'Escalate to Pre-Arb (Lost)' : cb.mStatus === 'Pre-Arbitration Raise' ? 'Escalate to Arbitration (Lost)' : 'Arbitration Lost'}
+                          </button>
                         </div>
                       </div>
                     </>
@@ -4560,8 +4547,8 @@ function PartnerPortal({
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                         <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                         <option value="Document Rejected">Document Rejected</option>
-                        <option value="UNDER_REVIEW">Document Pending Verification</option>
-                        <option value="ACTION_REQUIRED">Document Pending from Merchant</option>
+                        <option value="Chargeback In Progress">Document Pending Verification</option>
+                        <option value="Chargeback Resubmit">Document Pending from Merchant</option>
                       </select>
                     </div>
                     <div className="sp-field">
