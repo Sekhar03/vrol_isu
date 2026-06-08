@@ -4521,7 +4521,7 @@ function PartnerPortal({
                       <thead>
                         <tr>
                           <th>Case ID</th><th>RRN</th><th>Merchant</th><th>Scheme</th>
-                          <th>Status</th><th>Sub Status</th><th>Amount</th><th>Date</th><th>Visa</th>
+                          <th>Status</th><th>Sub Status</th><th>Amount</th><th>Date</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4535,7 +4535,6 @@ function PartnerPortal({
                             <td>{renderSubBadge(cb.mSubStatus)}</td>
                             <td><strong>{formatINR(cb.txnAmt)}</strong></td>
                             <td>{formatDateDisp(cb.createdDate)}</td>
-                            <td>{cb.visaPending ? <span className="badge badge-visa">🌐 Visa</span> : '—'}</td>
                           </tr>
                         ))}
                       </tbody>
