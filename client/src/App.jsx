@@ -3164,10 +3164,12 @@ function AdminPortal({
           const beneMobile = rowData['Bene Mobile'] || '9348909111';
           const glNo = rowData['GL No'] || '354422';
           const product = rowData['Product'] || selectedProvider || 'VISA';
+          const visaId = rowData['Visa ID'] || rowData['Visa Case Number'] || null;
 
           uploadPayload.push({
             id: 'CB' + Math.floor(Math.random() * 90000 + 10000),
             caseId: 'CASE' + Math.floor(Math.random() * 90000 + 10000),
+            visaId,
             userName: 'masteruser',
             userId: '2575789089',
             rrn, txnId,
@@ -3216,14 +3218,14 @@ function AdminPortal({
 
   const downloadVrolSampleTemplate = () => {
     const headers = [
-      'Visa Case Number', 'Dispute ID', 'Chargeback Number', 'ARN', 'RRN', 'STAN', 
+      'Visa ID', 'Dispute ID', 'Chargeback Number', 'ARN', 'RRN', 'Timestamp', 
       'MID', 'Merchant Name', 'Transaction Date', 'Settlement Date', 
       'Transaction Amount', 'Dispute Amount', 'Currency', 'Reason Code', 
       'Reason Description', 'Dispute Category', 'Card BIN', 'Last 4 Digits'
     ];
     const rows = [
       [
-        'CASE000001', 'DSP1001', 'CB-5541', '12345678901234567890123', '6093156553', '001234',
+        'VISA-12345', 'DSP1001', 'CB-5541', '12345678901234567890123', '6093156553', '2023-10-01T10:00:00Z',
         'ISU', 'Acme Corp', '2023-10-01', '2023-10-02', 
         '1000.00', '1000.00', 'INR', '10.4', 
         'Other Fraud - Card Absent Environment', 'Fraud', '411111', '1111'
@@ -3555,11 +3557,8 @@ function AdminPortal({
                           </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Vendor</label>
-                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} defaultValue="">
-                            <option value="">Select Vendor</option>
-                            <option value="ISU">ISU</option>
-                          </select>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Aggregator</label>
+                          <input type="text" value="PayerMax" readOnly style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#888', outline: 'none', background: '#f5f5f5', cursor: 'not-allowed' }} />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Status</label>
@@ -3654,6 +3653,7 @@ function AdminPortal({
                       <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
 
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Aggregator</th>
@@ -3677,6 +3677,7 @@ function AdminPortal({
                               <React.Fragment key={cb.id}>
                                 <tr style={{ borderBottom: '1px solid #f0f0f0', fontSize: '12px', background: 'transparent' }}>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
 
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>iServeU</td>

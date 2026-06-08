@@ -21,6 +21,7 @@ const documentEntrySchema = new mongoose.Schema({
 const chargebackSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   caseId: { type: String, required: true },
+  visaId: { type: String, default: null },
   userName: { type: String, default: 'masteruser' },
   userId: { type: String, default: '' },
   rrn: { type: String, required: true },
