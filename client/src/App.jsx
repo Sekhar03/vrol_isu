@@ -214,9 +214,16 @@ export default function App() {
     if (!s) return '';
     const d = new Date(s);
     if (isNaN(d.getTime())) return s;
-    return d.getDate().toString().padStart(2, '0') + '-' + 
+    const dateStr = d.getDate().toString().padStart(2, '0') + '-' + 
            (d.getMonth() + 1).toString().padStart(2, '0') + '-' + 
            d.getFullYear();
+    // Add time if present
+    if (s.includes('T') || s.includes(':')) {
+      const timeStr = d.getHours().toString().padStart(2, '0') + ':' + 
+             d.getMinutes().toString().padStart(2, '0');
+      return `${dateStr} ${timeStr}`;
+    }
+    return dateStr;
   };
 
   const handleLogin = async (e, username, password) => {
@@ -507,6 +514,9 @@ function MerchantPortal({
   const [acceptRemarks, setAcceptRemarks] = useState('');
   const [acceptResponseSelect, setAcceptResponseSelect] = useState('');
   const [contestRemarks, setContestRemarks] = useState('');
+  const [selectedDocsToReject, setSelectedDocsToReject] = useState([]);
+  const [merchantRejectAdminEvidence, setMerchantRejectAdminEvidence] = useState(null);
+  const [rejectionRemarks, setRejectionRemarks] = useState('');
   const [evidenceFiles, setEvidenceFiles] = useState({
     1: null,
     2: null,
@@ -732,6 +742,69 @@ function MerchantPortal({
   };
 
   // Submit Evidence Contest Action — also marks visaPending for Visa review
+  const handleMerchantRejectAdminClick = (id) => {
+    setTargetDisputeId(id);
+    setSelectedDocsToReject([]);
+    setRejectionRemarks('');
+    setMerchantRejectAdminEvidence(null);
+    setActiveModal('merchantRejectAdminDocs');
+  };
+
+  const submitMerchantAcceptAdmin = async (id) => {
+    try {
+      const response = await fetch(`${window.API_URL || 'http://localhost:5000/api'}/disputes/${id}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-role': 'merchant', 'x-user-name': currentUser?.username },
+        body: JSON.stringify({ action: 'merchant_accept_admin' })
+      });
+      if (response.ok) {
+        showToast('Accepted admin evidence successfully');
+        refreshAllData();
+      } else {
+        const errorData = await response.json();
+        showToast(`Error: ${errorData.message || 'Action failed'}`, 'error');
+      }
+    } catch (error) {
+      showToast('Network error', 'error');
+    }
+  };
+
+  const submitMerchantRejectAdminDocs = async () => {
+    if (selectedDocsToReject.length === 0) {
+      showToast('Please select at least one document to reject', 'error');
+      return;
+    }
+    if (!rejectionRemarks.trim()) {
+      showToast('Rejection remarks are mandatory', 'error');
+      return;
+    }
+    const id = targetDisputeId;
+    if (!id) return;
+
+    try {
+      const response = await fetch(`${window.API_URL || 'http://localhost:5000/api'}/disputes/${id}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-role': 'merchant', 'x-user-name': currentUser?.username },
+        body: JSON.stringify({
+          action: 'merchant_reject_admin',
+          comments: rejectionRemarks,
+          evidence: merchantRejectAdminEvidence ? merchantRejectAdminEvidence.name : null,
+          rejectedDocs: selectedDocsToReject.map(docId => ({ id: docId, remarks: rejectionRemarks }))
+        })
+      });
+      if (response.ok) {
+        showToast('Rejected admin evidence and re-uploaded successfully');
+        setActiveModal(null);
+        refreshAllData();
+      } else {
+        const errorData = await response.json();
+        showToast(`Error: ${errorData.message || 'Action failed'}`, 'error');
+      }
+    } catch (error) {
+      showToast('Network error', 'error');
+    }
+  };
+
   const submitContestEvidence = async () => {
     try {
       const headers = { 'Content-Type': 'application/json' };
@@ -2128,6 +2201,66 @@ function MerchantPortal({
         </div>
       )}
 
+      {activeModal === 'merchantRejectAdminDocs' && (
+        <div className="overlay open">
+          {(() => {
+            const cb = chargebacks.find(x => x.id === targetDisputeId);
+            if (!cb) return null;
+            return (
+              <div className="modal">
+                <div className="modal-hdr"><h3>Reject Admin Evidence</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
+                <div className="modal-body">
+                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px' }}>Select admin documents to reject:</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                    {(cb.documents || []).filter(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review').map(doc => (
+                      <label key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedDocsToReject.includes(doc.id)} 
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedDocsToReject([...selectedDocsToReject, doc.id]);
+                            else setSelectedDocsToReject(selectedDocsToReject.filter(id => id !== doc.id));
+                          }}
+                        />
+                        📄 {doc.filename}
+                      </label>
+                    ))}
+                  </div>
+                  
+                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Rejection Remarks (Mandatory):</div>
+                  <textarea 
+                    className="mfi" 
+                    placeholder="Enter reason for rejecting admin's evidence..." 
+                    value={rejectionRemarks}
+                    onChange={(e) => setRejectionRemarks(e.target.value)}
+                    rows={4}
+                    style={{ width: '100%', resize: 'vertical', marginBottom: '16px' }}
+                  ></textarea>
+
+                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Upload Additional Evidence (Optional):</div>
+                  <div className="file-upload-box" style={{ border: '2px dashed #e0e0e0', padding: '20px', textAlign: 'center', borderRadius: '4px', background: '#fafafa', position: 'relative' }}>
+                    <input 
+                      type="file" 
+                      onChange={(e) => setMerchantRejectAdminEvidence(e.target.files[0])} 
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+                    />
+                    {merchantRejectAdminEvidence ? (
+                      <div style={{ color: '#50BDC9', fontWeight: '600' }}>📄 {merchantRejectAdminEvidence.name}</div>
+                    ) : (
+                      <div style={{ color: '#9e9e9e', fontSize: '13px' }}>Drag & drop evidence file here, or click to browse</div>
+                    )}
+                  </div>
+                </div>
+                <div className="modal-footer" style={{ display: 'flex', gap: '10px' }}>
+                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setActiveModal(null)}>Cancel</button>
+                  <button className="btn btn-danger" style={{ flex: 2 }} onClick={() => submitMerchantRejectAdminDocs()}>Submit Rejection</button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
       {activeModal === 'successAccept' && (
         <div className="overlay open">
           <div className="modal modal-sm" style={{ textAlign: 'center', padding: '30px' }}>
@@ -2180,15 +2313,20 @@ const webhookData = [
 ];
 
 function AdminPortal({
-  currentUser, chargebacks, users, ledger, setView, toggleTheme, darkMode, formatINR, formatDateDisp, showToast, refreshAllData, resetAllSessions, handleLogout
+  currentUser, chargebacks, users, ledger, setView, toggleTheme, darkMode, formatINR, formatDateDisp: originalFormatDateDisp, showToast, refreshAllData, resetAllSessions, handleLogout
 }) {
-  const [activePage, setActivePage] = useState('a-dashboard'); // 'a-dashboard' | 'a-chargeback' | 'a-raise-cb' | 'a-view-cb' | 'a-lein' | 'a-credit'
+  const formatDateDisp = (d) => {
+    if (!d) return '';
+    const date = new Date(d);
+    return date.toLocaleDateString('en-IN') + ' ' + date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  };
+  const [activePage, setActivePage] = useState('a-dashboard'); 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [disputeMenuOpen, setDisputeMenuOpen] = useState(true);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   // Modal active
-  const [activeModal, setActiveModal] = useState(null); // null | 'remarks' | 'arbitration' | 'refund' | 'visaRuling' | 'acceptPartially'
+  const [activeModal, setActiveModal] = useState(null); 
   const [targetWebhook, setTargetWebhook] = useState(null);
   const [targetDisputeId, setTargetDisputeId] = useState(null);
   const [visaAcceptedAmount, setVisaAcceptedAmount] = useState('');
@@ -2197,6 +2335,7 @@ function AdminPortal({
   
   // Document rejection state
   const [selectedDocsToReject, setSelectedDocsToReject] = useState([]);
+  const [merchantRejectAdminEvidence, setMerchantRejectAdminEvidence] = useState(null);
   const [rejectionRemarks, setRejectionRemarks] = useState('');
   const [adminDisputeAction, setAdminDisputeAction] = useState('full');
 
@@ -2544,6 +2683,7 @@ function AdminPortal({
     setTargetDisputeId(id);
     setSelectedDocsToReject([]);
     setRejectionRemarks('');
+    setMerchantRejectAdminEvidence(null);
     setActiveModal('merchantRejectAdminDocs');
   };
 
@@ -2566,6 +2706,7 @@ function AdminPortal({
         body: JSON.stringify({
           action: 'merchant_reject_admin',
           comments: rejectionRemarks,
+          evidence: merchantRejectAdminEvidence ? merchantRejectAdminEvidence.name : null,
           rejectedDocs: selectedDocsToReject.map(docId => ({ id: docId, remarks: rejectionRemarks }))
         })
       });
@@ -3912,8 +4053,22 @@ function AdminPortal({
                     value={rejectionRemarks}
                     onChange={(e) => setRejectionRemarks(e.target.value)}
                     rows={4}
-                    style={{ width: '100%', resize: 'vertical' }}
+                    style={{ width: '100%', resize: 'vertical', marginBottom: '16px' }}
                   ></textarea>
+
+                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Upload Additional Evidence (Optional):</div>
+                  <div className="file-upload-box" style={{ border: '2px dashed #e0e0e0', padding: '20px', textAlign: 'center', borderRadius: '4px', background: '#fafafa', position: 'relative' }}>
+                    <input 
+                      type="file" 
+                      onChange={(e) => setMerchantRejectAdminEvidence(e.target.files[0])} 
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+                    />
+                    {merchantRejectAdminEvidence ? (
+                      <div style={{ color: '#50BDC9', fontWeight: '600' }}>📄 {merchantRejectAdminEvidence.name}</div>
+                    ) : (
+                      <div style={{ color: '#9e9e9e', fontSize: '13px' }}>Drag & drop evidence file here, or click to browse</div>
+                    )}
+                  </div>
                 </div>
                 <div className="modal-footer" style={{ display: 'flex', gap: '10px' }}>
                   <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setActiveModal(null)}>Cancel</button>

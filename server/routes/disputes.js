@@ -267,7 +267,7 @@ router.post('/:id/action', async (req, res) => {
       dispute.merchantAction = 'rejected_admin';
       dispute.acquirerAction = null;
       
-      const { rejectedDocs } = req.body;
+      const { rejectedDocs, evidence } = req.body;
       if (Array.isArray(rejectedDocs)) {
         rejectedDocs.forEach(rdoc => {
           const doc = dispute.documents.find(d => d.id === rdoc.id && d.uploadedBy === 'Admin');
@@ -278,8 +278,31 @@ router.post('/:id/action', async (req, res) => {
           }
         });
       }
+
+      let fileString = null;
+      if (Array.isArray(evidence)) {
+        evidence.forEach((filename, idx) => {
+          dispute.documents.push({
+            id: 'doc_' + Date.now() + '_' + idx,
+            filename: filename,
+            uploadedAt: new Date().toISOString(),
+            status: 'Pending Review',
+            uploadedBy: req.headers['x-user-name'] || 'Merchant'
+          });
+        });
+        fileString = evidence.join(', ');
+      } else if (evidence) {
+        dispute.documents.push({
+          id: 'doc_' + Date.now(),
+          filename: evidence,
+          uploadedAt: new Date().toISOString(),
+          status: 'Pending Review',
+          uploadedBy: req.headers['x-user-name'] || 'Merchant'
+        });
+        fileString = evidence;
+      }
       
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'Merchant', time: new Date().toISOString(), title: 'Merchant Rejected Admin Evidence', remarks: comments || 'Merchant rejected Admin evidence.', file: null });
+      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'Merchant', time: new Date().toISOString(), title: 'Merchant Rejected Admin Evidence', remarks: comments || 'Merchant rejected Admin evidence.', file: fileString });
     }
 
     const updated = await dispute.save();
