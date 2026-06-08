@@ -2367,7 +2367,7 @@ function AdminPortal({
 
   // Pagination view chargebacks
   const [aVcPage, setAVcPage] = useState(1);
-  const [aVcLimit, setAVcLimit] = useState(5);
+  const [aVcLimit, setAVcLimit] = useState(10);
   const [adminTab, setAdminTab] = useState('management');
 
   // Expanded row IDs
@@ -3543,7 +3543,7 @@ function AdminPortal({
               <div className="view-chargeback-header">
                 <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
               </div>
-              <div className="page-inner" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)' }}>
+              <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
                   {adminTab === 'management' && (
                   <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
@@ -3652,10 +3652,10 @@ function AdminPortal({
                 </div>
                 </div>
 
-                <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent', flex: 1, overflowY: 'auto' }}>
+                <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
                   <div className="tbl-wrap">
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10 }}>
+                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
