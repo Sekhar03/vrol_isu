@@ -4831,12 +4831,7 @@ function PartnerPortal({
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>👁</button>
-                                      {!cb.mStatus.includes('Won') && !cb.mStatus.includes('Lost') && !cb.visaPending && (
-                                        <>
-                                          <button className="btn btn-sm btn-outline" style={{borderColor: '#ef4444', color: '#ef4444'}} onClick={() => { setTargetDisputeId(cb.id); setActiveModal('action2'); }}>Reject</button>
-                                          <button className="btn btn-sm btn-outline" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('contest'); }}>Upload Evidence</button>
-                                        </>
-                                      )}
+
                                     </div>
                                   </td>
                           </tr>
@@ -5038,10 +5033,11 @@ function PartnerPortal({
                     
                     <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, gap: '12px' }}>
                       <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
-                      {(!cb.mSubStatus.includes('Won') && !cb.mSubStatus.includes('Lost') && cb.mSubStatus !== 'Document Rejected') && !cb.visaPending && (
-                        <button onClick={() => setActiveModal('partnerUploadEvidence')} style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
-                          Upload Evidence on Behalf of Merchant
-                        </button>
+                      {(!cb.mStatus.includes('Won') && !cb.mStatus.includes('Lost')) && !cb.visaPending && (
+                        <>
+                          <button style={{ padding: '8px 24px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }} onClick={() => { setActiveModal('action2'); }}>Reject</button>
+                          <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
+                        </>
                       )}
                     </div>
                   </div>
