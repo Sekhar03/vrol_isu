@@ -2026,7 +2026,10 @@ function MerchantPortal({
                       </>
                     )}
                     {reportTab === 'doc-verification' && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
-                      <span className="badge badge-progress" style={{ padding: '6px 16px', borderRadius: '4px', fontSize: '12px' }}>Pending Admin Verification</span>
+                      <>
+                        <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: '#50BDC9', border: '1px solid #50BDC9', background: '#fff' }} onClick={() => { setActiveModal('action2'); }}>Accept Loss</button>
+                        <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
+                      </>
                     )}
                     {reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && getActionBtn(cb)}
                   </div>
@@ -2474,9 +2477,9 @@ function AdminPortal({
     });
 
     if (adminTab === 'merchant-pending') {
-      list = list.filter(cb => !cb.merchantAction || cb.merchantAction === 'additional_evidence');
+      list = list.filter(cb => !cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence'));
     } else if (adminTab === 'verification-pending') {
-      list = list.filter(cb => (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected') && cb.acquirerAction === null);
+      list = list.filter(cb => (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin') && cb.acquirerAction === null);
     }
 
     if (aVcSearchInput) {
