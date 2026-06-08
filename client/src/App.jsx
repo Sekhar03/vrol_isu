@@ -3901,48 +3901,54 @@ function AdminPortal({
             const cb = chargebacks.find(x => x.id === targetDisputeId);
             if (!cb) return null;
             return (
-              <div className="modal">
-                <div className="modal-hdr"><h3>Remarks &amp; Evidence Review</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
-                <div className="modal-body">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '3px' }}>RRN</div><div style={{ fontWeight: 700, fontFamily: 'monospace' }}>{cb.rrn}</div></div>
-                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '3px' }}>Txn Amount</div><div style={{ fontWeight: 700 }}>{formatINR(cb.txnAmt)}</div></div>
-                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '3px' }}>Status</div><div>{renderStatusBadge(cb.mStatus)}</div></div>
-                    <div><div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '3px' }}>Merchant Action</div><div style={{ fontWeight: 600 }}>{cb.merchantAction || '—'}</div></div>
+              <div className="modal" style={{ width: '600px', padding: 0, borderRadius: '8px', overflow: 'hidden' }}>
+                <div className="modal-hdr" style={{ background: '#50BDC9', color: '#fff', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Remarks & Evidence Review</h3>
+                  <button onClick={() => setActiveModal(null)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', width: '30px', height: '30px', borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                </div>
+                <div className="modal-body" style={{ padding: '24px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
+                    <div><div style={{ fontSize: '12px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>RRN</div><div style={{ fontWeight: 700, fontSize: '15px' }}>{cb.rrn}</div></div>
+                    <div><div style={{ fontSize: '12px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>Txn Amount</div><div style={{ fontWeight: 700, fontSize: '15px' }}>{formatINR(cb.txnAmt)}</div></div>
+                    <div><div style={{ fontSize: '12px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>Status</div><div>{renderStatusBadge(cb.mStatus)}</div></div>
+                    <div><div style={{ fontSize: '12px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>Merchant Action</div><div style={{ fontWeight: 600, fontSize: '15px' }}>{cb.merchantAction || '—'}</div></div>
                   </div>
+
                   {(cb.documents && cb.documents.length > 0) ? (
                     <div>
-                      <div style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>Submitted Documents</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', color: '#777', marginBottom: '10px' }}>Submitted Documents</div>
                       {cb.documents.map((doc, idx) => (
-                        <div key={doc.id || idx} className="remarks-doc" style={{ marginBottom: '8px', border: doc.status === 'Rejected' ? '1px solid #ff4d4f' : '' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span>📄 {doc.filename}</span>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#faad14' }}>{doc.status}</span>
-                              <button type="button" className="btn btn-sm btn-secondary" onClick={() => showToast(`Downloading ${doc.filename}...`, 'success')}>⬇ Download</button>
-                            </div>
+                        <div key={doc.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', border: '1px solid #eaeaea', borderRadius: '6px', marginBottom: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ color: '#ccc' }}>📄</span>
+                            <span style={{ fontSize: '14px', color: '#333' }}>{doc.filename}</span>
+                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#faad14', marginLeft: '4px' }}>{doc.status}</span>
                           </div>
-                          {doc.status === 'Rejected' && doc.rejectionRemarks && (
-                            <div style={{ marginTop: '8px', fontSize: '12px', color: '#ff4d4f' }}>
-                              <strong>Rejection Reason:</strong> {doc.rejectionRemarks}
-                            </div>
-                          )}
+                          <button type="button" style={{ background: '#fff', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => showToast(`Downloading ${doc.filename}...`, 'success')}>
+                            ⬇ Download
+                          </button>
                         </div>
                       ))}
-                      <div style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px', marginTop: '12px' }}>Merchant Justification Remarks</div>
-                      <div className="remarks-reason">
+                      
+                      <div style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', color: '#777', marginBottom: '10px', marginTop: '20px' }}>Merchant Justification Remarks</div>
+                      <div style={{ border: '1px solid #eaeaea', borderRadius: '6px', padding: '16px', fontSize: '14px', color: '#333', lineHeight: '1.5' }}>
                         {cb.rejectReason || 'Merchant contested the chargeback. Pending admin review.'}
                       </div>
                     </div>
                   ) : (cb.rejectReason || cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence') ? (
                     <div>
-                      <div style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>Submitted Document</div>
-                      <div className="remarks-doc">
-                        <span>📄 {cb.merchantAction === 'evidence' ? 'Merchant_Evidence_Submitted.pdf' : 'Merchant_Evidence.pdf'}</span>
-                        <button type="button" className="btn btn-sm btn-secondary" onClick={() => showToast('Downloading Evidence File...', 'success')}>⬇ Download</button>
+                      <div style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', color: '#777', marginBottom: '10px' }}>Submitted Document</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', border: '1px solid #eaeaea', borderRadius: '6px', marginBottom: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ color: '#ccc' }}>📄</span>
+                          <span style={{ fontSize: '14px', color: '#333' }}>{cb.merchantAction === 'evidence' ? 'Merchant_Evidence_Submitted.pdf' : 'Merchant_Evidence.pdf'}</span>
+                        </div>
+                        <button type="button" style={{ background: '#fff', border: '1px solid #ddd', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => showToast('Downloading Evidence File...', 'success')}>
+                          ⬇ Download
+                        </button>
                       </div>
-                      <div style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>Merchant Justification Remarks</div>
-                      <div className="remarks-reason">
+                      <div style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', color: '#777', marginBottom: '10px', marginTop: '20px' }}>Merchant Justification Remarks</div>
+                      <div style={{ border: '1px solid #eaeaea', borderRadius: '6px', padding: '16px', fontSize: '14px', color: '#333', lineHeight: '1.5' }}>
                         {cb.rejectReason || (cb.merchantAction === 'evidence'
                           ? 'Merchant submitted evidence documents. Pending admin verification before representment to Visa/NPCI.'
                           : 'Merchant contested the chargeback. Pending admin review.')}
@@ -3952,20 +3958,20 @@ function AdminPortal({
                     <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No merchant representation logs found.</div>
                   )}
                 </div>
-                <div className="modal-footer" style={{ justifyContent: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
+                <div className="modal-footer" style={{ padding: '20px 24px', background: '#fff', borderTop: 'none', display: 'flex', gap: '12px' }}>
                   {cb.merchantAction === 'additional_evidence' ? (
                     <>
-                      <button type="button" className="btn btn-primary" style={{ flex: 1, minWidth: '140px' }} onClick={() => setActiveModal('visaRuling')}>Visa Ruling</button>
-                      <button type="button" className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
+                      <button type="button" style={{ flex: 1, padding: '12px', background: '#1890ff', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setActiveModal('visaRuling')}>Visa Ruling</button>
+                      <button type="button" style={{ flex: 1, padding: '12px', background: '#fff', border: '1px solid #ddd', color: '#333', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setActiveModal(null)}>Cancel</button>
                     </>
                   ) : isPendingVerification(cb) ? (
                     <>
-                      <button type="button" className="btn btn-danger" style={{ flex: 1, minWidth: '140px' }} onClick={() => handleArbitrationLost(cb.id)}>Accept Loss (Send to Visa)</button>
-                      <button type="button" className="btn btn-warning" style={{ flex: 1, minWidth: '140px', background: '#eab308', color: '#fff', border: 'none' }} onClick={() => handleDeclineClick(cb.id)}>Decline & Send to Merchant</button>
-                      <button type="button" className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
+                      <button type="button" style={{ flex: 1, padding: '12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => handleArbitrationLost(cb.id)}>Accept Loss (Send to Visa)</button>
+                      <button type="button" style={{ flex: 1, padding: '12px', background: '#eab308', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => handleDeclineClick(cb.id)}>Decline & Send to Merchant</button>
+                      <button type="button" style={{ padding: '12px 24px', background: '#fff', border: '1px solid #ddd', color: '#333', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setActiveModal(null)}>Cancel</button>
                     </>
                   ) : (
-                    <button type="button" className="btn btn-secondary" style={{ width: '100%' }} onClick={() => setActiveModal(null)}>Close</button>
+                    <button type="button" style={{ flex: 1, padding: '12px', background: '#fff', border: '1px solid #ddd', color: '#333', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setActiveModal(null)}>Close</button>
                   )}
                 </div>
               </div>
@@ -4084,42 +4090,47 @@ function AdminPortal({
             const cb = chargebacks.find(x => x.id === targetDisputeId);
             if (!cb) return null;
             return (
-              <div className="modal">
-                <div className="modal-hdr"><h3>Reject Documents &amp; Request More Info</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
-                <div className="modal-body">
-                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '10px' }}>Select documents to reject:</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              <div className="modal" style={{ width: '600px', padding: 0, borderRadius: '8px', overflow: 'hidden' }}>
+                <div className="modal-hdr" style={{ background: '#50BDC9', color: '#fff', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Reject Documents & Request More Info</h3>
+                  <button onClick={() => setActiveModal(null)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', width: '30px', height: '30px', borderRadius: '50%', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                </div>
+                <div className="modal-body" style={{ padding: '24px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#333', marginBottom: '12px' }}>Select documents to reject:</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                     {(cb.documents || []).filter(d => d.status === 'Pending Review').map(doc => (
-                      <label key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                      <label key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#333', cursor: 'pointer' }}>
                         <input 
                           type="checkbox" 
+                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                           checked={selectedDocsToReject.includes(doc.id)} 
                           onChange={(e) => {
                             if (e.target.checked) setSelectedDocsToReject([...selectedDocsToReject, doc.id]);
                             else setSelectedDocsToReject(selectedDocsToReject.filter(id => id !== doc.id));
                           }}
                         />
-                        📄 {doc.filename}
+                        <span style={{ color: '#ccc' }}>📄</span>
+                        {doc.filename}
                       </label>
                     ))}
                     {(cb.documents || []).filter(d => d.status === 'Pending Review').length === 0 && (
-                      <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No documents pending review.</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>No documents pending review.</div>
                     )}
                   </div>
                   
-                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Rejection Remarks (Mandatory):</div>
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#333', marginBottom: '10px' }}>Rejection Remarks (Mandatory):</div>
                   <textarea 
                     className="mfi" 
                     placeholder="Enter reason for rejection..." 
                     value={rejectionRemarks}
                     onChange={(e) => setRejectionRemarks(e.target.value)}
                     rows={4}
-                    style={{ width: '100%', resize: 'vertical' }}
+                    style={{ width: '100%', resize: 'vertical', padding: '12px', border: '1px solid #ccc', borderRadius: '6px', fontSize: '14px', fontFamily: 'inherit' }}
                   ></textarea>
                 </div>
-                <div className="modal-footer" style={{ display: 'flex', gap: '10px' }}>
-                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setActiveModal('remarks')}>Back</button>
-                  <button className="btn btn-danger" style={{ flex: 2 }} onClick={() => submitDeclineDocs()}>Submit Rejection</button>
+                <div className="modal-footer" style={{ padding: '20px 24px', background: '#fff', borderTop: 'none', display: 'flex', gap: '12px' }}>
+                  <button type="button" style={{ flex: 1, padding: '12px', background: '#fff', border: '1px solid #ddd', color: '#333', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setActiveModal('remarks')}>Back</button>
+                  <button type="button" style={{ flex: 2, padding: '12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => submitDeclineDocs()}>Submit Rejection</button>
                 </div>
               </div>
             );
