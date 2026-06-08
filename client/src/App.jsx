@@ -4331,6 +4331,55 @@ function PartnerPortal({
   const [targetDisputeId, setTargetDisputeId] = useState(null);
   const [targetUserId, setTargetUserId] = useState(null);
   const [merchantSearch, setMerchantSearch] = useState('');
+  
+  const [evidenceFiles, setEvidenceFiles] = useState({ 1: null, 2: null, 3: null });
+  const [contestRemarks, setContestRemarks] = useState('');
+
+  const handleEvidenceFileChange = (idx, file) => {
+    if (file) setEvidenceFiles(prev => ({ ...prev, [idx]: file }));
+  };
+  const removeEvidenceFile = (idx) => {
+    setEvidenceFiles(prev => ({ ...prev, [idx]: null }));
+  };
+
+  const submitPartnerEvidence = async () => {
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentUser) {
+        headers['x-user-role'] = currentUser.role;
+        headers['x-user-name'] = currentUser.username;
+      }
+
+      const uploadedDocs = [];
+      if (evidenceFiles[1]) uploadedDocs.push(evidenceFiles[1].name || evidenceFiles[1]);
+      if (evidenceFiles[2]) uploadedDocs.push(evidenceFiles[2].name || evidenceFiles[2]);
+      if (evidenceFiles[3]) uploadedDocs.push(evidenceFiles[3].name || evidenceFiles[3]);
+      if (uploadedDocs.length === 0) uploadedDocs.push('EvidenceSubmitted.pdf');
+
+      const response = await fetch(`${API_URL}/disputes/${targetDisputeId}/action`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'contest',
+          comments: (contestRemarks || 'Contested') + ' — Evidence forwarded to Acquirer on behalf of Merchant.',
+          evidence: uploadedDocs
+        })
+      });
+
+      if (response.ok) {
+        setContestRemarks('');
+        setEvidenceFiles({ 1: null, 2: null, 3: null });
+        setActiveModal(null);
+        showToast('Evidence submitted on behalf of Merchant', 'success');
+        await refreshAllData();
+      } else {
+        showToast('Evidence submit failed', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('API error', 'error');
+    }
+  };
 
   // Partner sees all disputes (they represent all merchants)
   const allDisputes = chargebacks;
@@ -4803,12 +4852,102 @@ function PartnerPortal({
                       </div>
                     </div>
                     
-                    <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0 }}>
+                    <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, gap: '12px' }}>
                       <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
+                      {(cb.mSubStatus === 'Chargeback Resubmit' || cb.mSubStatus === 'Chargeback New' || cb.mSubStatus === 'Pending') && !cb.visaPending && (
+                        <button onClick={() => setActiveModal('partnerUploadEvidence')} style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+                          Upload Evidence on Behalf of Merchant
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
               })()}
+            </div>
+          )}
+
+          {/* Partner Upload Evidence Modal */}
+          {activeModal === 'partnerUploadEvidence' && (
+            <div className="overlay open">
+              <div className="modal modal-lg">
+                <div className="modal-hdr">
+                  <h3>Submit Evidence on Behalf of Merchant</h3>
+                  <button className="modal-close" onClick={() => setActiveModal('disputeDetails')}>✕</button>
+                </div>
+                <div className="modal-body">
+                  <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px' }}>Evidence Documents</div>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                    Upload proof of delivery or service. The files will be forwarded to the acquirer. Max 20MB (.png, .jpeg, .pdf).
+                  </p>
+                  
+                  <div id="evidenceList">
+                    <div className="ev-row">
+                      <label>ℹ Delivery/Service Proof</label>
+                      <div>
+                        {evidenceFiles[1] ? (
+                          <div className="ev-uploaded">
+                            📄 {evidenceFiles[1].name || evidenceFiles[1]} 
+                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', marginLeft: '8px' }} onClick={() => removeEvidenceFile(1)}>✕</button>
+                          </div>
+                        ) : (
+                          <>
+                            <label className="ev-upload-btn" htmlFor="evInput1Partner">☁ Choose proof file</label>
+                            <input type="file" id="evInput1Partner" style={{ display: 'none' }} onChange={(e) => handleEvidenceFileChange(1, e.target.files[0])} />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ev-row">
+                      <label>ℹ Statement of Service</label>
+                      <div>
+                        {evidenceFiles[2] ? (
+                          <div className="ev-uploaded">
+                            📄 {evidenceFiles[2].name || evidenceFiles[2]} 
+                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', marginLeft: '8px' }} onClick={() => removeEvidenceFile(2)}>✕</button>
+                          </div>
+                        ) : (
+                          <>
+                            <label className="ev-upload-btn" htmlFor="evInput2Partner">☁ Choose file</label>
+                            <input type="file" id="evInput2Partner" style={{ display: 'none' }} onChange={(e) => handleEvidenceFileChange(2, e.target.files[0])} />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ev-row">
+                      <label>ℹ Refund Invoice (Optional)</label>
+                      <div>
+                        {evidenceFiles[3] ? (
+                          <div className="ev-uploaded">
+                            📄 {evidenceFiles[3].name || evidenceFiles[3]} 
+                            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', marginLeft: '8px' }} onClick={() => removeEvidenceFile(3)}>✕</button>
+                          </div>
+                        ) : (
+                          <>
+                            <label className="ev-upload-btn" htmlFor="evInput3Partner">☁ Choose file</label>
+                            <input type="file" id="evInput3Partner" style={{ display: 'none' }} onChange={(e) => handleEvidenceFileChange(3, e.target.files[0])} />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mf" style={{ marginTop: '14px' }}>
+                    <label>Justification Remarks</label>
+                    <input 
+                      type="text" 
+                      className="mfi" 
+                      placeholder="Summarize the representation case (Max 500 chars)" 
+                      value={contestRemarks}
+                      onChange={(e) => setContestRemarks(e.target.value)}
+                      maxLength={500} 
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn btn-secondary" onClick={() => setActiveModal('disputeDetails')}>Back</button>
+                  <button className="btn btn-primary" onClick={submitPartnerEvidence}>Submit Representation</button>
+                </div>
+              </div>
             </div>
           )}
 
