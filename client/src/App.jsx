@@ -461,6 +461,31 @@ function LoginForm({ handleLogin, toggleTheme, darkMode, onLoadDemo }) {
               Secure Login
             </button>
           </form>
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '24px' }}>
+            <button
+              type="button"
+              onClick={() => { setUsername('masteruser'); setPassword('Test@2026'); }}
+              style={{ flex: 1, padding: '8px', fontSize: '12px', fontWeight: '600', background: darkMode ? 'rgba(15,23,42,0.8)' : '#f1f5f9', color: 'var(--brand)', border: `1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`, borderRadius: '8px', cursor: 'pointer' }}
+            >
+              Merchant
+            </button>
+            <button
+              type="button"
+              onClick={() => { setUsername('Test@Ad'); setPassword('Test@2027'); }}
+              style={{ flex: 1, padding: '8px', fontSize: '12px', fontWeight: '600', background: darkMode ? 'rgba(15,23,42,0.8)' : '#f1f5f9', color: 'var(--brand)', border: `1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`, borderRadius: '8px', cursor: 'pointer' }}
+            >
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => { setUsername('partneruser'); setPassword('Test@2028'); }}
+              style={{ flex: 1, padding: '8px', fontSize: '12px', fontWeight: '600', background: darkMode ? 'rgba(15,23,42,0.8)' : '#f1f5f9', color: 'var(--brand)', border: `1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`, borderRadius: '8px', cursor: 'pointer' }}
+            >
+              Partner
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={handleLoadDemo}
