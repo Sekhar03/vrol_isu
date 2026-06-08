@@ -116,7 +116,17 @@ export default function App() {
 
   const hydrateDemoBundle = useCallback((bundle, user) => {
     if (Array.isArray(bundle.users)) setUsers(bundle.users);
-    if (Array.isArray(bundle.chargebacks)) setChargebacks(bundle.chargebacks);
+    if (Array.isArray(bundle.chargebacks)) {
+      const autoLossCbs = bundle.chargebacks.map(cb => {
+        if ((cb.mSubStatus === 'Chargeback New' || cb.mSubStatus === 'Chargeback In Progress') && cb.respondByDate) {
+          if (new Date(cb.respondByDate) < new Date()) {
+            return { ...cb, mStatus: 'Dispute Lost – TAT Expired', mSubStatus: 'Dispute Lost – TAT Expired' };
+          }
+        }
+        return cb;
+      });
+      setChargebacks(autoLossCbs);
+    }
     if (Array.isArray(bundle.ledger)) setLedger(bundle.ledger);
     if (user && Array.isArray(bundle.users)) {
       const found = bundle.users.find((u) => u.username === user.username);
@@ -1627,8 +1637,8 @@ function MerchantPortal({
                 </div>
 
                 {/* Search Panel — matches reference image */}
-                <div className="search-panel">
-                  <div className="search-panel-title">🔍 Search — Dispute Management</div>
+                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
+                    <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                   <div className="search-panel-grid">
                     <div className="sp-field">
                       <label>📅 From Date</label>
@@ -1644,22 +1654,19 @@ function MerchantPortal({
                       <label>Dispute Type</label>
                       <select className="sp-input" value={reportFilter.disputeType}
                         onChange={(e) => setReportFilter(prev => ({ ...prev, disputeType: e.target.value }))}>
-                        <option value="">Select Dispute Type</option>
+                        <option value="">Select All</option>
                         <option value="Chargeback">Chargeback</option>
                         <option value="Pre-Arbitration">Pre-Arbitration</option>
                         <option value="Retrieval Request">Retrieval Request</option>
                         <option value="Arbitration">Arbitration</option>
                       </select>
                     </div>
-                    <div className="sp-field">
-                      <label>Aggregator</label>
-                      <input type="text" className="sp-input" value="PayerMax" readOnly style={{ background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }} />
-                    </div>
+
                     <div className="sp-field">
                       <label>Scheme</label>
                       <select className="sp-input" value={reportFilter.scheme}
                         onChange={(e) => setReportFilter(prev => ({ ...prev, scheme: e.target.value }))}>
-                        <option value="">Select Scheme</option>
+                        <option value="">Select All</option>
                         <option value="Visa">Visa</option>
                       </select>
                     </div>
@@ -1667,7 +1674,7 @@ function MerchantPortal({
                       <label>Dispute Status</label>
                       <select className="sp-input" value={reportFilter.disputeStatus}
                         onChange={(e) => setReportFilter(prev => ({ ...prev, disputeStatus: e.target.value }))}>
-                        <option value="">Select Dispute Status</option>
+                        <option value="">Select All</option>
                         <option value="Dispute Won Partially">Dispute Won Partially</option>
                         <option value="Dispute Won Fully">Dispute Won Fully</option>
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
@@ -1681,7 +1688,7 @@ function MerchantPortal({
                       <label>Search By</label>
                       <select className="sp-input" value={reportFilter.searchBy}
                         onChange={(e) => setReportFilter(prev => ({ ...prev, searchBy: e.target.value }))}>
-                        <option value="">Select Search By</option>
+                        <option value="">Select All</option>
                         <option value="Txn ID">Transaction ID (Txn ID)</option>
                         <option value="RRN">RRN</option>
                         <option value="TID">TID</option>
@@ -1699,29 +1706,31 @@ function MerchantPortal({
                     )}
                     <div className="sp-field" style={{ visibility: 'hidden' }}></div>
                   </div>
-                  <div className="search-panel-actions">
-                    <button className="btn btn-secondary" onClick={() => setReportFilter({ from: DEFAULT_FROM, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' })}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                    <button style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: 'transparent', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => setReportFilter({ from: DEFAULT_FROM, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' })}>
                       Reset
                     </button>
-                    <button className="btn btn-primary" onClick={() => showToast('Reports filtered!')}>
+                    <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Reports filtered!')}>
                       Search
                     </button>
                   </div>
-                </div>
+                </fieldset>
 
-                {/* Tab navigation */}
-                <div className="tbl-card" style={{ overflow: 'visible' }}>
-                  <div className="report-tabs" style={{ padding: '0 16px' }}>
-                    <div className={`report-tab ${reportTab === 'dispute-mgmt' ? 'active' : ''}`} onClick={() => setReportTab('dispute-mgmt')}>
-                      All Disputes
-                    </div>
-                    <div className={`report-tab ${reportTab === 'doc-pending' ? 'active' : ''}`} onClick={() => setReportTab('doc-pending')}>
-                      Action Required
-                    </div>
-                    <div className={`report-tab ${reportTab === 'doc-verification' ? 'active' : ''}`} onClick={() => setReportTab('doc-verification')}>
-                      Pending Verification
-                    </div>
-                  </div>
+                <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
+                  <div 
+                    style={{ padding: '12px 0', color: reportTab === 'dispute-mgmt' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'dispute-mgmt' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => setReportTab('dispute-mgmt')}
+                  >Dispute Management</div>
+                  <div 
+                    style={{ padding: '12px 0', color: reportTab === 'doc-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => setReportTab('doc-pending')}
+                  >Document pending from Merchant</div>
+                  <div 
+                    style={{ padding: '12px 0', color: reportTab === 'doc-verification' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-verification' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => setReportTab('doc-verification')}
+                  >Document Pending for Verification</div>
+                </div>
+                <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
 
                   {/* Tab: Dispute Management */}
                   {reportTab === 'dispute-mgmt' && (
@@ -1734,40 +1743,44 @@ function MerchantPortal({
                       <div className="tbl-wrap">
                         <table>
                           <thead>
-                            <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Txn Currency</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Amount</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Current Status</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>TAT</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Action</th>
-                            </tr>
+                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View / Actions</th>
+                        </tr>
                           </thead>
                           <tbody>
                             {reportData.filtered.slice(0, 10).map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '12px 16px', color: '#50BDC9', fontWeight: '600' }}>{cb.caseId}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>INR</td>
-                                <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{cb.txnAmt}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.mStatus}</td>
-                                <td style={{ padding: '12px 16px' }}>
-                                  <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
-                                    {cb.aging}d
-                                  </span>
-                                </td>
-                                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                    👁
-                                  </button>
-                                </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
+                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                      👁
+                                    </button>
+                                  </td>
                               </tr>
                             ))}
                           </tbody>
@@ -1787,40 +1800,44 @@ function MerchantPortal({
                       <div className="tbl-wrap">
                         <table>
                           <thead>
-                            <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Txn Currency</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Amount</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Current Status</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>TAT</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Action</th>
-                            </tr>
+                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View / Actions</th>
+                        </tr>
                           </thead>
                           <tbody>
                             {actionRequiredDisputes.map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '12px 16px', color: '#50BDC9', fontWeight: '600' }}>{cb.caseId}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>INR</td>
-                                <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{cb.txnAmt}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.mStatus}</td>
-                                <td style={{ padding: '12px 16px' }}>
-                                  <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
-                                    {cb.aging}d
-                                  </span>
-                                </td>
-                                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                    👁
-                                  </button>
-                                </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
+                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                      👁
+                                    </button>
+                                  </td>
                               </tr>
                             ))}
                             {actionRequiredDisputes.length === 0 && (
@@ -1843,40 +1860,44 @@ function MerchantPortal({
                       <div className="tbl-wrap">
                         <table>
                           <thead>
-                            <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>AR Number</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Txn Currency</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Amount</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Current Status</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>TAT</th>
-                              <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Action</th>
-                            </tr>
+                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View / Actions</th>
+                        </tr>
                           </thead>
                           <tbody>
                             {pendingVerificationDisputes.map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '12px 16px', color: '#50BDC9', fontWeight: '600' }}>{cb.caseId}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>INR</td>
-                                <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{cb.txnAmt}</td>
-                                <td style={{ padding: '12px 16px', color: '#333' }}>{cb.mStatus}</td>
-                                <td style={{ padding: '12px 16px' }}>
-                                  <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
-                                    {cb.aging}d
-                                  </span>
-                                </td>
-                                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                    👁
-                                  </button>
-                                </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
+                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                      👁
+                                    </button>
+                                  </td>
                               </tr>
                             ))}
                             {pendingVerificationDisputes.length === 0 && (
@@ -2271,6 +2292,48 @@ function MerchantPortal({
         </div>
       )}
 
+      {activeModal === 'acceptPartially' && (
+        <div className="overlay open">
+          {(() => {
+            const cb = chargebacks.find(x => x.id === targetDisputeId);
+            if (!cb) return null;
+            return (
+              <div className="modal">
+                <div className="modal-hdr"><h3>Accept Partially</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
+                <div className="modal-body">
+                  <div className="mf">
+                    <label>Accepted Amount (Mandatory)</label>
+                    <input type="number" className="mfi" placeholder="e.g. 500" id="m_partial_amt" />
+                  </div>
+                  <div className="mf" style={{ marginTop: '12px' }}>
+                    <label>Remarks (Mandatory)</label>
+                    <textarea className="mfi mfi-area" placeholder="Reason for partial acceptance..." id="m_partial_rmk"></textarea>
+                  </div>
+                  <div className="mf" style={{ marginTop: '12px' }}>
+                    <label>Evidence Upload (Mandatory)</label>
+                    <input type="file" className="form-control" id="m_partial_file" />
+                  </div>
+                </div>
+                <div className="modal-footer" style={{ display: 'flex', gap: '12px' }}>
+                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setActiveModal(null)}>Cancel</button>
+                  <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => {
+                    const amt = document.getElementById('m_partial_amt').value;
+                    const rmk = document.getElementById('m_partial_rmk').value;
+                    const file = document.getElementById('m_partial_file').files[0];
+                    if (!amt || !rmk || !file) {
+                      showToast('Amount, Remarks, and Evidence are required for partial acceptance', 'error');
+                      return;
+                    }
+                    showToast('Partial acceptance submitted for Admin approval');
+                    setActiveModal(null);
+                  }}>Submit for Approval</button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+      
       {activeModal === 'successEvidence' && (
         <div className="overlay open">
           <div className="modal modal-sm" style={{ textAlign: 'center', padding: '30px' }}>
@@ -2358,7 +2421,7 @@ function AdminPortal({
   const [dashFilterFrom, setDashFilterFrom] = useState(() => { let d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; });
   const [dashFilterTo, setDashFilterTo] = useState(TODAY_STR);
 
-  const [filterSearchBy, setFilterSearchBy] = useState('');
+  const [filterSearchBy, setFilterSearchBy] = useState('ARN');
   const [aVcSearchInput, setAVcSearchInput] = useState('');
 
   // Pagination view chargebacks
@@ -3563,7 +3626,7 @@ function AdminPortal({
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Status</label>
                           <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                            <option value="">Select Dispute Status</option>
+                            <option value="">Select All</option>
                             <option value="Dispute Won Partially">Dispute Won Partially</option>
                             <option value="Dispute Won Fully">Dispute Won Fully</option>
                             <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
@@ -3586,14 +3649,14 @@ function AdminPortal({
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Scheme</label>
                           <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} defaultValue="">
-                            <option value="">Select Scheme</option>
+                            <option value="">Select All</option>
                             <option value="Visa">Visa</option>
                           </select>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search By</label>
                           <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
-                            <option value="">Select Search By</option>
+                            <option value="">Select All</option>
                             <option value="Txn ID">Transaction ID (Txn ID)</option>
                             <option value="RRN">RRN</option>
                             <option value="TID">TID</option>
@@ -3608,7 +3671,7 @@ function AdminPortal({
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Type</label>
                           <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSubStatus} onChange={(e) => setFilterSubStatus(e.target.value)}>
-                            <option value="">Select Dispute Type</option>
+                            <option value="">Select All</option>
                             <option value="Chargeback">Chargeback</option>
                             <option value="Pre-Arbitration">Pre-Arbitration</option>
                             <option value="Retrieval Request">Retrieval Request</option>
@@ -4397,7 +4460,7 @@ function PartnerPortal({
   const [filterStatus, setFilterStatus] = useState('');
   const [filterScheme, setFilterScheme] = useState('');
   const [filterDisputeType, setFilterDisputeType] = useState('');
-  const [filterSearchBy, setFilterSearchBy] = useState('');
+  const [filterSearchBy, setFilterSearchBy] = useState('ARN');
   const [filterSearchText, setFilterSearchText] = useState('');
   const [filterMerchant, setFilterMerchant] = useState('');
 
@@ -4628,8 +4691,8 @@ function PartnerPortal({
                   <div><h1>Dispute Reports</h1><p>Search and track all disputes across all merchants</p></div>
                 </div>
 
-                <div className="search-panel">
-                  <div className="search-panel-title">🔍 Search — Dispute Management</div>
+                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
+                    <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                   <div className="search-panel-grid">
                     <div className="sp-field">
                       <label>📅 From Date</label>
@@ -4642,7 +4705,7 @@ function PartnerPortal({
                     <div className="sp-field">
                       <label>Dispute Type</label>
                       <select className="sp-input" value={filterDisputeType} onChange={(e) => setFilterDisputeType(e.target.value)}>
-                        <option value="">Select Dispute Type</option>
+                        <option value="">Select All</option>
                         <option value="Chargeback">Chargeback</option>
                         <option value="Pre-Arbitration">Pre-Arbitration</option>
                         <option value="Retrieval Request">Retrieval Request</option>
@@ -4653,21 +4716,18 @@ function PartnerPortal({
                       <label>Merchant</label>
                       <input type="text" className="sp-input" placeholder="Enter Merchant ID/Name" value={filterMerchant} onChange={(e) => setFilterMerchant(e.target.value)} />
                     </div>
-                    <div className="sp-field">
-                      <label>Aggregator</label>
-                      <input type="text" className="sp-input" value="PayerMax" readOnly style={{ background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }} />
-                    </div>
+
                     <div className="sp-field">
                       <label>Scheme</label>
                       <select className="sp-input" value={filterScheme} onChange={(e) => setFilterScheme(e.target.value)}>
-                        <option value="">Select Scheme</option>
+                        <option value="">Select All</option>
                         <option value="Visa">Visa</option>
                       </select>
                     </div>
                     <div className="sp-field">
                       <label>Dispute Status</label>
                       <select className="sp-input" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                        <option value="">Select Dispute Status</option>
+                        <option value="">Select All</option>
                         <option value="Dispute Won Partially">Dispute Won Partially</option>
                         <option value="Dispute Won Fully">Dispute Won Fully</option>
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
@@ -4680,12 +4740,7 @@ function PartnerPortal({
                     <div className="sp-field">
                       <label>Search By</label>
                       <select className="sp-input" value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
-                        <option value="">Select Search By</option>
-                        <option value="Txn ID">Transaction ID (Txn ID)</option>
-                        <option value="RRN">RRN</option>
-                        <option value="TID">TID</option>
-                        <option value="MID">MID</option>
-                        <option value="Case ID">Case ID</option>
+                        <option value="ARN">ARN Number</option>
                       </select>
                     </div>
                     {filterSearchBy && (
@@ -4696,43 +4751,59 @@ function PartnerPortal({
                     )}
                     <div className="sp-field" style={{ visibility: 'hidden' }}></div>
                   </div>
-                  <div className="search-panel-actions">
-                    <button className="btn btn-secondary" onClick={() => { setFilterFrom(DEFAULT_FROM); setFilterTo(TODAY_STR); setFilterStatus(''); setFilterScheme(''); setFilterDisputeType(''); setFilterSearchBy(''); setFilterSearchText(''); setFilterMerchant(''); }}>Reset</button>
-                    <button className="btn btn-primary" onClick={() => showToast('Disputes filtered!')}>Search</button>
-                    <table>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                    <button style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: 'transparent', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => { setFilterFrom(DEFAULT_FROM); setFilterTo(TODAY_STR); setFilterStatus(''); setFilterScheme(''); setFilterDisputeType(''); setFilterSearchBy(''); setFilterSearchText(''); setFilterMerchant(''); }}>Reset</button>
+                    <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Disputes filtered!')}>Search</button>
+                  </div>
+                </fieldset>
+                    <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
+                    <div className="tbl-wrap">
+                    <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                       <thead>
-                        <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #e0e0e0' }}>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Case ID</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>RR Number</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Transaction Date & Time</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Dispute Date</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Txn Currency</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Amount</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Current Status</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>TAT</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 'bold', color: '#000', fontSize: '13px' }}>Action</th>
+                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View / Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredDisputes.map(cb => (
                           <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '12px 16px', color: '#50BDC9', fontWeight: '600' }}>{cb.caseId}</td>
-                            <td style={{ padding: '12px 16px', color: '#333' }}>{cb.rrn}</td>
-                            <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.txnDate)}</td>
-                            <td style={{ padding: '12px 16px', color: '#333' }}>{formatDateDisp(cb.createdDate)}</td>
-                            <td style={{ padding: '12px 16px', color: '#333' }}>INR</td>
-                            <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>{cb.txnAmt}</td>
-                            <td style={{ padding: '12px 16px', color: '#333' }}>{cb.mStatus}</td>
-                            <td style={{ padding: '12px 16px' }}>
-                              <span style={{ color: cb.aging > 5 ? 'var(--red)' : 'var(--yellow)', fontWeight: '600' }}>
-                                {cb.aging}d
-                              </span>
-                            </td>
-                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                👁
-                              </button>
-                            </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
+                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>👁</button>
+                                      {cb.mSubStatus !== 'Chargeback Won' && cb.mSubStatus !== 'Chargeback Lost' && !cb.visaPending && (
+                                        <>
+                                          <button className="btn btn-sm btn-outline" style={{borderColor: '#ef4444', color: '#ef4444'}} onClick={() => { setTargetDisputeId(cb.id); setActiveModal('action2'); }}>Reject</button>
+                                          <button className="btn btn-sm btn-outline" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('contest'); }}>Upload Evidence</button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </td>
                           </tr>
                         ))}
                       </tbody>
