@@ -4591,8 +4591,6 @@ function PartnerPortal({
                       <select className="sp-input" value={filterScheme} onChange={(e) => setFilterScheme(e.target.value)}>
                         <option value="">Select Scheme</option>
                         <option value="Visa">Visa</option>
-                        <option value="Mastercard">Mastercard</option>
-                        <option value="Rupay">Rupay</option>
                       </select>
                     </div>
                     <div className="sp-field">
