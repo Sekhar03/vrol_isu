@@ -2572,9 +2572,9 @@ function AdminPortal({
     });
 
     if (adminTab === 'merchant-pending') {
-      list = list.filter(cb => (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending);
+      list = list.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending);
     } else if (adminTab === 'verification-pending') {
-      list = list.filter(cb => (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin') && cb.acquirerAction === null && !cb.visaPending);
+      list = list.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin') && cb.acquirerAction === null && !cb.visaPending);
     }
 
     if (aVcSearchInput) {
