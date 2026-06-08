@@ -23,6 +23,47 @@ const buildSeedData = (TODAY) => {
   const dL = n => fmtDate(new Date(TODAY.getTime() + n * 86400000));
 
   return [
+    // CB_PEND_1 — Document Pending for Verification
+    {
+      id: 'CB_PEND_1', caseId: 'CASE000991', userName: 'masteruser', userId: '2575789089',
+      rrn: '7788991122', txnId: '500001', terminalId: '5692005',
+      beneMobile: '9100005005', remMobile: '9200005005',
+      createdDate: dA(2), txnDate: dA(3), adjDate: dA(2), respondByDate: dL(8),
+      mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback In Progress',
+      adjType: 'Chargeback Raise', remitter: 'AXIS', beneficiary: 'FIP',
+      txnAmt: 8500, adjAmt: 8500, glNo: '354458',
+      currency: 'Rupees', reasonCode: '10.4', pan: '416600*****',
+      product: 'VISA', aging: 2,
+      merchantAction: 'evidence', acquirerAction: null, visaPending: false,
+      documents: [
+        { id: 'doc_pend1', filename: 'DeliveryReceipt.pdf', uploadedAt: dA(1) + 'T10:00:00Z', status: 'Pending Review' }
+      ],
+      timeline: [
+        { by: 'iServeU', time: dA(2) + ' 10:00 AM', title: 'Chargeback Received', remarks: 'New dispute received.', file: null },
+        { by: 'masteruser', time: dA(1) + ' 02:00 PM', title: 'Evidence Submitted', remarks: 'Attached delivery confirmation.', file: 'DeliveryReceipt.pdf' }
+      ]
+    },
+    // CB_PEND_2 — Document Pending for Verification
+    {
+      id: 'CB_PEND_2', caseId: 'CASE000992', userName: 'Test@isu', userId: '9876543210',
+      rrn: '8899002233', txnId: '500002', terminalId: '5692006',
+      beneMobile: '9100006006', remMobile: '9200006006',
+      createdDate: dA(3), txnDate: dA(4), adjDate: dA(3), respondByDate: dL(7),
+      mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback In Progress',
+      adjType: 'Chargeback Raise', remitter: 'HDFC', beneficiary: 'FIP',
+      txnAmt: 12000, adjAmt: 12000, glNo: '354459',
+      currency: 'Rupees', reasonCode: '13.1', pan: '512500*****',
+      product: 'Mastercard', aging: 3,
+      merchantAction: 'evidence', acquirerAction: null, visaPending: false,
+      documents: [
+        { id: 'doc_pend2', filename: 'ServiceInvoice.pdf', uploadedAt: dA(2) + 'T14:00:00Z', status: 'Pending Review' },
+        { id: 'doc_pend3', filename: 'CustomerComms.pdf', uploadedAt: dA(2) + 'T14:00:00Z', status: 'Pending Review' }
+      ],
+      timeline: [
+        { by: 'iServeU', time: dA(3) + ' 09:30 AM', title: 'Chargeback Received', remarks: 'Services not provided claim.', file: null },
+        { by: 'Test@isu', time: dA(2) + ' 11:15 AM', title: 'Evidence Submitted', remarks: 'Attached invoice and emails.', file: 'ServiceInvoice.pdf' }
+      ]
+    },
     // CB001 — VISA · New · Awaiting merchant action
     {
       id: 'CB001', caseId: 'CASE000001', userName: 'masteruser', userId: '2575789089',
@@ -389,7 +430,7 @@ const buildSeedData = (TODAY) => {
       product: 'VISA', aging: 2,
       merchantAction: null, acquirerAction: null, visaPending: true,
       timeline: [
-        { by: 'iServeU', time: dA(2) + ' 10:00 AM', title: 'VROL Inquiry Initiated', remarks: 'Visa raised inquiry for potential fraud.', file: null }
+        { by: 'iServeU', time: dA(2) + ' 10:00 AM', title: 'Chargeback Raise Initiated', remarks: 'Visa raised inquiry for potential fraud.', file: null }
       ]
     },
     {
@@ -646,7 +687,7 @@ const buildSeedData = (TODAY) => {
         { by: 'iServeU', time: dA(8) + ' 09:00 AM', title: 'Mastercard Ruled — Won', remarks: 'Dispute Won. Merchant wallet restored.', file: 'MastercardWin.pdf' }
       ]
     },
-    // CB036 — VISA · VROL Inquiry · for Test@isu
+    // CB036 — VISA · Chargeback Raise · for Test@isu
     {
       id: 'CB036', caseId: 'CASE_VROL_06', userName: 'Test@isu', userId: '11111111',
       rrn: '2233445566', txnId: '300004', terminalId: '5691004',
@@ -659,7 +700,7 @@ const buildSeedData = (TODAY) => {
       product: 'VISA', aging: 4,
       merchantAction: null, acquirerAction: null, visaPending: true,
       timeline: [
-        { by: 'iServeU', time: dA(4) + ' 11:00 AM', title: 'VROL Inquiry Received from Visa', remarks: 'Visa raised inquiry on Rs.7,500 transaction under reason code 10.4 (Card Absent Fraud).', file: null }
+        { by: 'iServeU', time: dA(4) + ' 11:00 AM', title: 'Chargeback Raise Received from Visa', remarks: 'Visa raised inquiry on Rs.7,500 transaction under reason code 10.4 (Card Absent Fraud).', file: null }
       ]
     },
     // CB037 — Rupay · Lost · for Test@isu
