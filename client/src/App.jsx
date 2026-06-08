@@ -214,16 +214,7 @@ export default function App() {
     if (!s) return '';
     const d = new Date(s);
     if (isNaN(d.getTime())) return s;
-    const dateStr = d.getDate().toString().padStart(2, '0') + '-' + 
-           (d.getMonth() + 1).toString().padStart(2, '0') + '-' + 
-           d.getFullYear();
-    // Add time if present
-    if (s.includes('T') || s.includes(':')) {
-      const timeStr = d.getHours().toString().padStart(2, '0') + ':' + 
-             d.getMinutes().toString().padStart(2, '0');
-      return `${dateStr} ${timeStr}`;
-    }
-    return dateStr;
+    return d.toLocaleDateString('en-IN') + ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   };
 
   const handleLogin = async (e, username, password) => {
@@ -558,8 +549,8 @@ function MerchantPortal({
   );
   
   const pendingVerificationDisputes = merchantDisputes.filter(cb => 
-    (cb.merchantAction === 'evidence' || cb.merchantAction === 'accepted_admin' || cb.merchantAction === 'rejected_admin') && 
-    (cb.acquirerAction === null || cb.acquirerAction === 'evidence_uploaded')
+    (cb.merchantAction === 'evidence' || cb.merchantAction === 'accepted_admin' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'rejected') && 
+    (cb.acquirerAction === null || cb.acquirerAction === 'evidence_uploaded' || cb.acquirerAction === 'request_info')
   );
 
   // Dashboard calculations
@@ -2313,13 +2304,8 @@ const webhookData = [
 ];
 
 function AdminPortal({
-  currentUser, chargebacks, users, ledger, setView, toggleTheme, darkMode, formatINR, formatDateDisp: originalFormatDateDisp, showToast, refreshAllData, resetAllSessions, handleLogout
+  currentUser, chargebacks, users, ledger, setView, toggleTheme, darkMode, formatINR, formatDateDisp, showToast, refreshAllData, resetAllSessions, handleLogout
 }) {
-  const formatDateDisp = (d) => {
-    if (!d) return '';
-    const date = new Date(d);
-    return date.toLocaleDateString('en-IN') + ' ' + date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-  };
   const [activePage, setActivePage] = useState('a-dashboard'); 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [disputeMenuOpen, setDisputeMenuOpen] = useState(true);
@@ -3805,14 +3791,26 @@ function AdminPortal({
                     <button style={{ background: '#50BDC9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Download All Docs</button>
                   </div>
                   <div style={{ padding: '20px', display: 'flex', gap: '16px', overflowX: 'auto', background: '#fff' }}>
-                    {cb.timeline && cb.timeline.filter(t => t.file).map((t, i) => (
-                      <div key={i} style={{ width: '200px', padding: '12px', border: '2px solid #e0e0e0', borderTop: '4px solid #d1c4e9', borderRadius: '4px', flexShrink: 0, display: 'flex', flexDirection: 'column', color: '#333', background: '#fafafa' }}>
-                        <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '8px', wordBreak: 'break-all' }}>{t.file}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Uploaded By: {t.by}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Date: {new Date(t.time).toLocaleDateString()}</div>
+                    {(cb.documents && cb.documents.length > 0) ? cb.documents.map(doc => (
+                      <div key={doc.id} style={{ width: '220px', padding: '12px', border: '2px solid', borderColor: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#d1c4e9', borderTop: `4px solid ${doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#d1c4e9'}`, borderRadius: '4px', flexShrink: 0, display: 'flex', flexDirection: 'column', color: '#333', background: '#fafafa' }}>
+                        <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '8px', wordBreak: 'break-all' }}>📄 {doc.filename}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Uploaded By: <strong>{doc.uploadedBy || 'Merchant'}</strong></div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Status: <strong style={{ color: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#faad14' }}>{doc.status}</strong></div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Date: {new Date(doc.uploadedAt).toLocaleDateString()}</div>
+                        {doc.status === 'Rejected' && (
+                          <div style={{ fontSize: '11px', color: '#ff4d4f', marginTop: '6px', padding: '6px', background: '#fff1f0', borderRadius: '4px' }}>
+                            <strong>Remarks:</strong> {doc.rejectionRemarks}
+                          </div>
+                        )}
+                        {doc.status === 'Pending Review' && doc.uploadedBy !== 'Admin' && (
+                          <div style={{ marginTop: '8px' }}>
+                            <button style={{ fontSize: '11px', background: '#eab308', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }} onClick={() => { setActiveModal('declineDocuments'); setTargetDisputeId(cb.id); }}>
+                              Select & Reject
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                    {(!cb.timeline || cb.timeline.filter(t => t.file).length === 0) && (
+                    )) : (
                       <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No previous evidence uploaded.</div>
                     )}
                   </div>
