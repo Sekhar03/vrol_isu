@@ -36,7 +36,9 @@ const buildSeedData = (TODAY) => {
       product: 'VISA', aging: 2,
       merchantAction: 'evidence', acquirerAction: null, visaPending: false,
       documents: [
-        { id: 'doc_pend1', filename: 'DeliveryReceipt.pdf', uploadedAt: dA(1) + 'T10:00:00Z', status: 'Pending Review' }
+        { id: 'doc_pend1_1', filename: 'DeliveryReceipt.pdf', uploadedAt: dA(1) + 'T10:00:00Z', status: 'Pending Review' },
+        { id: 'doc_pend1_2', filename: 'StatementOfService.pdf', uploadedAt: dA(1) + 'T10:00:00Z', status: 'Pending Review' },
+        { id: 'doc_pend1_3', filename: 'RefundInvoice.pdf', uploadedAt: dA(1) + 'T10:00:00Z', status: 'Pending Review' }
       ],
       timeline: [
         { by: 'iServeU', time: dA(2) + ' 10:00 AM', title: 'Chargeback Received', remarks: 'New dispute received.', file: null },
