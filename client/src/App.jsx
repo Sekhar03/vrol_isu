@@ -1985,18 +1985,20 @@ function MerchantPortal({
                       
                       <div style={{ padding: '20px', display: 'flex', gap: '16px', overflowX: 'auto', background: '#fff' }}>
                         {(cb.documents && cb.documents.length > 0) ? cb.documents.map(doc => (
-                          <div key={doc.id} style={{ width: '220px', padding: '12px', border: '2px solid', borderColor: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#d1c4e9', borderTop: `4px solid ${doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#d1c4e9'}`, borderRadius: '4px', flexShrink: 0, display: 'flex', flexDirection: 'column', color: '#333', background: '#fafafa' }}>
-                            <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '8px', wordBreak: 'break-all' }}>📄 {doc.filename}</div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Status: <strong style={{ color: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#faad14' }}>{doc.status}</strong></div>
-                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Date: {new Date(doc.uploadedAt).toLocaleDateString()}</div>
+                          <div key={doc.id} style={{ width: '220px', padding: '16px', border: doc.status === 'Rejected' ? '1px solid #ff4d4f' : '1px solid #e0e0e0', borderRadius: '4px', flexShrink: 0, display: 'flex', flexDirection: 'column', color: '#333', background: doc.status === 'Rejected' ? '#fff1f0' : '#fafafa' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '12px', wordBreak: 'break-all' }}><span style={{ color: '#ccc', marginRight: '6px' }}>📄</span>{doc.filename}</div>
+                            <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Status: <span style={{ color: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#faad14', fontWeight: 'bold' }}>{doc.status}</span></div>
+                            <div style={{ fontSize: '12px', color: '#888' }}>Date: {new Date(doc.uploadedAt).toLocaleDateString()}</div>
                             {doc.status === 'Rejected' && (
-                              <div style={{ fontSize: '11px', color: '#ff4d4f', marginTop: '6px', padding: '6px', background: '#fff1f0', borderRadius: '4px' }}>
-                                <strong>Remarks:</strong> {doc.rejectionRemarks}
-                                <div style={{ marginTop: '8px' }}>
-                                  <button style={{ fontSize: '11px', background: '#ff4d4f', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }} onClick={() => setActiveModal('contest')}>
-                                    Re-upload
-                                  </button>
-                                </div>
+                              <div style={{ fontSize: '12px', color: '#ff4d4f', marginTop: '12px', lineHeight: '1.4' }}>
+                                Remarks: {doc.rejectionRemarks}
+                              </div>
+                            )}
+                            {doc.status === 'Rejected' && (
+                              <div style={{ marginTop: '16px' }}>
+                                <button style={{ fontSize: '12px', background: '#ff4d4f', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }} onClick={() => setActiveModal('contest')}>
+                                  Re-upload
+                                </button>
                               </div>
                             )}
                           </div>
