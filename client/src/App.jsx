@@ -1653,11 +1653,7 @@ function MerchantPortal({
                     </div>
                     <div className="sp-field">
                       <label>Aggregator</label>
-                      <select className="sp-input" value={reportFilter.provider}
-                        onChange={(e) => setReportFilter(prev => ({ ...prev, provider: e.target.value }))}>
-                        <option value="">Select Aggregator</option>
-                        <option value="ISU">ISU</option>
-                      </select>
+                      <input type="text" className="sp-input" value="PayerMax" readOnly style={{ background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }} />
                     </div>
                     <div className="sp-field">
                       <label>Scheme</label>
@@ -4658,10 +4654,7 @@ function PartnerPortal({
                     </div>
                     <div className="sp-field">
                       <label>Aggregator</label>
-                      <select className="sp-input" defaultValue="">
-                        <option value="">Select Aggregator</option>
-                        <option value="ISU">ISU</option>
-                      </select>
+                      <input type="text" className="sp-input" value="PayerMax" readOnly style={{ background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }} />
                     </div>
                     <div className="sp-field">
                       <label>Scheme</label>
