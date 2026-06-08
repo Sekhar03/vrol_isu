@@ -668,7 +668,7 @@ function MerchantPortal({
   const renderSubBadge = (s) => {
     const m = {
       'Chargeback New': 'badge-new',
-      'CASE_CLOSED': 'badge-lost',
+      'Chargeback Lost': 'badge-lost',
       'Chargeback in Progress': 'badge-progress',
       'Chargeback Resubmit': 'badge-resubmit',
       'Chargeback Won': 'badge-won',
@@ -680,7 +680,7 @@ function MerchantPortal({
 
   const getActionBtn = (cb) => {
     if (cb.visaPending) return <span className="badge badge-won" style={{background: '#e3f2fd', color: '#1976d2'}}>Submitted to Visa</span>;
-    if (cb.resolution === 'Lost' || cb.mSubStatus === 'CASE_CLOSED') return <span className="badge badge-resubmit">Accepted (Lost)</span>;
+    if (cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost') return <span className="badge badge-resubmit">Accepted (Lost)</span>;
     if (cb.mSubStatus === 'UNDER_REVIEW') return <span className="badge badge-progress">Pending Admin Verification</span>;
     if (cb.mSubStatus === 'ACTION_REQUIRED' || cb.mSubStatus === 'Pending') {
       return (
@@ -2432,7 +2432,7 @@ function AdminPortal({
   const renderSubBadge = (s) => {
     const m = {
       'Chargeback New': 'badge-new',
-      'CASE_CLOSED': 'badge-lost',
+      'Chargeback Lost': 'badge-lost',
       'Chargeback in Progress': 'badge-progress',
       'Chargeback Resubmit': 'badge-resubmit',
       'Chargeback Won': 'badge-won',
@@ -2464,7 +2464,7 @@ function AdminPortal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           acquirerAction: 'considered',
-          mSubStatus: 'Chargeback in Progress',
+          mSubStatus: 'Chargeback In Progress',
           timelineEntry: entry
         })
       });
@@ -2793,7 +2793,7 @@ function AdminPortal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           acquirerAction: 'lost',
-          mSubStatus: 'CASE_CLOSED',
+          mSubStatus: 'Chargeback Lost',
           visaPending: true,
           timelineEntry: entry
         })
@@ -3715,7 +3715,7 @@ function AdminPortal({
                                 setActiveModal(null); refreshAllData();
                               }}>Chargeback Won</button>
                               <button className="btn btn-sm btn-danger" onClick={async () => {
-                                await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'CASE_CLOSED', resolution: 'Lost', visaPending: false }) });
+                                await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'Chargeback Lost', resolution: 'Lost', visaPending: false }) });
                                 setActiveModal(null); refreshAllData();
                               }}>Chargeback Lost</button>
                             </div>
@@ -4044,7 +4044,7 @@ function AdminPortal({
                             setActiveModal(null); refreshAllData();
                           }}>Chargeback Won</button>
                           <button className="btn btn-sm btn-danger" style={{ flex: 1 }} onClick={async () => {
-                            await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'CASE_CLOSED', resolution: 'Lost', visaPending: false }) });
+                            await fetch(`${API_URL}/disputes/${cb.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mSubStatus: 'Chargeback Lost', resolution: 'Lost', visaPending: false }) });
                             setActiveModal(null); refreshAllData();
                           }}>Chargeback Lost</button>
                         </div>
@@ -4207,7 +4207,7 @@ function PartnerPortal({
     return <span className={`badge ${m[s] || 'badge-new'}`}>{s}</span>;
   };
   const renderSubBadge = (s) => {
-    const m = { 'Chargeback New': 'badge-new', 'CASE_CLOSED': 'badge-lost', 'Chargeback in Progress': 'badge-progress', 'Chargeback Resubmit': 'badge-resubmit', 'Chargeback Won': 'badge-won', 'Refund Success': 'badge-won', 'Refund On Hold': 'badge-progress' };
+    const m = { 'Chargeback New': 'badge-new', 'Chargeback Lost': 'badge-lost', 'Chargeback In Progress': 'badge-progress', 'Chargeback Resubmit': 'badge-resubmit', 'Chargeback Won': 'badge-won', 'Refund Success': 'badge-won', 'Refund On Hold': 'badge-progress' };
     return <span className={`badge ${m[s] || 'badge-pending'}`}>{s}</span>;
   };
 

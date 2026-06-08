@@ -73,7 +73,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             visaCaseNumber,
             reasonCode: row['Reason Code'] || row['reason_code'],
             disputeAmount: parseFloat(row['Dispute Amount']) || undefined,
-            status: 'DISPUTE_RECEIVED',
+            status: 'Chargeback Raise',
             merchantId: defaultMerchant.id
           },
           create: {
@@ -81,7 +81,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             visaCaseNumber,
             reasonCode: row['Reason Code'] || row['reason_code'],
             disputeAmount: parseFloat(row['Dispute Amount']) || 0,
-            status: 'DISPUTE_RECEIVED',
+            status: 'Chargeback Raise',
             merchantId: defaultMerchant.id,
             arn: row['ARN'] || row['arn'],
             rrn: row['RRN'] || row['rrn']

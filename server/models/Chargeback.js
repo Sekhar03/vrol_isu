@@ -32,8 +32,8 @@ const chargebackSchema = new mongoose.Schema({
   txnDate: { type: String, required: true },     // Date string (YYYY-MM-DD)
   adjDate: { type: String, required: true },     // Date string (YYYY-MM-DD)
   respondByDate: { type: String, required: true },// Date string (YYYY-MM-DD)
-  mStatus: { type: String, required: true, default: 'Dispute_Received' }, // Retrieval, Chargeback, Pre-Arb, Arbitration
-  mSubStatus: { type: String, required: true, default: 'Pending_Merchant_Response' },
+  mStatus: { type: String, required: true, default: 'Chargeback Raise' }, // Chargeback Raise, Pre-Arbitration Raise, Arbitration Raise, VROL Inquiry, VROL Chargeback, VROL Pre-Arbitration, VROL Arbitration
+  mSubStatus: { type: String, required: true, default: 'Chargeback New' }, // Chargeback New, Chargeback In Progress, Chargeback Resubmit, Chargeback Won, Chargeback Lost, Refund Success, Refund On Hold
   resolution: { type: String, enum: ['Won', 'Lost', 'Pending'], default: 'Pending' },
   partnerId: { type: String, default: null },
   adjType: { type: String, required: true },
