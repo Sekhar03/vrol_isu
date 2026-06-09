@@ -1670,7 +1670,8 @@ function MerchantPortal({
                 </div>
 
                 {/* Search Panel — matches reference image */}
-                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
+                <div style={{ position: 'sticky', top: 'var(--header-h, 60px)', zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
+                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
                     <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                   <div className="search-panel-grid">
                     <div className="sp-field">
@@ -1762,6 +1763,7 @@ function MerchantPortal({
                     style={{ padding: '12px 0', color: reportTab === 'doc-verification' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-verification' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-verification')}
                   >Document Pending for Verification</div>
+                </div>
                 </div>
                 <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
 
@@ -3639,8 +3641,8 @@ function AdminPortal({
                 <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
               </div>
               <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
-                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
+                <div style={{ position: 'sticky', top: 'var(--header-h, 60px)', zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
+                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
                     <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
                       {/* Col 1 */}
@@ -3745,7 +3747,7 @@ function AdminPortal({
                 <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
                   <div className="tbl-wrap">
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
+                      <thead style={{ background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
@@ -4724,7 +4726,8 @@ function PartnerPortal({
                   <div><h1>Dispute Reports</h1><p>Search and track all disputes across all merchants</p></div>
                 </div>
 
-                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
+                <div style={{ position: 'sticky', top: 'var(--header-h, 60px)', zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
+                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
                     <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                   <div className="search-panel-grid">
                     <div className="sp-field">
@@ -4789,6 +4792,7 @@ function PartnerPortal({
                     <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Disputes filtered!')}>Search</button>
                   </div>
                 </fieldset>
+                </div>
                     <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
                     <div className="tbl-wrap">
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
