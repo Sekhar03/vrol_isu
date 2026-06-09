@@ -2464,6 +2464,7 @@ function AdminPortal({
   const [aVcPage, setAVcPage] = useState(1);
   const [aVcLimit, setAVcLimit] = useState(10);
   const [adminTab, setAdminTab] = useState('management');
+  const [partnerTab, setPartnerTab] = useState('management');
 
   // Expanded row IDs
   const [expandedRowIds, setExpandedRowIds] = useState({});
@@ -4596,6 +4597,13 @@ function PartnerPortal({
     if (filterDisputeType && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(filterDisputeType) && !(filterDisputeType === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
     if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
     if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
+
+    if (partnerTab === 'merchant-pending') {
+      if (!((!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending)) return false;
+    } else if (partnerTab === 'verification-pending') {
+      if (!((!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin') && cb.acquirerAction === null && !cb.visaPending)) return false;
+    }
+
     return true;
   });
 
@@ -4797,6 +4805,7 @@ function PartnerPortal({
                     <div className="sp-field">
                       <label>Search By</label>
                       <select className="sp-input" value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
+                        <option value="">Select Field...</option>
                         <option value="ARN">ARN Number</option>
                       </select>
                     </div>
@@ -4813,6 +4822,26 @@ function PartnerPortal({
                     <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Disputes filtered!')}>Search</button>
                   </div>
                 </fieldset>
+                </div>
+                <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
+                  <div 
+                    style={{ padding: '12px 0', color: partnerTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setPartnerTab('management'); }}
+                  >
+                    All Disputes
+                  </div>
+                  <div 
+                    style={{ padding: '12px 0', color: partnerTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setPartnerTab('merchant-pending'); }}
+                  >
+                    Document Pending from Merchant
+                  </div>
+                  <div 
+                    style={{ padding: '12px 0', color: partnerTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setPartnerTab('verification-pending'); }}
+                  >
+                    Document verification Pending From Admin
+                  </div>
                 </div>
                     <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
                     <div className="tbl-wrap">
@@ -4831,7 +4860,7 @@ function PartnerPortal({
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View / Actions</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View</th>
                         </tr>
                       </thead>
                       <tbody>
