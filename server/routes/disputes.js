@@ -179,6 +179,7 @@ router.post('/:id/action', async (req, res) => {
       dispute.acquirerAction = null;
       
       let fileString = null;
+      if (!dispute.documents) dispute.documents = [];
       if (Array.isArray(evidence)) {
         evidence.forEach((filename, idx) => {
           dispute.documents.push({

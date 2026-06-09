@@ -1,0 +1,86 @@
+          {activePage === 'a-view-cb' && (
+            <div className="page active" id="a-view-cb">
+              <div className="view-chargeback-header">
+                <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
+              </div>
+              <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
+                  {adminTab === 'management' && (
+                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
+                    <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                      {/* Col 1 */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>From Date</label>
+                          <div style={{ position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#50BDC9' }}>📅</span>
+                            <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="From Date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Aggregator</label>
+                          <input type="text" value="PayerMax" readOnly style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#888', outline: 'none', background: '#f5f5f5', cursor: 'not-allowed' }} />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Status</label>
+                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                            <option value="">Select All</option>
+                            <option value="Dispute Won Partially">Dispute Won Partially</option>
+                            <option value="Dispute Won Fully">Dispute Won Fully</option>
+                            <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
+                            <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
+                            <option value="Document Rejected">Document Rejected</option>
+                            <option value="Chargeback In Progress">Document Pending Verification</option>
+                            <option value="Chargeback Resubmit">Document Pending from Merchant</option>
+                          </select>
+                        </div>
+                      </div>
+                      {/* Col 2 */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>To Date</label>
+                          <div style={{ position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#50BDC9' }}>📅</span>
+                            <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="To Date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Scheme</label>
+                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} defaultValue="">
+                            <option value="">Select All</option>
+                            <option value="Visa">Visa</option>
+                          </select>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search By</label>
+                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
+                            <option value="">Select All</option>
+                            <option value="Txn ID">Transaction ID (Txn ID)</option>
+                            <option value="RRN">RRN</option>
+                            <option value="TID">TID</option>
+                            <option value="MID">MID</option>
+                            <option value="Case ID">Case ID</option>
+                            <option value="Merchant Name">Merchant Name</option>
+                          </select>
+                        </div>
+                      </div>
+                      {/* Col 3 */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Type</label>
+                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSubStatus} onChange={(e) => setFilterSubStatus(e.target.value)}>
+                            <option value="">Select All</option>
+                            <option value="Chargeback">Chargeback</option>
+                            <option value="Pre-Arbitration">Pre-Arbitration</option>
+                            <option value="Retrieval Request">Retrieval Request</option>
+                            <option value="Arbitration">Arbitration</option>
+                          </select>
+                        </div>
+                        <div style={{ height: '0px' }}></div>
+                        {filterSearchBy && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search {filterSearchBy}</label>
+                            <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder={`Enter ${filterSearchBy}`} value={filterRrn} onChange={(e) => setFilterRrn(e.target.value)} />
+                          </div>
+                        )}

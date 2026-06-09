@@ -1823,7 +1823,7 @@ function MerchantPortal({
                   )}
 
                   {/* Tab: Document Pending from Merchant */}
-                  {reportTab === 'doc-pending' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
+                  {reportTab === 'doc-pending' && (
                     <div>
                       <div className="tbl-toolbar">
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
