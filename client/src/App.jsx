@@ -1041,7 +1041,7 @@ function MerchantPortal({
               className={`sb-item ${activePage === 'reports' ? 'active' : ''}`} 
               onClick={() => setActivePage('reports')}
             >
-              <span className="si">📋</span> All Disputes
+              <span className="si">📋</span> Dispute Management
             </div>
 
 
@@ -3417,7 +3417,7 @@ function AdminPortal({
               className={`sb-item ${activePage === 'a-view-cb' ? 'active' : ''}`}
               onClick={() => { setAVcPage(1); setActivePage('a-view-cb'); }}
             >
-              <span className="si">📋</span> All Disputes
+              <span className="si">📋</span> Dispute Management
             </div>
             <div 
               className={`sb-item ${activePage === 'a-vrol-import' ? 'active' : ''}`}
@@ -3551,7 +3551,7 @@ function AdminPortal({
           {activePage === 'a-vrol-import' && (
             <div className="page active" id="a-vrol-import">
               <div className="view-chargeback-header">
-                <span className="vc-breadcrumb">All Disputes / <span>VROL Import Center</span></span>
+                <span className="vc-breadcrumb">Dispute Management / <span>VROL Import Center</span></span>
               </div>
               <div className="page-inner">
                 <div style={{ marginTop: '32px', background: 'var(--card)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-md)' }}>
@@ -3612,7 +3612,7 @@ function AdminPortal({
           {activePage === 'a-chargeback' && (
             <div className="page active" id="a-chargeback">
               <div className="view-chargeback-header">
-                <span className="vc-breadcrumb">All Disputes / <span>Chargeback Menu</span></span>
+                <span className="vc-breadcrumb">Dispute Management / <span>Chargeback Menu</span></span>
               </div>
               <div className="page-inner">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px', margin: '40px auto 24px' }}>
@@ -3636,7 +3636,7 @@ function AdminPortal({
           {activePage === 'a-view-cb' && (
             <div className="page active" id="a-view-cb">
               <div className="view-chargeback-header">
-                <span className="vc-breadcrumb">All Disputes / <span>View Dispute History</span></span>
+                <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
               </div>
               <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
