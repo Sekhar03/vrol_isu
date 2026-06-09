@@ -2455,7 +2455,7 @@ function AdminPortal({
   const [dashFilterFrom, setDashFilterFrom] = useState(() => { let d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; });
   const [dashFilterTo, setDashFilterTo] = useState(TODAY_STR);
 
-  const [filterSearchBy, setFilterSearchBy] = useState('ARN');
+  const [filterSearchBy, setFilterSearchBy] = useState('');
   const [aVcSearchInput, setAVcSearchInput] = useState('');
 
   // Pagination view chargebacks
@@ -3640,7 +3640,6 @@ function AdminPortal({
               </div>
               <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
-                  {adminTab === 'management' && (
                   <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative' }}>
                     <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
@@ -3726,7 +3725,6 @@ function AdminPortal({
                       <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={filterAdminCb}>Search</button>
                     </div>
                   </fieldset>
-                )}
 
                 <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
@@ -4495,7 +4493,7 @@ function PartnerPortal({
   const [filterStatus, setFilterStatus] = useState('');
   const [filterScheme, setFilterScheme] = useState('');
   const [filterDisputeType, setFilterDisputeType] = useState('');
-  const [filterSearchBy, setFilterSearchBy] = useState('ARN');
+  const [filterSearchBy, setFilterSearchBy] = useState('');
   const [filterSearchText, setFilterSearchText] = useState('');
   const [filterMerchant, setFilterMerchant] = useState('');
 
