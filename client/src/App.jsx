@@ -4503,6 +4503,7 @@ function PartnerPortal({
   currentUser, users, chargebacks, setView, toggleTheme, darkMode, formatINR, formatDateDisp, showToast, refreshAllData, resetAllSessions, handleLogout
 }) {
   const [activePage, setActivePage] = useState('p-dashboard');
+  const [partnerTab, setPartnerTab] = useState('management');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
