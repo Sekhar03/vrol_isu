@@ -1041,7 +1041,7 @@ function MerchantPortal({
               className={`sb-item ${activePage === 'reports' ? 'active' : ''}`} 
               onClick={() => setActivePage('reports')}
             >
-              <span className="si">📋</span> Dispute Management
+              <span className="si">📋</span> All Disputes
             </div>
 
 
@@ -1664,7 +1664,7 @@ function MerchantPortal({
               <div className="page-inner">
                 <div className="page-hdr">
                   <div>
-                    <h1>📋 Dispute Management</h1>
+                    <h1>📋 All Disputes</h1>
                     <p>Monitor, respond to, and resolve your dispute cases</p>
                   </div>
                 </div>
@@ -1753,7 +1753,7 @@ function MerchantPortal({
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'dispute-mgmt' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'dispute-mgmt' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('dispute-mgmt')}
-                  >Dispute Management</div>
+                  >All Disputes</div>
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-pending')}
@@ -1765,7 +1765,7 @@ function MerchantPortal({
                 </div>
                 <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
 
-                  {/* Tab: Dispute Management */}
+                  {/* Tab: All Disputes */}
                   {reportTab === 'dispute-mgmt' && (
                     <div>
                       <div className="tbl-toolbar">
@@ -3417,7 +3417,7 @@ function AdminPortal({
               className={`sb-item ${activePage === 'a-view-cb' ? 'active' : ''}`}
               onClick={() => { setAVcPage(1); setActivePage('a-view-cb'); }}
             >
-              <span className="si">📋</span> Dispute Management
+              <span className="si">📋</span> All Disputes
             </div>
             <div 
               className={`sb-item ${activePage === 'a-vrol-import' ? 'active' : ''}`}
@@ -3551,7 +3551,7 @@ function AdminPortal({
           {activePage === 'a-vrol-import' && (
             <div className="page active" id="a-vrol-import">
               <div className="view-chargeback-header">
-                <span className="vc-breadcrumb">Dispute Management / <span>VROL Import Center</span></span>
+                <span className="vc-breadcrumb">All Disputes / <span>VROL Import Center</span></span>
               </div>
               <div className="page-inner">
                 <div style={{ marginTop: '32px', background: 'var(--card)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-md)' }}>
@@ -3612,7 +3612,7 @@ function AdminPortal({
           {activePage === 'a-chargeback' && (
             <div className="page active" id="a-chargeback">
               <div className="view-chargeback-header">
-                <span className="vc-breadcrumb">Dispute Management / <span>Chargeback Menu</span></span>
+                <span className="vc-breadcrumb">All Disputes / <span>Chargeback Menu</span></span>
               </div>
               <div className="page-inner">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', maxWidth: '700px', margin: '40px auto 24px' }}>
@@ -3636,7 +3636,7 @@ function AdminPortal({
           {activePage === 'a-view-cb' && (
             <div className="page active" id="a-view-cb">
               <div className="view-chargeback-header">
-                <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
+                <span className="vc-breadcrumb">All Disputes / <span>View Dispute History</span></span>
               </div>
               <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
@@ -3732,7 +3732,7 @@ function AdminPortal({
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('management'); setAVcPage(1); }}
-                  >Dispute Management</div>
+                  >All Disputes</div>
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('merchant-pending'); setAVcPage(1); }}
