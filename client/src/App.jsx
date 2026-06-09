@@ -2464,7 +2464,6 @@ function AdminPortal({
   const [aVcPage, setAVcPage] = useState(1);
   const [aVcLimit, setAVcLimit] = useState(10);
   const [adminTab, setAdminTab] = useState('management');
-  const [partnerTab, setPartnerTab] = useState('management');
 
   // Expanded row IDs
   const [expandedRowIds, setExpandedRowIds] = useState({});
