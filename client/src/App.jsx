@@ -1298,7 +1298,7 @@ function MerchantPortal({
                       </div>
                       <div className="tbl-wrap">
                         <table>
-                          <thead>
+                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                             <tr>
                               <th>User Name</th>
                               <th>RRN</th>
@@ -1497,7 +1497,7 @@ function MerchantPortal({
                     </div>
                     <div className="tbl-wrap">
                       <table>
-                        <thead>
+                        <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                           <tr>
                             <th>User Name</th>
                             <th>RRN</th>
@@ -1670,7 +1670,7 @@ function MerchantPortal({
                 </div>
 
                 {/* Search Panel — matches reference image */}
-                <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
+                <div style={{ background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
                   <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
                     <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                   <div className="search-panel-grid">
@@ -1777,7 +1777,7 @@ function MerchantPortal({
                       </div>
                       <div className="tbl-wrap">
                         <table>
-                          <thead>
+                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
@@ -1834,7 +1834,7 @@ function MerchantPortal({
                       </div>
                       <div className="tbl-wrap">
                         <table>
-                          <thead>
+                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
@@ -1894,7 +1894,7 @@ function MerchantPortal({
                       </div>
                       <div className="tbl-wrap">
                         <table>
-                          <thead>
+                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
@@ -3641,7 +3641,7 @@ function AdminPortal({
                 <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
               </div>
               <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
+                <div style={{ background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
                   <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
                     <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
@@ -3747,7 +3747,7 @@ function AdminPortal({
                 <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
                   <div className="tbl-wrap">
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                      <thead style={{ background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
+                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
@@ -4691,7 +4691,7 @@ function PartnerPortal({
                   </div>
                   <div className="tbl-wrap">
                     <table>
-                      <thead>
+                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr>
                           <th>Case ID</th><th>RRN</th><th>Merchant</th><th>Scheme</th>
                           <th>Status</th><th>Sub Status</th><th>Amount</th><th>Date</th>
@@ -4726,7 +4726,7 @@ function PartnerPortal({
                   <div><h1>Dispute Reports</h1><p>Search and track all disputes across all merchants</p></div>
                 </div>
 
-                <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
+                <div style={{ background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
                   <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
                     <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
                   <div className="search-panel-grid">
@@ -4796,7 +4796,7 @@ function PartnerPortal({
                     <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
                     <div className="tbl-wrap">
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                      <thead>
+                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
@@ -4861,7 +4861,7 @@ function PartnerPortal({
                   </div>
                   <div className="tbl-wrap">
                     <table>
-                      <thead>
+                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr>
                           <th>Case ID</th><th>RRN</th><th>Merchant</th><th>Scheme</th>
                           <th>Status</th><th>Amount</th><th>Date</th><th>Visa Status</th><th>Timeline</th>
@@ -4918,7 +4918,7 @@ function PartnerPortal({
                 </div>
                 <div className="table-responsive">
                   <table className="data-table">
-                    <thead><tr><th>Merchant Name</th><th>MID</th><th>TID</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}><tr><th>Merchant Name</th><th>MID</th><th>TID</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody>
                       {users && users.filter(u => u.role === 'merchant' && (!merchantSearch || u.name.toLowerCase().includes(merchantSearch.toLowerCase()) || u.id.toLowerCase().includes(merchantSearch.toLowerCase()))).map(m => (
                         <tr key={m.id}>
