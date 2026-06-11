@@ -4,6 +4,52 @@ import { CLIENT_DEMO } from './demoFallback.js';
 // API BASE URL
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+const DISPUTE_TYPE_OPTIONS = ['Chargeback', 'Pre-Arbitration', 'Retrieval Request', 'Arbitration'];
+
+const DISPUTE_STATUS_OPTIONS = [
+  'Dispute Won Partially',
+  'Dispute Won Fully',
+  'Dispute Lost – TAT Expired',
+  'Dispute Lost – Accepted',
+  'Document Rejected',
+  'Chargeback In Progress',
+  'Chargeback Resubmit',
+];
+
+const getDisputeType = (cb) => {
+  const adjType = cb.adjType || '';
+  if (DISPUTE_TYPE_OPTIONS.includes(adjType)) return adjType;
+  const status = cb.mStatus || '';
+  if (status.includes('Pre-Arbitration') || status.includes('Pre-Arb')) return 'Pre-Arbitration';
+  if (/Arbitration/i.test(status) && !/Pre-Arbitration/i.test(status)) return 'Arbitration';
+  if (status.includes('Retrieval')) return 'Retrieval Request';
+  return 'Chargeback';
+};
+
+const matchesDisputeTypeFilter = (cb, filterValue) => !filterValue || getDisputeType(cb) === filterValue;
+
+const matchesDisputeStatusFilter = (cb, filterValue) => !filterValue || cb.mSubStatus === filterValue;
+
+const renderDisputeStatusBadge = (s) => {
+  const m = {
+    'Chargeback New': 'badge-new',
+    'Chargeback Lost': 'badge-lost',
+    'Arbitration Lost': 'badge-lost',
+    'Chargeback In Progress': 'badge-progress',
+    'Chargeback Resubmit': 'badge-resubmit',
+    'Chargeback Won': 'badge-won',
+    'Arbitration Won': 'badge-won',
+    'Dispute Won Partially': 'badge-won',
+    'Dispute Won Fully': 'badge-won',
+    'Dispute Lost – TAT Expired': 'badge-lost',
+    'Dispute Lost – Accepted': 'badge-lost',
+    'Document Rejected': 'badge-resubmit',
+    'Refund Success': 'badge-won',
+    'Refund On Hold': 'badge-progress',
+  };
+  return <span className={`badge ${m[s] || 'badge-pending'}`}>{s}</span>;
+};
+
 export default function App() {
   const isInitialized = useRef(false);
 
@@ -946,8 +992,8 @@ function MerchantPortal({
         if (reportFilter.searchBy === 'Case ID' && !cb.caseId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
         if (!reportFilter.searchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q) && !(cb.mStatus && cb.mStatus.toLowerCase().includes(q)) && !(cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(q)) && !(cb.adjType && cb.adjType.toLowerCase().includes(q))) return false;
       }
-      if (reportFilter.disputeStatus && cb.mStatus !== reportFilter.disputeStatus && cb.mSubStatus !== reportFilter.disputeStatus) return false;
-      if (reportFilter.disputeType && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(reportFilter.disputeType) && !(reportFilter.disputeType === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
+      if (!matchesDisputeStatusFilter(cb, reportFilter.disputeStatus)) return false;
+      if (!matchesDisputeTypeFilter(cb, reportFilter.disputeType)) return false;
       if (reportFilter.from && cb.createdDate && cb.createdDate < reportFilter.from) return false;
       if (reportFilter.to && cb.createdDate && cb.createdDate > reportFilter.to) return false;
       return true;
@@ -1707,8 +1753,8 @@ function MerchantPortal({
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                         <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                         <option value="Document Rejected">Document Rejected</option>
-                        <option value="Chargeback In Progress">Document Pending Verification</option>
-                        <option value="Chargeback Resubmit">Document Pending from Merchant</option>
+                        <option value="Chargeback In Progress">Chargeback In Progress</option>
+                        <option value="Chargeback Resubmit">Chargeback Resubmit</option>
                       </select>
                     </div>
                     <div className="sp-field">
@@ -1794,11 +1840,11 @@ function MerchantPortal({
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
                                     {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
@@ -1851,11 +1897,11 @@ function MerchantPortal({
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
                                     {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
@@ -1911,11 +1957,11 @@ function MerchantPortal({
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
                                     {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
@@ -2559,8 +2605,8 @@ function AdminPortal({
         if (filterSearchBy === 'Merchant Name' && !cb.userName?.toLowerCase().includes(filterRrn.toLowerCase())) return false;
         if (!filterSearchBy && !cb.rrn.includes(filterRrn) && !cb.txnId.includes(filterRrn) && !cb.userId.includes(filterRrn) && !cb.id?.includes(filterRrn) && !cb.userName?.toLowerCase().includes(filterRrn.toLowerCase()) && !(cb.mStatus && cb.mStatus.toLowerCase().includes(filterRrn.toLowerCase())) && !(cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(filterRrn.toLowerCase())) && !(cb.adjType && cb.adjType.toLowerCase().includes(filterRrn.toLowerCase()))) return false;
       }
-      if (filterStatus && cb.mStatus !== filterStatus && cb.mSubStatus !== filterStatus) return false;
-      if (filterSubStatus && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(filterSubStatus) && !(filterSubStatus === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
+      if (!matchesDisputeStatusFilter(cb, filterStatus)) return false;
+      if (!matchesDisputeTypeFilter(cb, filterSubStatus)) return false;
       if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
       if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
       return true;
@@ -3660,8 +3706,8 @@ function AdminPortal({
                             <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                             <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                             <option value="Document Rejected">Document Rejected</option>
-                            <option value="Chargeback In Progress">Document Pending Verification</option>
-                            <option value="Chargeback Resubmit">Document Pending from Merchant</option>
+                            <option value="Chargeback In Progress">Chargeback In Progress</option>
+                            <option value="Chargeback Resubmit">Chargeback Resubmit</option>
                           </select>
                         </div>
                       </div>
@@ -3772,11 +3818,11 @@ function AdminPortal({
 
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Payermax</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
                                     {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
@@ -4584,10 +4630,10 @@ function PartnerPortal({
       if (filterSearchBy === 'Case ID' && !cb.caseId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
       if (!filterSearchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q) && !(cb.mStatus && cb.mStatus.toLowerCase().includes(q)) && !(cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(q)) && !(cb.adjType && cb.adjType.toLowerCase().includes(q))) return false;
     }
-    if (filterStatus && cb.mStatus !== filterStatus && cb.mSubStatus !== filterStatus) return false;
+    if (!matchesDisputeStatusFilter(cb, filterStatus)) return false;
     if (filterMerchant && !cb.userName?.toLowerCase().includes(filterMerchant.toLowerCase())) return false;
     if (filterScheme && cb.product !== filterScheme) return false;
-    if (filterDisputeType && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(filterDisputeType) && !(filterDisputeType === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
+    if (!matchesDisputeTypeFilter(cb, filterDisputeType)) return false;
     if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
     if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
 
@@ -4791,8 +4837,8 @@ function PartnerPortal({
                         <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
                         <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                         <option value="Document Rejected">Document Rejected</option>
-                        <option value="Chargeback In Progress">Document Pending Verification</option>
-                        <option value="Chargeback Resubmit">Document Pending from Merchant</option>
+                        <option value="Chargeback In Progress">Chargeback In Progress</option>
+                        <option value="Chargeback Resubmit">Chargeback Resubmit</option>
                       </select>
                     </div>
                     <div className="sp-field">
@@ -4863,11 +4909,11 @@ function PartnerPortal({
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.mSubStatus || 'Chargeback'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderStatusBadge(cb.mStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
                                     {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
