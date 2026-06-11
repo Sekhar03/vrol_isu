@@ -507,14 +507,7 @@ function LoginForm({ handleLogin, toggleTheme, darkMode, onLoadDemo }) {
             {loadingDemo ? 'Loading demo data…' : '↻ Load / Reset All Demo Data'}
           </button>
           
-          <div style={{ marginTop: '36px', paddingTop: '24px', borderTop: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', lineHeight: '1.8' }}>
-            <strong style={{ color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '11px' }}>Demo Access Details</strong><br />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '16px', textAlign: 'left', background: darkMode ? 'rgba(0,0,0,0.2)' : '#f1f5f9', padding: '16px', borderRadius: '12px' }}>
-              <div style={{ fontWeight: '600' }}>Merchant</div><div>masteruser <span style={{ color: 'var(--text-light)', fontSize: '11px' }}>/ Test@2026</span></div>
-              <div style={{ fontWeight: '600' }}>Admin</div><div>Test@Ad <span style={{ color: 'var(--text-light)', fontSize: '11px' }}>/ Test@2027</span></div>
-              <div style={{ fontWeight: '600' }}>Partner</div><div>partneruser <span style={{ color: 'var(--text-light)', fontSize: '11px' }}>/ Test@2028</span></div>
-            </div>
-          </div>
+
         </div>
         
         <div style={{ marginTop: '40px', color: darkMode ? 'rgba(255,255,255,0.4)' : '#64748b', fontSize: '12px', textAlign: 'center', lineHeight: '1.6' }}>
@@ -646,7 +639,7 @@ function MerchantPortal({
 
     if (respondSearchInput) {
       const q = respondSearchInput.toLowerCase();
-      list = list.filter(cb => cb.rrn.includes(q) || cb.txnId.includes(q) || cb.mStatus.toLowerCase().includes(q));
+      list = list.filter(cb => (cb.rrn && cb.rrn.toLowerCase().includes(q)) || (cb.txnId && cb.txnId.toLowerCase().includes(q)) || (cb.mStatus && cb.mStatus.toLowerCase().includes(q)) || (cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(q)) || (cb.adjType && cb.adjType.toLowerCase().includes(q)));
     }
     return list;
   };
@@ -667,7 +660,7 @@ function MerchantPortal({
 
     if (raisedSearchInput) {
       const q = raisedSearchInput.toLowerCase();
-      list = list.filter(cb => cb.rrn.includes(q) || cb.txnId.includes(q) || cb.mStatus.toLowerCase().includes(q));
+      list = list.filter(cb => (cb.rrn && cb.rrn.toLowerCase().includes(q)) || (cb.txnId && cb.txnId.toLowerCase().includes(q)) || (cb.mStatus && cb.mStatus.toLowerCase().includes(q)) || (cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(q)) || (cb.adjType && cb.adjType.toLowerCase().includes(q)));
     }
     return list;
   };
@@ -951,7 +944,7 @@ function MerchantPortal({
         if (reportFilter.searchBy === 'TID' && !cb.tid?.toLowerCase().includes(q)) return false;
         if (reportFilter.searchBy === 'MID' && !cb.userId?.toLowerCase().includes(q)) return false;
         if (reportFilter.searchBy === 'Case ID' && !cb.caseId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
-        if (!reportFilter.searchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
+        if (!reportFilter.searchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q) && !(cb.mStatus && cb.mStatus.toLowerCase().includes(q)) && !(cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(q)) && !(cb.adjType && cb.adjType.toLowerCase().includes(q))) return false;
       }
       if (reportFilter.disputeStatus && cb.mStatus !== reportFilter.disputeStatus && cb.mSubStatus !== reportFilter.disputeStatus) return false;
       if (reportFilter.disputeType && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(reportFilter.disputeType) && !(reportFilter.disputeType === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
@@ -2564,7 +2557,7 @@ function AdminPortal({
         if (filterSearchBy === 'MID' && !cb.userId.includes(filterRrn)) return false;
         if (filterSearchBy === 'Case ID' && !cb.caseId?.includes(filterRrn) && !cb.id?.includes(filterRrn)) return false;
         if (filterSearchBy === 'Merchant Name' && !cb.userName?.toLowerCase().includes(filterRrn.toLowerCase())) return false;
-        if (!filterSearchBy && !cb.rrn.includes(filterRrn) && !cb.txnId.includes(filterRrn) && !cb.userId.includes(filterRrn) && !cb.id?.includes(filterRrn) && !cb.userName?.toLowerCase().includes(filterRrn.toLowerCase())) return false;
+        if (!filterSearchBy && !cb.rrn.includes(filterRrn) && !cb.txnId.includes(filterRrn) && !cb.userId.includes(filterRrn) && !cb.id?.includes(filterRrn) && !cb.userName?.toLowerCase().includes(filterRrn.toLowerCase()) && !(cb.mStatus && cb.mStatus.toLowerCase().includes(filterRrn.toLowerCase())) && !(cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(filterRrn.toLowerCase())) && !(cb.adjType && cb.adjType.toLowerCase().includes(filterRrn.toLowerCase()))) return false;
       }
       if (filterStatus && cb.mStatus !== filterStatus && cb.mSubStatus !== filterStatus) return false;
       if (filterSubStatus && !((cb.adjType || cb.mStatus) && (cb.adjType || cb.mStatus).includes(filterSubStatus) && !(filterSubStatus === 'Arbitration' && (cb.adjType || cb.mStatus).includes('Pre-Arbitration')))) return false;
@@ -2581,7 +2574,7 @@ function AdminPortal({
 
     if (aVcSearchInput) {
       const q = aVcSearchInput.toLowerCase();
-      list = list.filter(cb => cb.rrn.includes(q) || cb.txnId.includes(q) || cb.userName.toLowerCase().includes(q));
+      list = list.filter(cb => (cb.rrn && cb.rrn.toLowerCase().includes(q)) || (cb.txnId && cb.txnId.toLowerCase().includes(q)) || (cb.userName && cb.userName.toLowerCase().includes(q)) || (cb.mStatus && cb.mStatus.toLowerCase().includes(q)) || (cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(q)) || (cb.adjType && cb.adjType.toLowerCase().includes(q)));
     }
     return list;
   };
@@ -4589,7 +4582,7 @@ function PartnerPortal({
       if (filterSearchBy === 'TID' && !cb.tid?.toLowerCase().includes(q)) return false;
       if (filterSearchBy === 'MID' && !cb.userId?.toLowerCase().includes(q)) return false;
       if (filterSearchBy === 'Case ID' && !cb.caseId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
-      if (!filterSearchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q)) return false;
+      if (!filterSearchBy && !cb.rrn?.toLowerCase().includes(q) && !cb.txnId?.toLowerCase().includes(q) && !cb.userId?.toLowerCase().includes(q) && !cb.id?.toLowerCase().includes(q) && !(cb.mStatus && cb.mStatus.toLowerCase().includes(q)) && !(cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(q)) && !(cb.adjType && cb.adjType.toLowerCase().includes(q))) return false;
     }
     if (filterStatus && cb.mStatus !== filterStatus && cb.mSubStatus !== filterStatus) return false;
     if (filterMerchant && !cb.userName?.toLowerCase().includes(filterMerchant.toLowerCase())) return false;
