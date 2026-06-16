@@ -5117,13 +5117,19 @@ function PartnerPortal({
             <div className="overlay open">
               <div className="modal modal-lg">
                 <div className="modal-hdr">
-                  <h3>Submit Evidence on Behalf of Merchant</h3>
+                  <h3>Reject &amp; Upload Evidence</h3>
                   <button className="modal-close" onClick={() => setActiveModal('disputeDetails')}>✕</button>
                 </div>
                 <div className="modal-body">
+                  <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Selected Action</div>
+                  <div className="radio-opts" style={{ marginBottom: '16px' }}>
+                    <label className="radio-opt">
+                      <input type="radio" name="partnerContestOpt" checked={true} readOnly /> Reject &amp; Upload Evidence
+                    </label>
+                  </div>
                   <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px' }}>Evidence Documents</div>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
-                    Upload proof of delivery or service. The files will be forwarded to the acquirer. Max 20MB (.png, .jpeg, .pdf).
+                    Upload proof of delivery or service. The files will be forwarded to the acquirer. Max 20MB (.png, .jpeg, .pdf supported).
                   </p>
                   
                   <div id="evidenceList">
