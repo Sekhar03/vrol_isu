@@ -5102,7 +5102,7 @@ function PartnerPortal({
                       <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
                       {partnerTab !== 'verification-pending' && (!cb.mStatus.includes('Won') && !cb.mStatus.includes('Lost')) && !cb.visaPending && (
                         <>
-                          <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
+                          <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }} onClick={() => { setActiveModal('partnerUploadEvidence'); }}>Reject & Upload Evidence</button>
                         </>
                       )}
                     </div>
