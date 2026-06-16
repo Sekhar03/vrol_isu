@@ -70,6 +70,21 @@ function findChargebackById(id) {
   return chargebacks.find((c) => c.id === id) || null;
 }
 
+function addChargeback(cb) {
+  const newCb = {
+    ...cb,
+    _id: cb.id,
+    toObject: () => ({ ...cb }),
+    save: async function save() {
+      const idx = chargebacks.findIndex((c) => c.id === this.id);
+      if (idx >= 0) chargebacks[idx] = { ...this };
+      return this;
+    }
+  };
+  chargebacks.unshift(newCb);
+  return newCb;
+}
+
 function getLedger(query = {}) {
   let list = [...ledger];
   if (query.merchant) list = list.filter((l) => l.merchant === query.merchant);
@@ -96,6 +111,7 @@ module.exports = {
   updateUserWallet,
   getChargebacks,
   findChargebackById,
+  addChargeback,
   getLedger,
   addLedgerEntry,
   countLedger

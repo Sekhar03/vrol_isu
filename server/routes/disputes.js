@@ -145,11 +145,26 @@ router.post('/:id/action', async (req, res) => {
     }
     if (!dispute) return res.status(404).json({ message: 'Dispute not found' });
 
+    const user = req.headers['x-user-name'] || 'System';
+    const role = req.headers['x-user-role'] || 'System';
+    const prevStatus = dispute.mStatus;
+    const prevSubStatus = dispute.mSubStatus;
+
+    // Determine uploader role string
+    let uploaderRole = 'Merchant';
+    if (role === 'partner') {
+      uploaderRole = 'Partner (On Behalf of Merchant)';
+    } else if (role === 'admin') {
+      uploaderRole = 'Admin';
+    }
+
     if (action === 'accept') {
       dispute.resolution = 'Lost';
       dispute.mSubStatus = dispute.mStatus.includes('Arbitration') ? 'Arbitration Lost' : 'Chargeback Lost';
       dispute.merchantAction = 'accepted';
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'System', time: new Date().toISOString(), title: 'Accepted Liability', remarks: 'Merchant accepted the dispute loss.', file: null });
+      
+      const remarks = `User: ${user} | Role: ${role} | Action: Accepted Liability | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Accepted Liability', remarks, file: null });
     } else if (action === 'admin_request_info') {
       const { rejectedDocs } = req.body;
       dispute.mSubStatus = 'Chargeback Resubmit';
@@ -157,6 +172,7 @@ router.post('/:id/action', async (req, res) => {
       dispute.merchantAction = 'rejected';
       dispute.rejectReason = comments;
       
+      let rejectedDocsString = 'None';
       if (Array.isArray(rejectedDocs)) {
         rejectedDocs.forEach(rdoc => {
           const doc = dispute.documents.find(d => d.id === rdoc.id);
@@ -166,9 +182,11 @@ router.post('/:id/action', async (req, res) => {
             doc.rejectedAt = new Date().toISOString();
           }
         });
+        rejectedDocsString = rejectedDocs.map(d => d.id).join(', ');
       }
 
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'System', time: new Date().toISOString(), title: 'Documents Rejected / More Info Requested', remarks: comments || 'Admin requested more information from the merchant.', file: null });
+      const remarks = `User: ${user} | Role: ${role} | Action: Request Info | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus} | Rejected Docs: ${rejectedDocsString} | Comments: ${comments || 'None'}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Documents Rejected / More Info Requested', remarks, file: null });
     } else if (action === 'contest') {
       dispute.mSubStatus = 'Chargeback In Progress';
       if (dispute.acquirerAction === 'considered') {
@@ -186,7 +204,8 @@ router.post('/:id/action', async (req, res) => {
             id: 'doc_' + Date.now() + '_' + idx,
             filename: filename,
             uploadedAt: new Date().toISOString(),
-            status: 'Pending Review'
+            status: 'Pending Review',
+            uploadedBy: uploaderRole
           });
         });
         fileString = evidence.join(', ');
@@ -195,32 +214,42 @@ router.post('/:id/action', async (req, res) => {
           id: 'doc_' + Date.now(),
           filename: evidence,
           uploadedAt: new Date().toISOString(),
-          status: 'Pending Review'
+          status: 'Pending Review',
+          uploadedBy: uploaderRole
         });
         fileString = evidence;
       }
       
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'System', time: new Date().toISOString(), title: 'Evidence Submitted', remarks: comments || 'Evidence provided to fight dispute.', file: fileString });
+      const remarks = `User: ${user} | Role: ${role} | Action: Contest Dispute | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus} | Uploaded Docs: ${fileString || 'None'} | Remarks: ${comments || 'None'}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Evidence Submitted', remarks, file: fileString });
     } else if (action === 'escalate') {
       dispute.mStatus = 'Pre-Arbitration Raise';
       dispute.mSubStatus = 'Chargeback In Progress';
-      dispute.timeline.unshift({ by: 'Admin', time: new Date().toISOString(), title: 'Escalated to Pre-Arb', remarks: 'Case sent to Visa for Pre-Arbitration.', file: null });
+      
+      const remarks = `User: ${user} | Role: ${role} | Action: Escalated to Pre-Arb | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Escalated to Pre-Arb', remarks, file: null });
     } else if (action === 'visa_accept') {
       dispute.mSubStatus = 'Chargeback In Progress';
       dispute.acquirerAction = 'visa_accept';
       dispute.visaPending = true;
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'System', time: new Date().toISOString(), title: 'Admin Accepted - Sent to Visa', remarks: 'Admin accepted the documents. Case forwarded to Visa for final ruling.', file: null });
+      
+      const remarks = `User: ${user} | Role: ${role} | Action: Admin Accepted - Sent to Visa | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Admin Accepted - Sent to Visa', remarks, file: null });
     } else if (action === 'visa_accept_partially') {
       dispute.mSubStatus = 'Chargeback In Progress';
       dispute.acquirerAction = 'visa_accept_partially';
       dispute.visaPending = true;
       dispute.acceptedAmount = req.body.acceptedAmount || 0;
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'System', time: new Date().toISOString(), title: 'Admin Partially Accepted - Sent to Visa', remarks: `Accepted Amount: ${req.body.acceptedAmount}. Remarks: ${comments}`, file: evidence || null });
+      
+      const remarks = `User: ${user} | Role: ${role} | Action: Admin Partially Accepted - Sent to Visa | Accepted Amt: ${dispute.acceptedAmount} | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus} | Comments: ${comments || 'None'}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Admin Partially Accepted - Sent to Visa', remarks, file: evidence || null });
     } else if (action === 'visa_review') {
       dispute.mSubStatus = 'Chargeback In Progress';
       dispute.acquirerAction = 'visa_review';
       dispute.visaPending = true;
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'System', time: new Date().toISOString(), title: 'Sent to Visa for Review', remarks: 'Admin disagrees with merchant submission. Case escalated to Visa for review.', file: null });
+      
+      const remarks = `User: ${user} | Role: ${role} | Action: Sent to Visa for Review | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Sent to Visa for Review', remarks, file: null });
     } else if (action === 'admin_upload_evidence') {
       dispute.mSubStatus = 'Chargeback Resubmit';
       dispute.acquirerAction = 'evidence_uploaded';
@@ -249,7 +278,8 @@ router.post('/:id/action', async (req, res) => {
         fileString = evidence;
       }
       
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'Admin', time: new Date().toISOString(), title: 'Admin Evidence Uploaded', remarks: comments || 'Admin uploaded documents for merchant review.', file: fileString });
+      const remarks = `User: ${user} | Role: ${role} | Action: Admin Uploaded Evidence | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus} | Uploaded Docs: ${fileString || 'None'} | Remarks: ${comments || 'None'}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Admin Evidence Uploaded', remarks, file: fileString });
     } else if (action === 'merchant_accept_admin') {
       dispute.mSubStatus = 'Chargeback In Progress';
       dispute.merchantAction = 'accepted_admin';
@@ -262,13 +292,15 @@ router.post('/:id/action', async (req, res) => {
         }
       });
       
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'Merchant', time: new Date().toISOString(), title: 'Merchant Accepted Admin Evidence', remarks: 'Merchant accepted the Admin documents. Case routed to Admin for final submission.', file: null });
+      const remarks = `User: ${user} | Role: ${role} | Action: Merchant Accepted Admin Evidence | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Merchant Accepted Admin Evidence', remarks, file: null });
     } else if (action === 'merchant_reject_admin') {
       dispute.mSubStatus = 'Chargeback In Progress';
       dispute.merchantAction = 'rejected_admin';
       dispute.acquirerAction = null;
       
       const { rejectedDocs, evidence } = req.body;
+      let rejectedDocsString = 'None';
       if (Array.isArray(rejectedDocs)) {
         rejectedDocs.forEach(rdoc => {
           const doc = dispute.documents.find(d => d.id === rdoc.id && d.uploadedBy === 'Admin');
@@ -278,6 +310,7 @@ router.post('/:id/action', async (req, res) => {
             doc.rejectedAt = new Date().toISOString();
           }
         });
+        rejectedDocsString = rejectedDocs.map(d => d.id).join(', ');
       }
 
       let fileString = null;
@@ -288,7 +321,7 @@ router.post('/:id/action', async (req, res) => {
             filename: filename,
             uploadedAt: new Date().toISOString(),
             status: 'Pending Review',
-            uploadedBy: req.headers['x-user-name'] || 'Merchant'
+            uploadedBy: uploaderRole
           });
         });
         fileString = evidence.join(', ');
@@ -298,12 +331,13 @@ router.post('/:id/action', async (req, res) => {
           filename: evidence,
           uploadedAt: new Date().toISOString(),
           status: 'Pending Review',
-          uploadedBy: req.headers['x-user-name'] || 'Merchant'
+          uploadedBy: uploaderRole
         });
         fileString = evidence;
       }
       
-      dispute.timeline.unshift({ by: req.headers['x-user-name'] || 'Merchant', time: new Date().toISOString(), title: 'Merchant Rejected Admin Evidence', remarks: comments || 'Merchant rejected Admin evidence.', file: fileString });
+      const remarks = `User: ${user} | Role: ${role} | Action: Merchant Rejected Admin Evidence | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus} | Rejected Docs: ${rejectedDocsString} | Uploaded Docs: ${fileString || 'None'} | Remarks: ${comments || 'None'}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Merchant Rejected Admin Evidence', remarks, file: fileString });
     }
 
     const updated = await dispute.save();

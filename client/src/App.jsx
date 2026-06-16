@@ -2043,6 +2043,7 @@ function MerchantPortal({
                         {(cb.documents && cb.documents.length > 0) ? cb.documents.map(doc => (
                           <div key={doc.id} style={{ width: '220px', padding: '16px', border: doc.status === 'Rejected' ? '1px solid #ff4d4f' : '1px solid #e0e0e0', borderRadius: '4px', flexShrink: 0, display: 'flex', flexDirection: 'column', color: '#333', background: doc.status === 'Rejected' ? '#fff1f0' : '#fafafa' }}>
                             <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '12px', wordBreak: 'break-all' }}><span style={{ color: '#ccc', marginRight: '6px' }}>📄</span>{doc.filename}</div>
+                            <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Uploaded By: <span style={{ color: '#333', fontWeight: 'bold' }}>{doc.uploadedBy || 'Merchant'}</span></div>
                             <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>Status: <span style={{ color: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#faad14', fontWeight: 'bold' }}>{doc.status}</span></div>
                             <div style={{ fontSize: '12px', color: '#888' }}>Date: {new Date(doc.uploadedAt).toLocaleDateString()}</div>
                             {doc.status === 'Rejected' && (
@@ -5079,10 +5080,21 @@ function PartnerPortal({
                       </div>
                       
                       <div style={{ padding: '20px', display: 'flex', gap: '16px', overflowX: 'auto', background: '#fff' }}>
-                        {[1, 2, 3, 4].map(i => (
-                          <div key={i} style={{ width: '120px', height: '80px', border: '2px solid #e0e0e0', borderTop: '4px solid #d1c4e9', borderRadius: '4px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d1c4e9', background: '#fafafa' }}>
+                        {(cb.documents && cb.documents.length > 0) ? cb.documents.map(doc => (
+                          <div key={doc.id} style={{ width: '220px', padding: '12px', border: '2px solid', borderColor: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#d1c4e9', borderTop: `4px solid ${doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#d1c4e9'}`, borderRadius: '4px', flexShrink: 0, display: 'flex', flexDirection: 'column', color: '#333', background: '#fafafa' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '8px', wordBreak: 'break-all' }}>📄 {doc.filename}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Uploaded By: <strong>{doc.uploadedBy || 'Merchant'}</strong></div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Status: <strong style={{ color: doc.status === 'Rejected' ? '#ff4d4f' : doc.status === 'Accepted' ? '#52c41a' : '#faad14' }}>{doc.status}</strong></div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Date: {new Date(doc.uploadedAt).toLocaleDateString()}</div>
+                            {doc.status === 'Rejected' && (
+                              <div style={{ fontSize: '11px', color: '#ff4d4f', marginTop: '6px', padding: '6px', background: '#fff1f0', borderRadius: '4px' }}>
+                                <strong>Remarks:</strong> {doc.rejectionRemarks}
+                              </div>
+                            )}
                           </div>
-                        ))}
+                        )) : (
+                          <div style={{ color: 'var(--text-muted)', fontSize: '13px', padding: '10px' }}>No documents uploaded yet.</div>
+                        )}
                       </div>
                     </div>
                     
@@ -5090,7 +5102,6 @@ function PartnerPortal({
                       <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
                       {partnerTab !== 'verification-pending' && (!cb.mStatus.includes('Won') && !cb.mStatus.includes('Lost')) && !cb.visaPending && (
                         <>
-                          <button style={{ padding: '8px 24px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }} onClick={() => { setActiveModal('action2'); }}>Reject</button>
                           <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
                         </>
                       )}
