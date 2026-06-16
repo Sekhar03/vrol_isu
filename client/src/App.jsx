@@ -1758,7 +1758,7 @@ function MerchantPortal({
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-pending')}
-                  >Document pending from Merchant</div>
+                  >Document pending for Merchant</div>
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-verification' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-verification' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-verification')}
@@ -1824,7 +1824,7 @@ function MerchantPortal({
                     </div>
                   )}
 
-                  {/* Tab: Document Pending from Merchant */}
+                  {/* Tab: Document Pending for Merchant */}
                   {reportTab === 'doc-pending' && (
                     <div>
                       <div className="tbl-toolbar">
@@ -3737,7 +3737,7 @@ function AdminPortal({
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('merchant-pending'); setAVcPage(1); }}
-                  >Document pending from Merchant</div>
+                  >Document pending for Merchant</div>
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('verification-pending'); setAVcPage(1); }}
@@ -4836,7 +4836,7 @@ function PartnerPortal({
                     style={{ padding: '12px 0', color: partnerTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setPartnerTab('merchant-pending'); }}
                   >
-                    Document Pending from Merchant
+                    Document Pending for Merchant
                   </div>
                   <div 
                     style={{ padding: '12px 0', color: partnerTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}

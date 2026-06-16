@@ -109,11 +109,11 @@ old4 = '''                  <fieldset style={{ border: '1px solid #d1c4e9', bord
                           <option value="">Dispute Status</option>
                           <option value="Dispute Won Partially">Dispute Won Partially</option>
                           <option value="Dispute Won Fully">Dispute Won Fully</option>
-                          <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
-                          <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
+                          <option value="Dispute Lost ï¿½ TAT Expired">Dispute Lost ï¿½ TAT Expired</option>
+                          <option value="Dispute Lost ï¿½ Accepted">Dispute Lost ï¿½ Accepted</option>
                           <option value="Document Rejected">Document Rejected</option>
                           <option value="Document Pending Verification">Document Pending Verification</option>
-                          <option value="Document Pending from Merchant">Document Pending from Merchant</option>
+                          <option value="Document Pending for Merchant">Document Pending for Merchant</option>
                         </select>
                       </div>
                       {/* Col 2 */}
@@ -181,7 +181,7 @@ new4 = '''                  <fieldset style={{ border: '1px solid #d1c4e9', bord
                             <option value="Dispute Lost - Accepted">Dispute Lost - Accepted</option>
                             <option value="Document Rejected">Document Rejected</option>
                             <option value="Document Pending Verification">Document Pending Verification</option>
-                            <option value="Document Pending from Merchant">Document Pending from Merchant</option>
+                            <option value="Document Pending for Merchant">Document Pending for Merchant</option>
                           </select>
                         </div>
                       </div>

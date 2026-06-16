@@ -32,7 +32,7 @@
                             <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
                             <option value="Document Rejected">Document Rejected</option>
                             <option value="Chargeback In Progress">Document Pending Verification</option>
-                            <option value="Chargeback Resubmit">Document Pending from Merchant</option>
+                            <option value="Chargeback Resubmit">Document Pending for Merchant</option>
                           </select>
                         </div>
                       </div>

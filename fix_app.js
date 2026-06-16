@@ -88,7 +88,7 @@ const chunk4 = [
   "                            <option value=\"Dispute Lost - Accepted\">Dispute Lost - Accepted</option>",
   "                            <option value=\"Document Rejected\">Document Rejected</option>",
   "                            <option value=\"Document Pending Verification\">Document Pending Verification</option>",
-  "                            <option value=\"Document Pending from Merchant\">Document Pending from Merchant</option>",
+  "                            <option value=\"Document Pending for Merchant\">Document Pending for Merchant</option>",
   "                          </select>",
   "                        </div>",
   "                      </div>",

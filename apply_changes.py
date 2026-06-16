@@ -69,7 +69,7 @@ def main():
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-pending')}
-                  >Document pending from Merchant</div>
+                  >Document pending for Merchant</div>
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-verification' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-verification' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-verification')}

@@ -61,7 +61,7 @@ tabs_ui = """                </div>
                     style={{ padding: '12px 0', color: partnerTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setPartnerTab('merchant-pending'); }}
                   >
-                    Document Pending from Merchant
+                    Document Pending for Merchant
                   </div>
                   <div 
                     style={{ padding: '12px 0', color: partnerTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
