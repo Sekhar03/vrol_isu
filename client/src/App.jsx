@@ -1987,17 +1987,39 @@ function MerchantPortal({
                 {/* Toolbar with dropdowns and export */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
-                      <option>Last 6 Months</option>
-                      <option>Last 30 Days</option>
-                      <option>Last 7 Days</option>
-                      <option>Today</option>
+                    <input 
+                      type="date" 
+                      value={reportFilter.from} 
+                      onChange={(e) => setReportFilter({...reportFilter, from: e.target.value})}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    />
+                    <input 
+                      type="date" 
+                      value={reportFilter.to} 
+                      onChange={(e) => setReportFilter({...reportFilter, to: e.target.value})}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    />
+                    <select 
+                      value={reportFilter.disputeStatus}
+                      onChange={(e) => setReportFilter({...reportFilter, disputeStatus: e.target.value})}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    >
+                      <option value="">Select All</option>
+                      <option value="New">New</option>
+                      <option value="Progress">Progress</option>
+                      <option value="Hold">Hold</option>
+                      <option value="Lost">Lost</option>
+                      <option value="Won">Won</option>
+                      <option value="Success">Success</option>
                     </select>
-                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
-                      <option>Search & Filter</option>
-                      <option>By Status</option>
-                      <option>By Type</option>
-                      <option>By Date</option>
+                    <select 
+                      value={reportFilter.scheme}
+                      onChange={(e) => setReportFilter({...reportFilter, scheme: e.target.value})}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    >
+                      <option value="">Select All</option>
+                      <option value="visa">Visa</option>
+                      <option value="mastercard">Mastercard</option>
                     </select>
                   </div>
                   <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => exportToCSV('raised')}>
@@ -2014,26 +2036,34 @@ function MerchantPortal({
                         <table>
                           <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Created On</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Order ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Transaction ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Amt.</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Respond By</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Action</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
                         </tr>
                           </thead>
                           <tbody>
                             {reportData.filtered.slice(0, 10).map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.createdDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.caseId || '-'}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>₹{cb.txnAmt?.toLocaleString('en-IN') || '-'}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.respondByDate || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
+                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     {isClosedDispute(cb) ? (
                                       <button 
@@ -4404,17 +4434,39 @@ function AdminPortal({
                 {/* Toolbar with dropdowns and export */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
-                      <option>Last 6 Months</option>
-                      <option>Last 30 Days</option>
-                      <option>Last 7 Days</option>
-                      <option>Today</option>
+                    <input 
+                      type="date" 
+                      value={filterFrom} 
+                      onChange={(e) => setFilterFrom(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    />
+                    <input 
+                      type="date" 
+                      value={filterTo} 
+                      onChange={(e) => setFilterTo(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    />
+                    <select 
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    >
+                      <option value="">Select All</option>
+                      <option value="New">New</option>
+                      <option value="Progress">Progress</option>
+                      <option value="Hold">Hold</option>
+                      <option value="Lost">Lost</option>
+                      <option value="Won">Won</option>
+                      <option value="Success">Success</option>
                     </select>
-                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
-                      <option>Search & Filter</option>
-                      <option>By Status</option>
-                      <option>By Type</option>
-                      <option>By Date</option>
+                    <select 
+                      value={filterScheme}
+                      onChange={(e) => setFilterScheme(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    >
+                      <option value="">Select All</option>
+                      <option value="visa">Visa</option>
+                      <option value="mastercard">Mastercard</option>
                     </select>
                   </div>
                   <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => exportExcel('admin')}>
@@ -4427,14 +4479,17 @@ function AdminPortal({
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                       <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Created On</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Order ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Transaction ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Amt.</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Respond By</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Action</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4444,13 +4499,18 @@ function AdminPortal({
                             return (
                               <React.Fragment key={cb.id}>
                                 <tr style={{ borderBottom: '1px solid #f0f0f0', fontSize: '12px', background: 'transparent' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.createdDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.caseId || '-'}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>₹{cb.txnAmt?.toLocaleString('en-IN') || '-'}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.respondByDate || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
+                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     {adminTab === 'closed' || isClosedDispute(cb) ? (
                                       <button 
@@ -4477,7 +4537,7 @@ function AdminPortal({
                           })
                         ) : (
                           <tr>
-                            <td colSpan="8" style={{ textAlign: 'center', padding: '24px' }}>No records match the filter.</td>
+                            <td colSpan="11" style={{ textAlign: 'center', padding: '24px' }}>No records match the filter.</td>
                           </tr>
                         )}
                       </tbody>
@@ -5680,17 +5740,39 @@ function PartnerPortal({
                 {/* Toolbar with dropdowns and export */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
-                      <option>Last 6 Months</option>
-                      <option>Last 30 Days</option>
-                      <option>Last 7 Days</option>
-                      <option>Today</option>
+                    <input 
+                      type="date" 
+                      value={filterFrom} 
+                      onChange={(e) => setFilterFrom(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    />
+                    <input 
+                      type="date" 
+                      value={filterTo} 
+                      onChange={(e) => setFilterTo(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    />
+                    <select 
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    >
+                      <option value="">Select All</option>
+                      <option value="New">New</option>
+                      <option value="Progress">Progress</option>
+                      <option value="Hold">Hold</option>
+                      <option value="Lost">Lost</option>
+                      <option value="Won">Won</option>
+                      <option value="Success">Success</option>
                     </select>
-                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
-                      <option>Search & Filter</option>
-                      <option>By Status</option>
-                      <option>By Type</option>
-                      <option>By Date</option>
+                    <select 
+                      value={filterScheme}
+                      onChange={(e) => setFilterScheme(e.target.value)}
+                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
+                    >
+                      <option value="">Select All</option>
+                      <option value="visa">Visa</option>
+                      <option value="mastercard">Mastercard</option>
                     </select>
                   </div>
                   <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Export functionality coming soon')}>
@@ -5703,26 +5785,34 @@ function PartnerPortal({
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                       <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Created On</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Order ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Transaction ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Amt.</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Respond By</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Action</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredDisputes.map(cb => (
                           <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.createdDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.caseId || '-'}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>₹{cb.txnAmt?.toLocaleString('en-IN') || '-'}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.respondByDate || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
+                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                  </td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     {partnerTab === 'closed' || isClosedDispute(cb) ? (
                                       <button 
