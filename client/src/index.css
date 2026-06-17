@@ -2162,3 +2162,72 @@ body.dark-mode .tour-popover-footer { background-color: #0d0f17; border-top-colo
   position: relative;
   z-index: 1;
 }
+
+/* Premium Summary Cards styles */
+.premium-summary-card {
+  flex: 1;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+}
+.premium-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.15);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.premium-summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.08);
+}
+.premium-summary-card:hover::before {
+  opacity: 1;
+}
+.premium-summary-card:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.premium-summary-card.active-red {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2), 0 10px 22px rgba(239, 68, 68, 0.15) !important;
+}
+.premium-summary-card.active-yellow {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2), 0 10px 22px rgba(245, 158, 11, 0.15) !important;
+}
+.premium-summary-card.active-blue {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), 0 10px 22px rgba(59, 130, 246, 0.15) !important;
+}
+
+.premium-summary-card .card-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+.premium-summary-card .card-hint {
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateX(-10px);
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-weight: 600;
+}
+
+.premium-summary-card:hover .card-hint {
+  opacity: 0.7;
+  transform: translateX(0);
+}

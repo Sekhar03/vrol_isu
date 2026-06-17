@@ -46,8 +46,18 @@ const matchesDisputeStatusFilter = (cb, filterValue) => {
   if (filterValue === 'visa_escalation') {
     return !!cb.visaPending;
   }
-  if (filterValue === 'sla_today') {
+  if (filterValue === 'sla_today' || filterValue === 'due_today') {
     return cb.respondByDate === TODAY_STR && !cb.mSubStatus.includes('Won') && !cb.mSubStatus.includes('Lost') && !cb.mSubStatus.includes('Success') && cb.mSubStatus !== 'Dispute Lost – TAT Expired' && cb.mSubStatus !== 'Dispute Lost – Accepted';
+  }
+  if (filterValue === 'due_tomorrow') {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const TOMORROW_STR = tomorrow.toISOString().split('T')[0];
+    return cb.respondByDate === TOMORROW_STR && !cb.mSubStatus.includes('Won') && !cb.mSubStatus.includes('Lost') && !cb.mSubStatus.includes('Success') && cb.mSubStatus !== 'Dispute Lost – TAT Expired' && cb.mSubStatus !== 'Dispute Lost – Accepted';
+  }
+  if (filterValue === 'insufficient_evidence') {
+    const isClosed = cb.mSubStatus?.includes('Won') || cb.mSubStatus?.includes('Lost') || cb.mSubStatus?.includes('Success') || cb.mSubStatus === 'Dispute Won Partially' || cb.mSubStatus === 'Dispute Won Fully' || cb.mSubStatus === 'Dispute Lost – TAT Expired' || cb.mSubStatus === 'Dispute Lost – Accepted';
+    return cb.merchantAction === 'rejected' && !isClosed;
   }
   return cb.mSubStatus === filterValue;
 };
@@ -1869,12 +1879,29 @@ function MerchantPortal({
 
                 {/* Summary Cards */}
                 <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${reportFilter.disputeStatus === 'due_today' ? 'active-red' : ''}`}
+                    onClick={() => {
+                      setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_today' ? '' : 'due_today' }));
+                      setReportTab('dispute-mgmt');
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}
+                  >
+                    <div className="card-badge">🚨</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{merchantDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{merchantDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#dc2626' }}>{reportFilter.disputeStatus === 'due_today' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${reportFilter.disputeStatus === 'due_tomorrow' ? 'active-yellow' : ''}`}
+                    onClick={() => {
+                      setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_tomorrow' ? '' : 'due_tomorrow' }));
+                      setReportTab('dispute-mgmt');
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}
+                  >
+                    <div className="card-badge">⚠️</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{merchantDisputes.filter(cb => {
                       const tomorrow = new Date();
@@ -1886,11 +1913,21 @@ function MerchantPortal({
                       tomorrow.setDate(tomorrow.getDate() + 1);
                       return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
                     }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#d97706' }}>{reportFilter.disputeStatus === 'due_tomorrow' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${reportFilter.disputeStatus === 'insufficient_evidence' ? 'active-blue' : ''}`}
+                    onClick={() => {
+                      setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence' }));
+                      setReportTab('dispute-mgmt');
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' }}
+                  >
+                    <div className="card-badge">ℹ️</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#1d4ed8' }}>{reportFilter.disputeStatus === 'insufficient_evidence' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
                 </div>
 
@@ -4457,12 +4494,31 @@ function AdminPortal({
 
                 {/* Summary Cards */}
                 <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${filterStatus === 'due_today' ? 'active-red' : ''}`}
+                    onClick={() => {
+                      setFilterStatus(filterStatus === 'due_today' ? '' : 'due_today');
+                      setAdminTab('management');
+                      setAVcPage(1);
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}
+                  >
+                    <div className="card-badge">🚨</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{chargebacks.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{chargebacks.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#dc2626' }}>{filterStatus === 'due_today' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${filterStatus === 'due_tomorrow' ? 'active-yellow' : ''}`}
+                    onClick={() => {
+                      setFilterStatus(filterStatus === 'due_tomorrow' ? '' : 'due_tomorrow');
+                      setAdminTab('management');
+                      setAVcPage(1);
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}
+                  >
+                    <div className="card-badge">⚠️</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{chargebacks.filter(cb => {
                       const tomorrow = new Date();
@@ -4474,11 +4530,22 @@ function AdminPortal({
                       tomorrow.setDate(tomorrow.getDate() + 1);
                       return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
                     }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#d97706' }}>{filterStatus === 'due_tomorrow' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${filterStatus === 'insufficient_evidence' ? 'active-blue' : ''}`}
+                    onClick={() => {
+                      setFilterStatus(filterStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence');
+                      setAdminTab('management');
+                      setAVcPage(1);
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' }}
+                  >
+                    <div className="card-badge">ℹ️</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{chargebacks.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{chargebacks.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#1d4ed8' }}>{filterStatus === 'insufficient_evidence' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
                 </div>
 
@@ -5939,12 +6006,29 @@ function PartnerPortal({
 
                 {/* Summary Cards */}
                 <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${filterStatus === 'due_today' ? 'active-red' : ''}`}
+                    onClick={() => {
+                      setFilterStatus(filterStatus === 'due_today' ? '' : 'due_today');
+                      setPartnerTab('management');
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}
+                  >
+                    <div className="card-badge">🚨</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{allDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{allDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#dc2626' }}>{filterStatus === 'due_today' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${filterStatus === 'due_tomorrow' ? 'active-yellow' : ''}`}
+                    onClick={() => {
+                      setFilterStatus(filterStatus === 'due_tomorrow' ? '' : 'due_tomorrow');
+                      setPartnerTab('management');
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}
+                  >
+                    <div className="card-badge">⚠️</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{allDisputes.filter(cb => {
                       const tomorrow = new Date();
@@ -5956,11 +6040,21 @@ function PartnerPortal({
                       tomorrow.setDate(tomorrow.getDate() + 1);
                       return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
                     }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#d97706' }}>{filterStatus === 'due_tomorrow' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
-                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <div 
+                    className={`premium-summary-card ${filterStatus === 'insufficient_evidence' ? 'active-blue' : ''}`}
+                    onClick={() => {
+                      setFilterStatus(filterStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence');
+                      setPartnerTab('management');
+                    }}
+                    style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' }}
+                  >
+                    <div className="card-badge">ℹ️</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
                     <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{allDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{allDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                    <span className="card-hint" style={{ color: '#1d4ed8' }}>{filterStatus === 'insufficient_evidence' ? 'Active filter ✓' : 'Click to filter →'}</span>
                   </div>
                 </div>
 
