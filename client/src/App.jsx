@@ -65,10 +65,53 @@ const matchesDisputeStatusFilter = (cb, filterValue) => {
 const ensureTodaySLA = (list) => {
   const TODAY_STR = new Date().toISOString().split('T')[0];
   return list.map(cb => {
+    let updated = cb;
     if (['CB010', 'CB024', 'CB_PEND_1', 'CB_PEND_2', 'CB_PEND_3', 'CB_PEND_4'].includes(cb.id)) {
-      return { ...cb, respondByDate: TODAY_STR };
+      updated = { ...updated, respondByDate: TODAY_STR };
     }
-    return cb;
+
+    // Automatically populate document journey if missing but status implies evidence was uploaded
+    if (!updated.documents || updated.documents.length === 0) {
+      const sub = updated.mSubStatus || '';
+      const status = updated.mStatus || '';
+      
+      const needsEvidence = 
+        sub.includes('Won') || 
+        sub.includes('Rejected') || 
+        sub.includes('Resubmit') || 
+        sub.includes('Progress') ||
+        updated.merchantAction === 'evidence' || 
+        updated.acquirerAction === 'evidence_uploaded';
+
+      if (needsEvidence) {
+        const docDate = updated.createdDate ? new Date(updated.createdDate) : new Date();
+        docDate.setDate(docDate.getDate() + 1);
+        const uploadedAt = docDate.toISOString();
+        
+        updated = {
+          ...updated,
+          documents: [
+            {
+              id: `mock_doc_${updated.id}_1`,
+              filename: `Evidence_Receipt_${updated.id}.pdf`,
+              uploadedBy: 'Merchant',
+              status: sub.includes('Rejected') ? 'Rejected' : 'Accepted',
+              uploadedAt: uploadedAt,
+              rejectionRemarks: sub.includes('Rejected') ? 'The signature on the receipt is illegible. Please upload a clear copy.' : ''
+            },
+            {
+              id: `mock_doc_${updated.id}_2`,
+              filename: `DeliveryProof_${updated.id}.pdf`,
+              uploadedBy: 'Merchant',
+              status: sub.includes('Rejected') ? 'Rejected' : 'Accepted',
+              uploadedAt: uploadedAt
+            }
+          ]
+        };
+      }
+    }
+    
+    return updated;
   });
 };
 
