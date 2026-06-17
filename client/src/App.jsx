@@ -3862,11 +3862,11 @@ function MerchantPortal({
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                  <span style={{ fontSize: '15px', fontWeight: '800', color: '#6B38FB' }}>
+                                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#6B38FB' }}>
                                     Dispute Amount: {formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}
                                   </span>
                                   {!isClosed && cb.respondByDate && (
-                                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#ef4444' }}>
+                                    <span style={{ fontSize: '17px', fontWeight: '800', color: '#ef4444' }}>
                                       SLA: {(() => {
                                         const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
                                         return diff > 0 ? `${diff} days pending` : diff === 0 ? 'Due today' : 'Expired';
