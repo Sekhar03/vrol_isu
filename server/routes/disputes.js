@@ -359,7 +359,11 @@ router.post('/:id/action', async (req, res) => {
       
       const remarks = `User: ${user} | Role: ${role} | Action: Merchant Rejected Admin Evidence | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus} | Rejected Docs: ${rejectedDocsString} | Uploaded Docs: ${fileString || 'None'} | Remarks: ${comments || 'None'}`;
       dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Merchant Rejected Admin Evidence', remarks, file: fileString });
+    } else if (action === 'comment') {
+      const remarks = comments || '';
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Comment Added', remarks, file: null });
     }
+
 
     const updated = await dispute.save();
     res.json(updated);

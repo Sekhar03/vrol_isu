@@ -980,6 +980,18 @@ function MerchantPortal({
   const [selectedDocsToReject, setSelectedDocsToReject] = useState([]);
   const [merchantRejectAdminEvidence, setMerchantRejectAdminEvidence] = useState(null);
   const [rejectionRemarks, setRejectionRemarks] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [guidedTourStep, setGuidedTourStep] = useState(null);
+  const [hoveredIcon, setHoveredIcon] = useState(null);
+
+  useEffect(() => {
+    if (guidedTourStep === 2 || guidedTourStep === 3) {
+      setActivePage('reports');
+    } else if (guidedTourStep === 0 || guidedTourStep === 1) {
+      setActivePage('dashboard');
+    }
+  }, [guidedTourStep]);
+
   const [evidenceFiles, setEvidenceFiles] = useState({
     1: null,
     2: null,
@@ -1391,6 +1403,36 @@ function MerchantPortal({
     }
   };
 
+  const submitComment = async () => {
+    if (!commentText.trim()) return;
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentUser) {
+        headers['x-user-role'] = currentUser.role;
+        headers['x-user-name'] = currentUser.username;
+      }
+      const response = await fetch(`${API_URL}/disputes/${targetDisputeId}/action`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'comment',
+          comments: commentText
+        })
+      });
+      if (response.ok) {
+        setCommentText('');
+        setActiveModal(null);
+        showToast('Comment added successfully');
+        await refreshAllData();
+      } else {
+        showToast('Comment failed', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('API error', 'error');
+    }
+  };
+
   const handleEscalate = async (id) => {
     try {
       const headers = { 'Content-Type': 'application/json' };
@@ -1434,14 +1476,21 @@ function MerchantPortal({
 
   // Exports data to CSV
   const exportToCSV = (src) => {
-    const list = src === 'respond' ? filteredRespond : filteredRaised;
+    let list;
+    if (src === 'reports') {
+      list = activeReportsList;
+    } else if (src === 'respond') {
+      list = filteredRespond;
+    } else {
+      list = filteredRaised;
+    }
     if (!list.length) {
       showToast('No data to export', 'error');
       return;
     }
     const headers = ['RRN', 'Case ID', 'Txn ID', 'Merchant', 'Status', 'Sub Status', 'Amount', 'Date', 'Product'];
     const rows = list.map(cb => [
-      cb.rrn, cb.caseId, cb.txnId, cb.userName, cb.mStatus, cb.mSubStatus, cb.txnAmt, cb.createdDate, cb.product
+      cb.rrn, cb.caseId || cb.id, cb.txnId, cb.userName, cb.mStatus, cb.mSubStatus, cb.txnAmt, cb.createdDate || cb.txnDate, cb.product
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
     const link = document.createElement("a");
@@ -1528,8 +1577,40 @@ function MerchantPortal({
   } else if (reportTab === 'closed') {
     activeReportsList = closedDisputes;
   } else {
-    activeReportsList = reportData.filtered;
+    activeReportsList = merchantDisputes;
   }
+
+  // Filter based on the respective filters (date, status, search, type, etc.)
+  activeReportsList = activeReportsList.filter(cb => {
+    if (reportFilter.searchText) {
+      const q = reportFilter.searchText.toLowerCase();
+      if (reportFilter.searchBy === 'Txn ID') {
+        if (!cb.txnId || !cb.txnId.toLowerCase().includes(q)) return false;
+      } else if (reportFilter.searchBy === 'RRN') {
+        if (!cb.rrn || !cb.rrn.toLowerCase().includes(q)) return false;
+      } else if (reportFilter.searchBy === 'TID') {
+        if (!cb.tid || !cb.tid.toLowerCase().includes(q)) return false;
+      } else if (reportFilter.searchBy === 'MID') {
+        if (!cb.userId || !cb.userId.toLowerCase().includes(q)) return false;
+      } else if (reportFilter.searchBy === 'Case ID') {
+        if ((!cb.caseId || !cb.caseId.toLowerCase().includes(q)) && (!cb.id || !cb.id.toLowerCase().includes(q))) return false;
+      } else {
+        if (
+          (!cb.rrn || !cb.rrn.toLowerCase().includes(q)) &&
+          (!cb.txnId || !cb.txnId.toLowerCase().includes(q)) &&
+          (!cb.userId || !cb.userId.toLowerCase().includes(q)) &&
+          (!cb.id || !cb.id.toLowerCase().includes(q)) &&
+          (!cb.mStatus || !cb.mStatus.toLowerCase().includes(q)) &&
+          (!cb.mSubStatus || !cb.mSubStatus.toLowerCase().includes(q))
+        ) return false;
+      }
+    }
+    if (!matchesDisputeStatusFilter(cb, reportFilter.disputeStatus)) return false;
+    if (!matchesDisputeTypeFilter(cb, reportFilter.disputeType)) return false;
+    if (reportFilter.from && cb.createdDate && cb.createdDate < reportFilter.from) return false;
+    if (reportFilter.to && cb.createdDate && cb.createdDate > reportFilter.to) return false;
+    return true;
+  });
 
   // Apply elastic search filter on top of existing list
   if (elasticSearchVal) {
@@ -1742,8 +1823,152 @@ function MerchantPortal({
     );
   };
 
+  const tourSteps = [
+    {
+      target: '.hdr-user',
+      title: 'User Profile & Settings',
+      text: 'Manage your settings, change passwords, restart this guided tour, or log out from here.',
+      placement: 'bottom-right'
+    },
+    {
+      target: '#mSidebar',
+      title: 'Navigation Sidebar',
+      text: 'Access different portals: Dashboard, Dispute Management, and Help Center from here.',
+      placement: 'right'
+    },
+    {
+      target: '#merchantApp .page-inner',
+      title: 'Dispute Management Tabs',
+      text: 'Switch between Action Required, Under Review, Closed, and All Disputes tabs to manage your dispute workflow.',
+      placement: 'bottom'
+    },
+    {
+      target: '#merchantApp .tbl-wrap',
+      title: 'Disputes List',
+      text: 'Review the details of all cases. Click on any record to open the split vertical preview pane to contest disputes or upload evidence.',
+      placement: 'top'
+    }
+  ];
+
+  const WebsiteTour = () => {
+    if (guidedTourStep === null) return null;
+    const step = tourSteps[guidedTourStep];
+    const el = document.querySelector(step.target);
+    let coords = { top: 0, left: 0, width: 0, height: 0 };
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      coords = {
+        top: rect.top + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        height: rect.height
+      };
+    } else {
+      return (
+        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', zIndex: 10000, width: '320px', border: '2px solid #6B38FB' }}>
+          <h4 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '15px', fontWeight: '800' }}>{step.title}</h4>
+          <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#64748b', lineHeight: '1.4' }}>{step.text}</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => setGuidedTourStep(null)}>Skip Demo</button>
+            <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '11px', background: '#6B38FB', color: '#fff', border: 'none' }} onClick={() => setGuidedTourStep(guidedTourStep + 1 < tourSteps.length ? guidedTourStep + 1 : null)}>
+              {guidedTourStep + 1 < tourSteps.length ? 'Next' : 'Finish'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    let tooltipStyle = {
+      position: 'absolute',
+      zIndex: 10000,
+      background: '#fff',
+      padding: '16px 20px',
+      borderRadius: '12px',
+      boxShadow: '0 10px 30px rgba(107, 56, 251, 0.15)',
+      width: '280px',
+      border: '2px solid #6B38FB',
+      transition: 'all 0.3s ease'
+    };
+
+    let arrowStyle = {
+      position: 'absolute',
+      width: '0',
+      height: '0',
+      borderStyle: 'solid'
+    };
+
+    if (step.placement === 'bottom') {
+      tooltipStyle.top = coords.top + coords.height + 12;
+      tooltipStyle.left = coords.left + (coords.width / 2) - 140;
+      arrowStyle.top = '-8px';
+      arrowStyle.left = 'calc(50% - 8px)';
+      arrowStyle.borderWidth = '0 8px 8px 8px';
+      arrowStyle.borderColor = 'transparent transparent #6B38FB transparent';
+    } else if (step.placement === 'right') {
+      tooltipStyle.top = coords.top + (coords.height / 2) - 60;
+      tooltipStyle.left = coords.left + coords.width + 12;
+      arrowStyle.left = '-8px';
+      arrowStyle.top = '50px';
+      arrowStyle.borderWidth = '8px 8px 8px 0';
+      arrowStyle.borderColor = 'transparent #6B38FB transparent transparent';
+    } else if (step.placement === 'top') {
+      tooltipStyle.top = coords.top - 140;
+      tooltipStyle.left = coords.left + (coords.width / 2) - 140;
+      arrowStyle.bottom = '-8px';
+      arrowStyle.left = 'calc(50% - 8px)';
+      arrowStyle.borderWidth = '8px 8px 0 8px';
+      arrowStyle.borderColor = '#6B38FB transparent transparent transparent';
+    } else {
+      tooltipStyle.top = coords.top + coords.height + 12;
+      tooltipStyle.left = coords.left + coords.width - 280;
+      arrowStyle.top = '-8px';
+      arrowStyle.right = '20px';
+      arrowStyle.borderWidth = '0 8px 8px 8px';
+      arrowStyle.borderColor = 'transparent transparent #6B38FB transparent';
+    }
+
+    return (
+      <>
+        <div style={{
+          position: 'absolute',
+          top: coords.top - 4,
+          left: coords.left - 4,
+          width: coords.width + 8,
+          height: coords.height + 8,
+          borderRadius: '8px',
+          boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.5)',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          border: '2px dashed #6B38FB',
+          transition: 'all 0.3s ease'
+        }}></div>
+
+        <div style={tooltipStyle}>
+          <div style={arrowStyle}></div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#1e293b', fontSize: '14px', fontWeight: '800', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{step.title}</span>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>{guidedTourStep + 1}/{tourSteps.length}</span>
+          </h4>
+          <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#475569', lineHeight: '1.4' }}>{step.text}</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }} onClick={() => setGuidedTourStep(null)}>Skip</button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {guidedTourStep > 0 && (
+                <button style={{ background: '#f1f5f9', border: 'none', color: '#334155', cursor: 'pointer', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }} onClick={() => setGuidedTourStep(guidedTourStep - 1)}>Back</button>
+              )}
+              <button style={{ background: '#6B38FB', border: 'none', color: '#fff', cursor: 'pointer', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold' }} onClick={() => setGuidedTourStep(guidedTourStep + 1 < tourSteps.length ? guidedTourStep + 1 : null)}>
+                {guidedTourStep + 1 < tourSteps.length ? 'Next' : 'Finish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="app" id="merchantApp">
+      {guidedTourStep !== null && <WebsiteTour />}
       <header className="app-header">
         <button className="hdr-hamburger" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>☰</button>
         <div className="hdr-logo"><div className="hl-text">iServeU<sup>®</sup></div></div>
@@ -1766,6 +1991,7 @@ function MerchantPortal({
           </div>
           {profileMenuOpen && (
             <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', background: 'var(--bg-card, #fff)', border: '1px solid var(--border-color, #ddd)', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 1000, minWidth: '160px', overflow: 'hidden' }}>
+              <div style={{ padding: '12px 16px', color: '#6B38FB', fontSize: '13px', cursor: 'pointer', borderBottom: '1px solid var(--border-color, #eee)', transition: 'background 0.2s', fontWeight: '700' }} onMouseEnter={(e) => e.target.style.background='var(--bg-body, #f9f9f9)'} onMouseLeave={(e) => e.target.style.background='transparent'} onClick={(e) => { e.stopPropagation(); setGuidedTourStep(0); setProfileMenuOpen(false); }}>Start Guided Tour 🚀</div>
               <div style={{ padding: '12px 16px', color: 'var(--text-main, #333)', fontSize: '13px', cursor: 'pointer', borderBottom: '1px solid var(--border-color, #eee)', transition: 'background 0.2s' }} onMouseEnter={(e) => e.target.style.background='var(--bg-body, #f9f9f9)'} onMouseLeave={(e) => e.target.style.background='transparent'} onClick={(e) => { e.stopPropagation(); showToast('Change password functionality not implemented'); setProfileMenuOpen(false); }}>Change Password</div>
               <div style={{ padding: '12px 16px', color: 'var(--red, #d32f2f)', fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.target.style.background='var(--bg-body, #f9f9f9)'} onMouseLeave={(e) => e.target.style.background='transparent'} onClick={(e) => { e.stopPropagation(); handleLogout(); }}>Logout</div>
             </div>
@@ -2481,7 +2707,13 @@ function MerchantPortal({
                     gridTemplateColumns: 'repeat(5, 1fr)',
                     gap: '16px',
                     marginTop: '24px',
-                    marginBottom: '24px'
+                    marginBottom: '24px',
+                    position: 'sticky',
+                    top: '0',
+                    zIndex: 9,
+                    background: '#f8fafc',
+                    paddingTop: '12px',
+                    paddingBottom: '12px'
                   }}>
                     {/* Card 1: Due Today */}
                     {(() => {
@@ -2768,12 +3000,18 @@ function MerchantPortal({
                 {reportTab === 'closed' && (
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
                     gap: '16px',
                     marginTop: '24px',
-                    marginBottom: '24px'
+                    marginBottom: '24px',
+                    position: 'sticky',
+                    top: '0',
+                    zIndex: 9,
+                    background: '#f8fafc',
+                    paddingTop: '12px',
+                    paddingBottom: '12px'
                   }}>
-                    {/* Card 1: Total Closed */}
+                    {/* Card 1: Total Disputes */}
                     {(() => {
                       const totalClosedCount = closedDisputes.length;
                       const totalClosedAmount = closedDisputes.reduce((sum, cb) => sum + cb.txnAmt, 0);
@@ -2794,13 +3032,13 @@ function MerchantPortal({
                           }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Total Closed</span>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Total Disputes</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                             <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{totalClosedCount}</div>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(totalClosedAmount)}</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR ? formatINR(totalClosedAmount) : '₹' + totalClosedAmount}</div>
                             </div>
                           </div>
                         </div>
@@ -2847,7 +3085,7 @@ function MerchantPortal({
                             <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{wonCount}</div>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(wonAmount)}</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR ? formatINR(wonAmount) : '₹' + wonAmount}</div>
                             </div>
                           </div>
                         </div>
@@ -2894,7 +3132,55 @@ function MerchantPortal({
                             <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{lostCount}</div>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(lostAmount)}</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR ? formatINR(lostAmount) : '₹' + lostAmount}</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Card 4: Representment Win Ratio */}
+                    {(() => {
+                      const totalClosedCount = closedDisputes.length;
+                      const wonCount = closedDisputes.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).length;
+                      const lostCount = closedDisputes.filter(cb => cb.mSubStatus.includes('Lost')).length;
+                      const winRatio = totalClosedCount > 0 ? ((wonCount / totalClosedCount) * 100).toFixed(1) + '%' : '0.0%';
+                      return (
+                        <div
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #a855f7',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                            border: '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Representment Win Ratio</span>
+                              <span style={{
+                                background: '#a855f7',
+                                color: '#FFFFFF',
+                                padding: '3px 10px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Win Ratio</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{winRatio}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>Won: <strong style={{color: '#22c55e'}}>{wonCount}</strong></div>
+                              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', marginTop: '2px' }}>Lost: <strong style={{color: '#ef4444'}}>{lostCount}</strong></div>
                             </div>
                           </div>
                         </div>
@@ -3275,7 +3561,7 @@ function MerchantPortal({
                       alignItems: 'center',
                       transition: 'opacity 0.2s'
                     }}
-                    onClick={() => exportToCSV('raised')}
+                    onClick={() => exportToCSV('reports')}
                     onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                     onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   >
@@ -3413,10 +3699,7 @@ function MerchantPortal({
                               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                   <span style={{ fontSize: '15px', fontWeight: '800', color: '#6B38FB' }}>
-                                    {formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}
-                                  </span>
-                                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#ef4444', background: '#fef2f2', padding: '4px 10px', borderRadius: '6px', border: '1px solid #fee2e2' }}>
-                                    {getDaysDifference(cb.respondByDate, TODAY_STR)} days pending
+                                    Dispute Amount: {formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}
                                   </span>
                                 </div>
                                 <button onClick={() => setTargetDisputeId(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94a3b8'; }}>&times;</button>
@@ -3425,7 +3708,7 @@ function MerchantPortal({
                             
                             <div style={{ padding: '20px', overflowY: 'auto', flex: 1, background: '#f8fafc' }}>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'stretch' }}>
-                                {/* Left Column: Upload Evidence, Actions, and Uploaded Documents */}
+                                {/* Left Column: Upload Evidence, Actions, Uploaded Documents, and Timeline */}
                                 <div style={{ flex: '1 1 calc(50% - 10px)', minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                   {/* Upload Evidence / Action card */}
                                   {!isClosed && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
@@ -3434,29 +3717,140 @@ function MerchantPortal({
                                         <span>📤</span> Upload Evidence &amp; Actions
                                       </h3>
                                       <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px', lineHeight: '1.4' }}>
-                                        You can upload document proof to contest this dispute or accept liability for the dispute transaction.
+                                        {reportTab === 'doc-verification' ? 'You can upload more evidence or add comments for this dispute case.' : 'You can upload document proof to contest this dispute or accept liability for the dispute transaction.'}
                                       </p>
                                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                         {reportTab === 'doc-pending' && (
-                                          <>
-                                            <button className="btn btn-outline" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '38px', fontWeight: '600', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
-                                            <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
-                                          </>
-                                        )}
-                                        {reportTab === 'doc-verification' && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
-                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                                            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                                              <button className="btn btn-danger" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#ef4444', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => handleMerchantRejectAdminClick(cb.id)}>Reject Admin Evidence</button>
-                                              <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#22c55e', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => submitMerchantAcceptAdmin(cb.id)}>Accept Admin Evidence</button>
-                                            </div>
+                                          cb.documents && cb.documents.length > 0 ? (
                                             <button className="btn btn-outline" style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '38px', fontWeight: '600', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }} onClick={() => { setActiveModal('contest'); }}>Upload More Evidence</button>
-                                          </div>
+                                          ) : (
+                                            <>
+                                              <button className="btn btn-outline" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '38px', fontWeight: '600', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
+                                              <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
+                                            </>
+                                          )
                                         )}
-                                        {reportTab === 'doc-verification' && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
-                                          <>
-                                            <button className="btn btn-outline" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '38px', fontWeight: '600', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
-                                            <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
-                                          </>
+                                        {reportTab === 'doc-verification' && (
+                                          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                              <button 
+                                                onClick={() => setActiveModal('contest')} 
+                                                style={{ 
+                                                  background: '#f1f5f9', 
+                                                  border: '1px solid #cbd5e1', 
+                                                  borderRadius: '50%', 
+                                                  width: '42px', 
+                                                  height: '42px', 
+                                                  cursor: 'pointer', 
+                                                  fontSize: '18px', 
+                                                  display: 'inline-flex', 
+                                                  alignItems: 'center', 
+                                                  justifyContent: 'center',
+                                                  transition: 'all 0.2s',
+                                                }}
+                                                onMouseEnter={(e) => { 
+                                                  e.currentTarget.style.background = '#e2e8f0'; 
+                                                  setHoveredIcon('upload');
+                                                }}
+                                                onMouseLeave={(e) => { 
+                                                  e.currentTarget.style.background = '#f1f5f9'; 
+                                                  setHoveredIcon(null);
+                                                }}
+                                              >
+                                                📤
+                                              </button>
+                                              {hoveredIcon === 'upload' && (
+                                                <div style={{
+                                                  position: 'absolute',
+                                                  bottom: '100%',
+                                                  left: '50%',
+                                                  transform: 'translateX(-50%) translateY(-8px)',
+                                                  background: '#1e293b',
+                                                  color: '#fff',
+                                                  padding: '6px 10px',
+                                                  borderRadius: '6px',
+                                                  fontSize: '11px',
+                                                  fontWeight: '600',
+                                                  whiteSpace: 'nowrap',
+                                                  pointerEvents: 'none',
+                                                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                  zIndex: 100
+                                                }}>
+                                                  Upload More Evidence
+                                                  <div style={{
+                                                    position: 'absolute',
+                                                    top: '100%',
+                                                    left: '50%',
+                                                    transform: 'translateX(-50%)',
+                                                    borderWidth: '5px',
+                                                    borderStyle: 'solid',
+                                                    borderColor: '#1e293b transparent transparent transparent',
+                                                    width: 0,
+                                                    height: 0
+                                                  }} />
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                              <button 
+                                                onClick={() => setActiveModal('merchantComment')} 
+                                                style={{ 
+                                                  background: '#f1f5f9', 
+                                                  border: '1px solid #cbd5e1', 
+                                                  borderRadius: '50%', 
+                                                  width: '42px', 
+                                                  height: '42px', 
+                                                  cursor: 'pointer', 
+                                                  fontSize: '18px', 
+                                                  display: 'inline-flex', 
+                                                  alignItems: 'center', 
+                                                  justifyContent: 'center',
+                                                  transition: 'all 0.2s',
+                                                }}
+                                                onMouseEnter={(e) => { 
+                                                  e.currentTarget.style.background = '#e2e8f0'; 
+                                                  setHoveredIcon('comment');
+                                                }}
+                                                onMouseLeave={(e) => { 
+                                                  e.currentTarget.style.background = '#f1f5f9'; 
+                                                  setHoveredIcon(null);
+                                                }}
+                                              >
+                                                💬
+                                              </button>
+                                              {hoveredIcon === 'comment' && (
+                                                <div style={{
+                                                  position: 'absolute',
+                                                  bottom: '100%',
+                                                  left: '50%',
+                                                  transform: 'translateX(-50%) translateY(-8px)',
+                                                  background: '#1e293b',
+                                                  color: '#fff',
+                                                  padding: '6px 10px',
+                                                  borderRadius: '6px',
+                                                  fontSize: '11px',
+                                                  fontWeight: '600',
+                                                  whiteSpace: 'nowrap',
+                                                  pointerEvents: 'none',
+                                                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                  zIndex: 100
+                                                }}>
+                                                  Comment
+                                                  <div style={{
+                                                    position: 'absolute',
+                                                    top: '100%',
+                                                    left: '50%',
+                                                    transform: 'translateX(-50%)',
+                                                    borderWidth: '5px',
+                                                    borderStyle: 'solid',
+                                                    borderColor: '#1e293b transparent transparent transparent',
+                                                    width: 0,
+                                                    height: 0
+                                                  }} />
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
                                         )}
                                         {reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && (
                                           <div style={{ width: '100%' }}>{getActionBtn(cb)}</div>
@@ -3502,9 +3896,14 @@ function MerchantPortal({
                                       <div style={{ color: '#64748B', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>No evidence documents uploaded.</div>
                                     )}
                                   </div>
+
+                                  {/* Timeline (moved below evidence documents) */}
+                                  <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                    {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'merchant')}
+                                  </div>
                                 </div>
 
-                                {/* Right Column: Transaction Details, Dispute Info, and Timeline */}
+                                {/* Right Column: Transaction Details, Dispute Info */}
                                 <div style={{ flex: '1 1 calc(50% - 10px)', minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                   {/* Transaction Details */}
                                   <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
@@ -3541,11 +3940,6 @@ function MerchantPortal({
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Dispute Description:</span> <strong style={{color: '#1e293b', fontWeight: '600', lineHeight: '1.4'}}>13.1 - Services Not Provided or Merchandise Not Received</strong></div>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Admin Remarks:</span> <strong style={{color: '#ef4444'}}>{cb.rejectReason || '-'}</strong></div>
                                     </div>
-                                  </div>
-
-                                  {/* Timeline */}
-                                  <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                                    {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'merchant')}
                                   </div>
                                 </div>
                               </div>
@@ -4090,6 +4484,34 @@ function MerchantPortal({
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
               <button className="btn btn-primary" onClick={submitContestEvidence}>Submit Evidence</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeModal === 'merchantComment' && (
+        <div className="overlay open">
+          <div className="modal">
+            <div className="modal-hdr">
+              <h3>Add Dispute Comment</h3>
+              <button className="modal-close" onClick={() => { setActiveModal(null); setCommentText(''); }}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="mf" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '600' }}>Your Comment</label>
+                <textarea 
+                  className="mfi" 
+                  style={{ width: '100%', height: '100px', padding: '10px', borderRadius: '6px', border: '1.5px solid #cbd5e1', outline: 'none', fontSize: '13px', resize: 'vertical' }}
+                  placeholder="Type your comment here..." 
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  maxLength={500} 
+                />
+              </div>
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
+              <button className="btn btn-secondary" onClick={() => { setActiveModal(null); setCommentText(''); }}>Cancel</button>
+              <button className="btn btn-primary" style={{ background: '#6B38FB', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }} onClick={submitComment}>Submit Comment</button>
             </div>
           </div>
         </div>
