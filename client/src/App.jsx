@@ -573,7 +573,7 @@ function MerchantPortal({
   // Detail disputes states (Removed)
 
   // Modals state
-  const [activeModal, setActiveModal] = useState(null); // null | 'action1' | 'action2' | 'contest' | 'successAccept' | 'successEvidence'
+  const [activeModal, setActiveModal] = useState(null); // null | 'action1' | 'action2' | 'contest' | 'successAccept' | 'successEvidence' | 'successAcceptPartially'
   const [targetDisputeId, setTargetDisputeId] = useState(null);
   
   // Accepting remarks
@@ -588,6 +588,12 @@ function MerchantPortal({
     2: null,
     3: null
   });
+
+  // Full & Partial Liability states
+  const [liabilityType, setLiabilityType] = useState('full'); // 'full' | 'partial'
+  const [partialAmount, setPartialAmount] = useState('');
+  const [partialRemarks, setPartialRemarks] = useState('');
+  const [partialEvidenceFile, setPartialEvidenceFile] = useState(null);
 
   // Filters State
   const TODAY_STR = new Date().toISOString().split('T')[0];
@@ -625,7 +631,7 @@ function MerchantPortal({
   );
   
   const pendingVerificationDisputes = merchantDisputes.filter(cb => 
-    (cb.merchantAction === 'evidence' || cb.merchantAction === 'accepted_admin' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'rejected') && 
+    (cb.merchantAction === 'evidence' || cb.merchantAction === 'accepted_admin' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'rejected' || cb.merchantAction === 'accepted_partially') && 
     (cb.acquirerAction === null || cb.acquirerAction === 'evidence_uploaded' || cb.acquirerAction === 'request_info')
   );
 
@@ -814,6 +820,48 @@ function MerchantPortal({
         await refreshAllData();
       } else {
         showToast('Acceptance failed', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('API error', 'error');
+    }
+  };
+
+  const confirmAcceptPartially = async () => {
+    if (!partialAmount) {
+      showToast('Liability amount is required', 'error');
+      return;
+    }
+    if (!partialEvidenceFile) {
+      showToast('Evidence upload is required', 'error');
+      return;
+    }
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (currentUser) {
+        headers['x-user-role'] = currentUser.role;
+        headers['x-user-name'] = currentUser.username;
+      }
+
+      const response = await fetch(`${API_URL}/disputes/${targetDisputeId}/action`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'accept_partially',
+          acceptedAmount: Number(partialAmount),
+          comments: partialRemarks || 'Partially Accepted',
+          evidence: partialEvidenceFile.name || partialEvidenceFile
+        })
+      });
+
+      if (response.ok) {
+        setPartialAmount('');
+        setPartialRemarks('');
+        setPartialEvidenceFile(null);
+        setActiveModal('successAcceptPartially');
+        await refreshAllData();
+      } else {
+        showToast('Partial acceptance failed', 'error');
       }
     } catch (err) {
       console.error(err);
@@ -2151,8 +2199,8 @@ function MerchantPortal({
                     <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
                     {reportTab === 'doc-pending' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
                       <>
-                        <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => { setActiveModal('action2'); }}>Accept Loss</button>
-                        <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
+                        <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
+                        <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Contest Dispute &amp; Submit Evidence</button>
                       </>
                     )}
                     {reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
@@ -2164,8 +2212,8 @@ function MerchantPortal({
                     )}
                     {reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
                       <>
-                        <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: '#50BDC9', border: '1px solid #50BDC9', background: '#fff' }} onClick={() => { setActiveModal('action2'); }}>Accept Loss</button>
-                        <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Upload Evidence</button>
+                        <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: '#50BDC9', border: '1px solid #50BDC9', background: '#fff' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
+                        <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Contest Dispute &amp; Submit Evidence</button>
                       </>
                     )}
                     {reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && getActionBtn(cb)}
@@ -2190,16 +2238,16 @@ function MerchantPortal({
               <button 
                 className="btn btn-primary" 
                 style={{ width: '100%', marginBottom: '12px', height: '46px', fontSize: '15px' }} 
-                onClick={() => { setAcceptResponseSelect(''); setActiveModal('action2'); }}
+                onClick={() => { setLiabilityType('full'); setActiveModal('action2'); }}
               >
-                Accept Liability (Close as Lost)
+                Accept Dispute
               </button>
               <button 
                 className="btn btn-outline" 
                 style={{ width: '100%', height: '46px', fontSize: '15px' }} 
                 onClick={() => setActiveModal('contest')}
               >
-                Fight Dispute &amp; Upload Evidence
+                Contest Dispute &amp; Submit Evidence
               </button>
             </div>
           </div>
@@ -2208,34 +2256,124 @@ function MerchantPortal({
 
       {activeModal === 'action2' && (
         <div className="overlay open">
-          <div className="modal">
-            <div className="modal-hdr"><h3>Ticket Representation Action</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
-            <div className="modal-body">
-              <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '14px' }}>Choose Action</div>
-              <div style={{ position: 'relative', marginBottom: '16px' }}>
-                <select className="mf-sel-box" value={acceptResponseSelect} onChange={(e) => handleResponseSelect(e.target.value)}>
-                  <option value="">Choose Response</option>
-                  <option value="accept">Accept Liability (Close as Lost)</option>
-                  <option value="contest">Fight Dispute and Submit Evidence</option>
-                </select>
+          <div className="modal" style={{ width: '90%', maxWidth: '500px', borderRadius: '8px', overflow: 'hidden' }}>
+            <div className="modal-hdr" style={{ borderBottom: '1px solid #eee', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>Accept Dispute</h3>
+              <button className="modal-close" onClick={() => setActiveModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', background: '#f5f5f5', borderRadius: '6px', padding: '4px', marginBottom: '20px' }}>
+                <button 
+                  style={{ 
+                    flex: 1, 
+                    padding: '8px', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    background: liabilityType === 'full' ? '#fff' : 'transparent', 
+                    color: liabilityType === 'full' ? '#000' : '#757575',
+                    fontWeight: liabilityType === 'full' ? 'bold' : 'normal',
+                    boxShadow: liabilityType === 'full' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    cursor: 'pointer',
+                    fontSize: '13px'
+                  }} 
+                  onClick={() => setLiabilityType('full')}
+                >
+                  Full Liability
+                </button>
+                <button 
+                  style={{ 
+                    flex: 1, 
+                    padding: '8px', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    background: liabilityType === 'partial' ? '#fff' : 'transparent', 
+                    color: liabilityType === 'partial' ? '#000' : '#757575',
+                    fontWeight: liabilityType === 'partial' ? 'bold' : 'normal',
+                    boxShadow: liabilityType === 'partial' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    cursor: 'pointer',
+                    fontSize: '13px'
+                  }} 
+                  onClick={() => setLiabilityType('partial')}
+                >
+                  Partial Liability
+                </button>
               </div>
-              {acceptResponseSelect === 'accept' && (
+
+              {liabilityType === 'full' ? (
                 <div>
-                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '14px', lineHeight: '1.6' }}>
-                    Accepting this dispute will refund the dispute amount to the customer. This action is final and closes the dispute ticket.
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
+                    Accepting full liability will refund the complete dispute amount to the customer. This action is final.
                   </p>
-                  <div className="mf">
-                    <label>Remarks</label>
+                  <div className="mf" style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '6px' }}>Remarks</label>
                     <textarea 
                       className="mfi mfi-area" 
                       placeholder="Add accepting remarks..." 
                       value={acceptRemarks}
                       onChange={(e) => setAcceptRemarks(e.target.value)}
+                      style={{ width: '100%', minHeight: '80px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
                     />
                   </div>
-                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                    <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
-                    <button className="btn btn-primary" onClick={confirmAccept}>Accept Liability</button>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    <button className="btn btn-secondary" onClick={() => setActiveModal(null)} style={{ padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                    <button className="btn btn-primary" onClick={confirmAccept} style={{ padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', background: '#1890ff', color: '#fff', border: 'none' }}>Accept Liability</button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
+                    Accepting partial liability allows you to pay a portion of the dispute. You must upload supporting evidence.
+                  </p>
+                  <div className="mf" style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '6px' }}>Liability Amount (Mandatory)</label>
+                    <input 
+                      type="number" 
+                      className="mfi" 
+                      placeholder="e.g. 500" 
+                      value={partialAmount}
+                      onChange={(e) => setPartialAmount(e.target.value)}
+                      style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div className="mf" style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '6px' }}>Evidence Upload (Mandatory)</label>
+                    <div style={{ position: 'relative', border: '1px dashed #ccc', padding: '16px', textAlign: 'center', borderRadius: '4px', background: '#fafafa' }}>
+                      <input 
+                        type="file" 
+                        id="partialEvInput" 
+                        style={{ display: 'none' }} 
+                        onChange={(e) => setPartialEvidenceFile(e.target.files[0])} 
+                      />
+                      {partialEvidenceFile ? (
+                        <div style={{ fontSize: '13px', color: '#1890ff', fontWeight: 'bold' }}>
+                          📄 {partialEvidenceFile.name}
+                          <button 
+                            style={{ background: 'none', border: 'none', color: 'red', marginLeft: '10px', cursor: 'pointer' }}
+                            onClick={() => setPartialEvidenceFile(null)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label htmlFor="partialEvInput" style={{ cursor: 'pointer', fontSize: '13px', color: '#757575' }}>
+                          ☁ Choose proof file
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mf" style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '6px' }}>Remarks (Optional)</label>
+                    <textarea 
+                      className="mfi mfi-area" 
+                      placeholder="Reason for partial acceptance..." 
+                      value={partialRemarks}
+                      onChange={(e) => setPartialRemarks(e.target.value)}
+                      style={{ width: '100%', minHeight: '80px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    <button className="btn btn-secondary" onClick={() => setActiveModal(null)} style={{ padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
+                    <button className="btn btn-primary" onClick={confirmAcceptPartially} style={{ padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', background: '#1890ff', color: '#fff', border: 'none' }}>Accept Liability</button>
                   </div>
                 </div>
               )}
@@ -2247,15 +2385,15 @@ function MerchantPortal({
       {activeModal === 'contest' && (
         <div className="overlay open">
           <div className="modal modal-lg">
-            <div className="modal-hdr"><h3>Represent Dispute &amp; Submit Evidence</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
+            <div className="modal-hdr"><h3>Contest Dispute &amp; Submit Evidence</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
             <div className="modal-body">
               <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '6px' }}>Selected Action</div>
               <div className="radio-opts" style={{ marginBottom: '16px' }}>
                 <label className="radio-opt">
-                  <input type="radio" name="contestOpt" checked={false} onChange={() => setActiveModal('action2')} /> Accept Liability
+                  <input type="radio" name="contestOpt" checked={false} onChange={() => { setLiabilityType('full'); setActiveModal('action2'); }} /> Accept Dispute
                 </label>
                 <label className="radio-opt">
-                  <input type="radio" name="contestOpt" checked={true} readOnly /> Contest Dispute &amp; Upload Proofs
+                  <input type="radio" name="contestOpt" checked={true} readOnly /> Contest Dispute &amp; Submit Evidence
                 </label>
               </div>
               <div style={{ fontSize: '15px', fontWeight: '700', marginBottom: '6px' }}>Evidence Documents</div>
@@ -2328,7 +2466,7 @@ function MerchantPortal({
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setActiveModal(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={submitContestEvidence}>Submit Representation</button>
+              <button className="btn btn-primary" onClick={submitContestEvidence}>Submit Evidence</button>
             </div>
           </div>
         </div>
@@ -2400,9 +2538,9 @@ function MerchantPortal({
             <button className="modal-close" style={{ position: 'absolute', top: '12px', right: '12px', color: 'var(--text-muted)' }} onClick={() => setActiveModal(null)}>✕</button>
             <div className="modal-success">
               <div className="ms-icon" style={{ fontSize: '48px', marginBottom: '16px' }}>🔴</div>
-              <h3>Dispute Deemed Accepted</h3>
+              <h3>Full Liability Accepted</h3>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                The dispute has been marked accepted. Adjustment debit has been processed against your wallet balance.
+                Full liability has been accepted successfully. The complete dispute amount has been refund-debited from your wallet balance.
               </p>
               <button className="btn btn-primary" style={{ marginTop: '20px', width: '100%' }} onClick={() => setActiveModal(null)}>Close</button>
             </div>
@@ -2410,45 +2548,19 @@ function MerchantPortal({
         </div>
       )}
 
-      {activeModal === 'acceptPartially' && (
+      {activeModal === 'successAcceptPartially' && (
         <div className="overlay open">
-          {(() => {
-            const cb = chargebacks.find(x => x.id === targetDisputeId);
-            if (!cb) return null;
-            return (
-              <div className="modal">
-                <div className="modal-hdr"><h3>Accept Partially</h3><button className="modal-close" onClick={() => setActiveModal(null)}>✕</button></div>
-                <div className="modal-body">
-                  <div className="mf">
-                    <label>Accepted Amount (Mandatory)</label>
-                    <input type="number" className="mfi" placeholder="e.g. 500" id="m_partial_amt" />
-                  </div>
-                  <div className="mf" style={{ marginTop: '12px' }}>
-                    <label>Remarks (Mandatory)</label>
-                    <textarea className="mfi mfi-area" placeholder="Reason for partial acceptance..." id="m_partial_rmk"></textarea>
-                  </div>
-                  <div className="mf" style={{ marginTop: '12px' }}>
-                    <label>Evidence Upload (Mandatory)</label>
-                    <input type="file" className="form-control" id="m_partial_file" />
-                  </div>
-                </div>
-                <div className="modal-footer" style={{ display: 'flex', gap: '12px' }}>
-                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setActiveModal(null)}>Cancel</button>
-                  <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => {
-                    const amt = document.getElementById('m_partial_amt').value;
-                    const rmk = document.getElementById('m_partial_rmk').value;
-                    const file = document.getElementById('m_partial_file').files[0];
-                    if (!amt || !rmk || !file) {
-                      showToast('Amount, Remarks, and Evidence are required for partial acceptance', 'error');
-                      return;
-                    }
-                    showToast('Partial acceptance submitted for Admin approval');
-                    setActiveModal(null);
-                  }}>Submit for Approval</button>
-                </div>
-              </div>
-            );
-          })()}
+          <div className="modal modal-sm" style={{ textAlign: 'center', padding: '30px' }}>
+            <button className="modal-close" style={{ position: 'absolute', top: '12px', right: '12px', color: 'var(--text-muted)' }} onClick={() => setActiveModal(null)}>✕</button>
+            <div className="modal-success">
+              <div className="ms-icon" style={{ fontSize: '48px', marginBottom: '16px' }}>🟡</div>
+              <h3>Partial Liability Accepted</h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>
+                Partial liability has been accepted successfully. The details and evidence have been submitted to the acquirer/scheme network for verification.
+              </p>
+              <button className="btn btn-primary" style={{ marginTop: '20px', width: '100%' }} onClick={() => setActiveModal(null)}>Close</button>
+            </div>
+          </div>
         </div>
       )}
       
@@ -2458,9 +2570,9 @@ function MerchantPortal({
             <button className="modal-close" style={{ position: 'absolute', top: '12px', right: '12px', color: 'var(--text-muted)' }} onClick={() => setActiveModal(null)}>✕</button>
             <div className="modal-success">
               <div className="ms-icon" style={{ fontSize: '48px', marginBottom: '16px' }}>🟢</div>
-              <h3>Evidence Logs Received</h3>
+              <h3>Evidence Submitted Successfully</h3>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                Dispute represented successfully. The settlement network team will evaluate and update statuses.
+                The supporting evidence has been submitted successfully for review and further processing.
               </p>
               <button className="btn btn-primary" style={{ marginTop: '20px', width: '100%' }} onClick={() => setActiveModal(null)}>Close</button>
             </div>

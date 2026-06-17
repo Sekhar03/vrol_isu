@@ -165,6 +165,27 @@ router.post('/:id/action', async (req, res) => {
       
       const remarks = `User: ${user} | Role: ${role} | Action: Accepted Liability | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus}`;
       dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Accepted Liability', remarks, file: null });
+    } else if (action === 'accept_partially') {
+      dispute.resolution = 'Partially Accepted';
+      dispute.mSubStatus = dispute.mStatus.includes('Arbitration') ? 'Arbitration Lost' : 'Chargeback Lost';
+      dispute.merchantAction = 'accepted_partially';
+      dispute.acceptedAmount = req.body.acceptedAmount || 0;
+      
+      let fileString = null;
+      if (evidence) {
+        if (!dispute.documents) dispute.documents = [];
+        dispute.documents.push({
+          id: 'doc_' + Date.now(),
+          filename: evidence,
+          uploadedAt: new Date().toISOString(),
+          status: 'Pending Review',
+          uploadedBy: uploaderRole
+        });
+        fileString = evidence;
+      }
+      
+      const remarks = `User: ${user} | Role: ${role} | Action: Accepted Partial Liability | Amount: ${dispute.acceptedAmount} | Prev Status: ${prevStatus}/${prevSubStatus} | New Status: ${dispute.mStatus}/${dispute.mSubStatus} | Comments: ${comments || 'None'}`;
+      dispute.timeline.unshift({ by: user, time: new Date().toISOString(), title: 'Partially Accepted Liability', remarks, file: fileString });
     } else if (action === 'admin_request_info') {
       const { rejectedDocs } = req.body;
       dispute.mSubStatus = 'Chargeback Resubmit';
