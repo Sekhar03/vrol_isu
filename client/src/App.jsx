@@ -2725,7 +2725,7 @@ function AdminPortal({
   // Pagination view chargebacks
   const [aVcPage, setAVcPage] = useState(1);
   const [aVcLimit, setAVcLimit] = useState(10);
-  const [adminTab, setAdminTab] = useState('merchant-pending');
+  const [adminTab, setAdminTab] = useState('verification-pending');
 
   // Expanded row IDs
   const [expandedRowIds, setExpandedRowIds] = useState({});
@@ -2735,7 +2735,7 @@ function AdminPortal({
     cb && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence') && !cb.acquirerAction && !cb.visaPending;
 
   const getAdminActionRequiredCount = () => {
-    return chargebacks.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending).length;
+    return chargebacks.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending).length;
   };
 
   const handleAdminEscalate = async (id) => {
@@ -4049,12 +4049,12 @@ function AdminPortal({
 
                 <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
-                    style={{ padding: '12px 0', color: adminTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setAdminTab('merchant-pending'); setAVcPage(1); }}
-                  >Action Required ({getAdminActionRequiredCount()})</div>
-                  <div 
                     style={{ padding: '12px 0', color: adminTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('verification-pending'); setAVcPage(1); }}
+                  >Action Required ({getAdminActionRequiredCount()})</div>
+                  <div 
+                    style={{ padding: '12px 0', color: adminTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setAdminTab('merchant-pending'); setAVcPage(1); }}
                   >Under Review</div>
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
@@ -4109,12 +4109,12 @@ function AdminPortal({
                                       <button className="btn btn-sm btn-outline" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
                                         View Details
                                       </button>
-                                    ) : adminTab !== 'verification-pending' ? (
-                                      <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
+                                    ) : adminTab === 'verification-pending' ? (
+                                      <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}>
                                         Take Action
                                       </button>
                                     ) : (
-                                      <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}>
+                                      <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
                                         Take Action
                                       </button>
                                     )}
