@@ -2725,7 +2725,6 @@ function MerchantPortal({
                         <div
                           onClick={() => {
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_today' ? '' : 'due_today' }));
-                            setReportTab('dispute-mgmt');
                             setReportsPage(1);
                             setTargetDisputeId(null);
                           }}
@@ -2784,7 +2783,6 @@ function MerchantPortal({
                         <div
                           onClick={() => {
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_tomorrow' ? '' : 'due_tomorrow' }));
-                            setReportTab('dispute-mgmt');
                             setReportsPage(1);
                             setTargetDisputeId(null);
                           }}
@@ -2843,7 +2841,6 @@ function MerchantPortal({
                         <div
                           onClick={() => {
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_2_7' ? '' : 'due_2_7' }));
-                            setReportTab('dispute-mgmt');
                             setReportsPage(1);
                             setTargetDisputeId(null);
                           }}
@@ -2902,7 +2899,6 @@ function MerchantPortal({
                         <div
                           onClick={() => {
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_over_7' ? '' : 'due_over_7' }));
-                            setReportTab('dispute-mgmt');
                             setReportsPage(1);
                             setTargetDisputeId(null);
                           }}
@@ -2958,7 +2954,6 @@ function MerchantPortal({
                         <div
                           onClick={() => {
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence' }));
-                            setReportTab('dispute-mgmt');
                             setReportsPage(1);
                             setTargetDisputeId(null);
                           }}
@@ -3697,10 +3692,18 @@ function MerchantPortal({
                                 <h2 style={{ fontSize: '15px', fontWeight: '800', margin: '2px 0 0 0', color: '#1e293b', fontFamily: 'monospace' }}>{cb.id}</h2>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                                   <span style={{ fontSize: '15px', fontWeight: '800', color: '#6B38FB' }}>
                                     Dispute Amount: {formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}
                                   </span>
+                                  {!isClosed && cb.respondByDate && (
+                                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#ef4444' }}>
+                                      SLA: {(() => {
+                                        const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
+                                        return diff > 0 ? `${diff} days pending` : diff === 0 ? 'Due today' : 'Expired';
+                                      })()}
+                                    </span>
+                                  )}
                                 </div>
                                 <button onClick={() => setTargetDisputeId(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94a3b8'; }}>&times;</button>
                               </div>
