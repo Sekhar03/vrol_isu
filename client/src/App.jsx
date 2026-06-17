@@ -644,6 +644,46 @@ export default function App() {
     return d.toLocaleDateString('en-IN') + ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Format respond-by date as "17 May" style
+  const formatRespondByOnlyDate = (s) => {
+    if (!s) return '-';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate() + ' ' + months[d.getMonth()];
+  };
+
+  // Return pill style based on how close respond-by date is
+  const getRespondByStyle = (s) => {
+    if (!s) return {};
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return {};
+    const today = new Date(); today.setHours(0,0,0,0);
+    const target = new Date(d); target.setHours(0,0,0,0);
+    const diffDays = Math.round((target - today) / 86400000);
+    if (diffDays === 0) return { display:'inline-block', padding:'2px 8px', borderRadius:'999px', fontSize:'11px', fontWeight:'700', background:'#FEE2E2', color:'#DC2626', border:'1px solid #FECACA' };
+    if (diffDays === -1) return { display:'inline-block', padding:'2px 8px', borderRadius:'999px', fontSize:'11px', fontWeight:'700', background:'#FEF3C7', color:'#D97706', border:'1px solid #FDE68A' };
+    return { fontWeight:'600' };
+  };
+
+  // Gather unique autocomplete suggestions matching RRN / TxnID / TID / MID
+  const getElasticSuggestions = (disputesList, query) => {
+    if (!query || query.length < 2) return [];
+    const q = query.toLowerCase();
+    const seen = new Set();
+    const results = [];
+    for (const cb of disputesList) {
+      for (const val of [cb.rrn, cb.txnId, cb.tid, cb.userId, cb.userName]) {
+        if (val && val.toLowerCase().includes(q) && !seen.has(val)) {
+          seen.add(val);
+          results.push(val);
+          if (results.length >= 8) return results;
+        }
+      }
+    }
+    return results;
+  };
+
   const handleLogin = async (e, username, password) => {
     e.preventDefault();
     const u = users.find(x => x.username === username && x.password === password);
@@ -971,6 +1011,10 @@ function MerchantPortal({
   // Search filter inputs inside table toolbar
   const [respondSearchInput, setRespondSearchInput] = useState('');
   const [raisedSearchInput, setRaisedSearchInput] = useState('');
+
+  // Elastic search state (Merchant)
+  const [elasticSearchVal, setElasticSearchVal] = useState('');
+  const [elasticSearchFocused, setElasticSearchFocused] = useState(false);
 
   // Compute Merchant Disputes
   // Compute Merchant Disputes
@@ -1469,6 +1513,18 @@ function MerchantPortal({
     activeReportsList = reportData.filtered;
   }
 
+  // Apply elastic search filter on top of existing list
+  if (elasticSearchVal) {
+    const eq = elasticSearchVal.toLowerCase();
+    activeReportsList = activeReportsList.filter(cb =>
+      (cb.rrn && cb.rrn.toLowerCase().includes(eq)) ||
+      (cb.txnId && cb.txnId.toLowerCase().includes(eq)) ||
+      (cb.tid && cb.tid.toLowerCase().includes(eq)) ||
+      (cb.userId && cb.userId.toLowerCase().includes(eq)) ||
+      (cb.userName && cb.userName.toLowerCase().includes(eq))
+    );
+  }
+
   const reportsPaging = paginateList(activeReportsList, reportsPage, reportsLimit);
 
   const renderDisputesTable = (paging) => {
@@ -1496,7 +1552,6 @@ function MerchantPortal({
               <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Status</th>
               <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>TXN Ref. Number</th>
               <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Responded By</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>TID</th>
               <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
@@ -1544,10 +1599,7 @@ function MerchantPortal({
                     {cb.txnId}
                   </td>
                   <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
-                    {cb.respondByDate ? formatDateDisp(cb.respondByDate) : '-'}
-                  </td>
-                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
-                    TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}
+                    <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
                   </td>
                   <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                     {isFirstRow ? (
@@ -1979,7 +2031,7 @@ function MerchantPortal({
                                 <td>{renderStatusBadge(cb.mStatus)}</td>
                                 <td>{renderSubBadge(cb.mSubStatus)}</td>
                                 <td><strong>{formatINR(cb.adjAmt)}</strong></td>
-                                <td>{formatDateDisp(cb.respondByDate)}</td>
+                                <td><span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span></td>
                                 <td>{cb.adjType}</td>
                                 <td>
                                   <button className="info-btn" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>ℹ</button>
@@ -2703,10 +2755,48 @@ function MerchantPortal({
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span>🔍</span>
-                          <span>Search & Filter</span>
+                          <span>Advance Search and Filter</span>
                         </span>
                         <span style={{ fontSize: '10px', color: '#6B38FB', fontWeight: 'bold' }}>▼</span>
                       </button>
+
+                      {/* Elastic Search Input - Merchant */}
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <input
+                          type="text"
+                          value={elasticSearchVal}
+                          onChange={e => setElasticSearchVal(e.target.value)}
+                          onFocus={() => setElasticSearchFocused(true)}
+                          onBlur={() => setTimeout(() => setElasticSearchFocused(false), 180)}
+                          placeholder="Search by RRN / Transaction ID / TID / MID"
+                          style={{
+                            padding: '8px 14px 8px 36px',
+                            border: '1px solid #CBD5E1',
+                            borderRadius: '12px',
+                            fontSize: '13px',
+                            width: '290px',
+                            outline: 'none',
+                            height: '42px',
+                            background: '#fff',
+                            color: '#1e293b',
+                            boxShadow: elasticSearchFocused ? '0 0 0 3px rgba(107,56,251,0.15)' : 'none',
+                            borderColor: elasticSearchFocused ? '#6B38FB' : '#CBD5E1',
+                            transition: 'all 0.2s',
+                          }}
+                        />
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', pointerEvents: 'none' }}>🔎</span>
+                        {elasticSearchFocused && elasticSearchVal.length >= 2 && getElasticSuggestions(merchantDisputes, elasticSearchVal).length > 0 && (
+                          <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 1100, minWidth: '290px', overflow: 'hidden' }}>
+                            {getElasticSuggestions(merchantDisputes, elasticSearchVal).map((s, i) => (
+                              <div key={i} onMouseDown={() => setElasticSearchVal(s)} style={{ padding: '9px 14px', fontSize: '13px', cursor: 'pointer', borderBottom: '1px solid #F1F5F9', color: '#1e293b' }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#F8FAFF'}
+                                onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
+                                {s}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
                       {filterDropdownOpen && (
                         <>
@@ -3094,18 +3184,23 @@ function MerchantPortal({
         return (
           <div className="tour-overlay" style={{ pointerEvents: 'all' }}>
             <div className="tour-backdrop" onClick={skipTour} />
-            <div className="tour-popover" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-              <div className="tour-popover-header">
-                <h3>{step.title}</h3>
-                <span className="tour-popover-step">{tourStep + 1} / {TOUR_STEPS.length}</span>
+            <div style={{
+              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
+              borderRadius: '16px', padding: '28px 28px 20px', boxShadow: '0 20px 60px rgba(30,64,175,0.35)',
+              zIndex: 10001, maxWidth: '400px', width: '90vw', color: '#fff', fontFamily: "'Inter', sans-serif"
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div style={{ fontSize: '17px', fontWeight: '700', lineHeight: '1.3' }}>{step.title}</div>
+                <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.2)', padding: '3px 10px', borderRadius: '999px', fontWeight: '600', marginLeft: '12px', whiteSpace: 'nowrap' }}>{tourStep + 1} / {TOUR_STEPS.length}</span>
               </div>
-              <div className="tour-popover-body"><p>{step.body}</p></div>
-              <div className="tour-popover-footer">
-                <button className="tour-btn-skip" onClick={skipTour}>Skip Tour</button>
-                <div className="tour-dots">
-                  {TOUR_STEPS.map((_, i) => <span key={i} className={`tour-dot ${i === tourStep ? 'active' : ''}`} />)}
+              <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'rgba(255,255,255,0.9)', margin: '0 0 20px' }}>{step.body}</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button onClick={skipTour} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.75)', fontSize: '13px', cursor: 'pointer', fontWeight: '600', padding: 0 }}>Hide these tips</button>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {TOUR_STEPS.map((_, i) => <span key={i} style={{ width: i === tourStep ? '18px' : '6px', height: '6px', borderRadius: '999px', background: i === tourStep ? '#fff' : 'rgba(255,255,255,0.4)', transition: 'all 0.3s', display: 'inline-block' }} />)}
                 </div>
-                <button className={`tour-btn-next ${isLast ? 'tour-btn-finish' : ''}`} onClick={nextStep}>
+                <button onClick={nextStep} style={{ background: '#fff', color: '#1e40af', border: 'none', borderRadius: '8px', padding: '8px 20px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
                   {isLast ? '✅ Done' : 'Next →'}
                 </button>
               </div>
@@ -3739,6 +3834,10 @@ function AdminPortal({
   const [filterStatus, setFilterStatus] = useState('');
   const [filterSubStatus, setFilterSubStatus] = useState('');
   const [filterScheme, setFilterScheme] = useState('');
+
+  // Elastic search state (Admin)
+  const [elasticSearchVal, setElasticSearchVal] = useState('');
+  const [elasticSearchFocused, setElasticSearchFocused] = useState(false);
   
   const TODAY_STR = new Date().toISOString().split('T')[0];
   const SIX_MONTHS_AGO = (() => {
@@ -3906,6 +4005,16 @@ function AdminPortal({
     if (aVcSearchInput) {
       const q = aVcSearchInput.toLowerCase();
       list = list.filter(cb => (cb.rrn && cb.rrn.toLowerCase().includes(q)) || (cb.txnId && cb.txnId.toLowerCase().includes(q)) || (cb.userName && cb.userName.toLowerCase().includes(q)) || (cb.mStatus && cb.mStatus.toLowerCase().includes(q)) || (cb.mSubStatus && cb.mSubStatus.toLowerCase().includes(q)) || (cb.adjType && cb.adjType.toLowerCase().includes(q)));
+    }
+    if (elasticSearchVal) {
+      const eq = elasticSearchVal.toLowerCase();
+      list = list.filter(cb =>
+        (cb.rrn && cb.rrn.toLowerCase().includes(eq)) ||
+        (cb.txnId && cb.txnId.toLowerCase().includes(eq)) ||
+        (cb.tid && cb.tid.toLowerCase().includes(eq)) ||
+        (cb.userId && cb.userId.toLowerCase().includes(eq)) ||
+        (cb.userName && cb.userName.toLowerCase().includes(eq))
+      );
     }
     return list;
   };
@@ -5268,9 +5377,47 @@ function AdminPortal({
                           boxShadow: 'var(--shadow-sm)',
                         }}
                       >
-                        <span>🔍 Search & Filter</span>
+                        <span>🔍 Advance Search and Filter</span>
                         <span style={{ fontSize: '10px', color: '#6B38FB' }}>▼</span>
                       </button>
+
+                      {/* Elastic Search Input - Admin */}
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <input
+                          type="text"
+                          value={elasticSearchVal}
+                          onChange={e => setElasticSearchVal(e.target.value)}
+                          onFocus={() => setElasticSearchFocused(true)}
+                          onBlur={() => setTimeout(() => setElasticSearchFocused(false), 180)}
+                          placeholder="Search by RRN / Transaction ID / TID / MID"
+                          style={{
+                            padding: '8px 14px 8px 36px',
+                            border: '1px solid var(--border-input, #CBD5E1)',
+                            borderRadius: '12px',
+                            fontSize: '13px',
+                            width: '290px',
+                            outline: 'none',
+                            height: '42px',
+                            background: 'var(--card, #fff)',
+                            color: 'var(--text)',
+                            boxShadow: elasticSearchFocused ? '0 0 0 3px rgba(107,56,251,0.15)' : 'none',
+                            borderColor: elasticSearchFocused ? '#6B38FB' : 'var(--border-input, #CBD5E1)',
+                            transition: 'all 0.2s',
+                          }}
+                        />
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', pointerEvents: 'none' }}>🔎</span>
+                        {elasticSearchFocused && elasticSearchVal.length >= 2 && getElasticSuggestions(chargebacks, elasticSearchVal).length > 0 && (
+                          <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, background: 'var(--card,#fff)', border: '1px solid var(--border,#E2E8F0)', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 1100, minWidth: '290px', overflow: 'hidden' }}>
+                            {getElasticSuggestions(chargebacks, elasticSearchVal).map((s, i) => (
+                              <div key={i} onMouseDown={() => setElasticSearchVal(s)} style={{ padding: '9px 14px', fontSize: '13px', cursor: 'pointer', borderBottom: '1px solid var(--border,#F1F5F9)', color: 'var(--text)' }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'var(--hover,#F8FAFF)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'var(--card,#fff)'}>
+                                {s}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
                       {filterDropdownOpen && (
                         <>
@@ -5460,7 +5607,6 @@ function AdminPortal({
                           <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Status</th>
                           <th style={{ padding: '10px 8px', fontWeight: '600' }}>TXN Ref. Number</th>
                           <th style={{ padding: '10px 8px', fontWeight: '600' }}>Responded By</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>TID</th>
                           <th style={{ padding: '10px 8px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
                         </tr>
                       </thead>
@@ -5479,9 +5625,8 @@ function AdminPortal({
                                   <td style={{ padding: '10px 8px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
                                   <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.txnId}</td>
                                   <td style={{ padding: '10px 8px', fontWeight: '500' }}>
-                                    {cb.respondByDate ? formatDateDisp(cb.respondByDate) : '-'}
+                                    <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
                                   </td>
-                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                                     {adminTab === 'closed' || isClosedDispute(cb) ? (
                                       <button 
@@ -6297,6 +6442,10 @@ function PartnerPortal({
   const [filterSearchText, setFilterSearchText] = useState('');
   const [filterMerchant, setFilterMerchant] = useState('');
 
+  // Elastic search state (Partner)
+  const [elasticSearchVal, setElasticSearchVal] = useState('');
+  const [elasticSearchFocused, setElasticSearchFocused] = useState(false);
+
   const [activeTab, setActiveTab] = useState('dispute-mgmt');
   const [activeModal, setActiveModal] = useState(null);
   const [showFaq, setShowFaq] = useState(false);
@@ -6369,6 +6518,16 @@ function PartnerPortal({
   const evidenceDisputes = allDisputes.filter(cb => cb.merchantAction === 'evidence');
 
   const filteredDisputes = allDisputes.filter(cb => {
+    if (elasticSearchVal) {
+      const eq = elasticSearchVal.toLowerCase();
+      if (
+        !(cb.rrn && cb.rrn.toLowerCase().includes(eq)) &&
+        !(cb.txnId && cb.txnId.toLowerCase().includes(eq)) &&
+        !(cb.tid && cb.tid.toLowerCase().includes(eq)) &&
+        !(cb.userId && cb.userId.toLowerCase().includes(eq)) &&
+        !(cb.userName && cb.userName.toLowerCase().includes(eq))
+      ) return false;
+    }
     if (filterSearchText) {
       const q = filterSearchText.toLowerCase();
       if (filterSearchBy === 'Txn ID' && !cb.txnId?.toLowerCase().includes(q)) return false;
@@ -6828,9 +6987,47 @@ function PartnerPortal({
                           boxShadow: 'var(--shadow-sm)',
                         }}
                       >
-                        <span>🔍 Search & Filter</span>
+                        <span>🔍 Advance Search and Filter</span>
                         <span style={{ fontSize: '10px', color: '#50BDC9' }}>▼</span>
                       </button>
+
+                      {/* Elastic Search Input - Partner */}
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <input
+                          type="text"
+                          value={elasticSearchVal}
+                          onChange={e => setElasticSearchVal(e.target.value)}
+                          onFocus={() => setElasticSearchFocused(true)}
+                          onBlur={() => setTimeout(() => setElasticSearchFocused(false), 180)}
+                          placeholder="Search by RRN / Transaction ID / TID / MID"
+                          style={{
+                            padding: '8px 14px 8px 36px',
+                            border: '1px solid var(--border-input, #CBD5E1)',
+                            borderRadius: '12px',
+                            fontSize: '13px',
+                            width: '290px',
+                            outline: 'none',
+                            height: '42px',
+                            background: 'var(--card, #fff)',
+                            color: 'var(--text)',
+                            boxShadow: elasticSearchFocused ? '0 0 0 3px rgba(80,189,201,0.18)' : 'none',
+                            borderColor: elasticSearchFocused ? '#50BDC9' : 'var(--border-input, #CBD5E1)',
+                            transition: 'all 0.2s',
+                          }}
+                        />
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', pointerEvents: 'none' }}>🔎</span>
+                        {elasticSearchFocused && elasticSearchVal.length >= 2 && getElasticSuggestions(allDisputes, elasticSearchVal).length > 0 && (
+                          <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, background: 'var(--card,#fff)', border: '1px solid var(--border,#E2E8F0)', borderRadius: '10px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 1100, minWidth: '290px', overflow: 'hidden' }}>
+                            {getElasticSuggestions(allDisputes, elasticSearchVal).map((s, i) => (
+                              <div key={i} onMouseDown={() => setElasticSearchVal(s)} style={{ padding: '9px 14px', fontSize: '13px', cursor: 'pointer', borderBottom: '1px solid var(--border,#F1F5F9)', color: 'var(--text)' }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'var(--hover,#F0FFFE)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'var(--card,#fff)'}>
+                                {s}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
                       {filterDropdownOpen && (
                         <>
@@ -7036,7 +7233,6 @@ function PartnerPortal({
                               <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Status</th>
                               <th style={{ padding: '10px 8px', fontWeight: '600' }}>TXN Ref. Number</th>
                               <th style={{ padding: '10px 8px', fontWeight: '600' }}>Responded By</th>
-                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>TID</th>
                               <th style={{ padding: '10px 8px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
                             </tr>
                           </thead>
@@ -7052,9 +7248,8 @@ function PartnerPortal({
                                 <td style={{ padding: '10px 8px', fontSize: '13px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
                                 <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.txnId}</td>
                                 <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '600', fontSize: '13px' }}>
-                                  {cb.respondByDate ? formatDateDisp(cb.respondByDate) : '-'}
+                                  <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
                                 </td>
-                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                 <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                                   {partnerTab === 'closed' || isClosedDispute(cb) ? (
                                     <button 
@@ -7186,7 +7381,6 @@ function PartnerPortal({
                         <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
                           <th style={{ padding: '14px 16px', fontWeight: '600' }}>Merchant Name</th>
                           <th style={{ padding: '14px 16px', fontWeight: '600' }}>MID</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>TID</th>
                           <th style={{ padding: '14px 16px', fontWeight: '600' }}>Status</th>
                           <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
                         </tr>
@@ -7196,7 +7390,6 @@ function PartnerPortal({
                           <tr key={m.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
                             <td style={{ padding: '14px 16px', fontWeight: '600', color: 'var(--text)', fontSize: '13px' }}>{m.name}</td>
                             <td className="mono" style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{m.id}</td>
-                            <td className="mono" style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{m.tid || '10515104'}</td>
                             <td style={{ padding: '14px 16px', fontSize: '13px' }}>
                               <span className="badge badge-won" style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '4px 8px', borderRadius: '6px', fontWeight: '600', fontSize: '11px' }}>Active</span>
                             </td>
@@ -7667,19 +7860,24 @@ function PartnerPortal({
         return (
           <div className="tour-overlay" style={{ pointerEvents: 'all' }}>
             <div className="tour-backdrop" onClick={skipTour} />
-            <div className="tour-popover" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-              <div className="tour-popover-header">
-                <h3>{step.title}</h3>
-                <span className="tour-popover-step">{tourStep + 1} / {STEPS.length}</span>
+            <div style={{
+              position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              background: 'linear-gradient(135deg, #0e7490 0%, #06b6d4 100%)',
+              borderRadius: '16px', padding: '28px 28px 20px', boxShadow: '0 20px 60px rgba(14,116,144,0.35)',
+              zIndex: 10001, maxWidth: '400px', width: '90vw', color: '#fff', fontFamily: "'Inter', sans-serif"
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <div style={{ fontSize: '17px', fontWeight: '700', lineHeight: '1.3' }}>{step.title}</div>
+                <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.2)', padding: '3px 10px', borderRadius: '999px', fontWeight: '600', marginLeft: '12px', whiteSpace: 'nowrap' }}>{tourStep + 1} / {STEPS.length}</span>
               </div>
-              <div className="tour-popover-body"><p>{step.body}</p></div>
-              <div className="tour-popover-footer">
-                <button className="tour-btn-skip" onClick={skipTour}>Skip Tour</button>
-                <div className="tour-dots">
-                  {STEPS.map((_, i) => <span key={i} className={'tour-dot ' + (i === tourStep ? 'active' : '')} />)}
+              <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'rgba(255,255,255,0.9)', margin: '0 0 20px' }}>{step.body}</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button onClick={skipTour} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.75)', fontSize: '13px', cursor: 'pointer', fontWeight: '600', padding: 0 }}>Hide these tips</button>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {STEPS.map((_, i) => <span key={i} style={{ width: i === tourStep ? '18px' : '6px', height: '6px', borderRadius: '999px', background: i === tourStep ? '#fff' : 'rgba(255,255,255,0.4)', transition: 'all 0.3s', display: 'inline-block' }} />)}
                 </div>
-                <button className={'tour-btn-next ' + (isLast ? 'tour-btn-finish' : '')} onClick={nextStep}>
-                  {isLast ? 'Done' : 'Next'}
+                <button onClick={nextStep} style={{ background: '#fff', color: '#0e7490', border: 'none', borderRadius: '8px', padding: '8px 20px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
+                  {isLast ? '✅ Done' : 'Next →'}
                 </button>
               </div>
             </div>
@@ -7872,3 +8070,5 @@ function BarChart({ providerData }) {
     </svg>
   );
 }
+
+
