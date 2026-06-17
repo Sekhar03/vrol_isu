@@ -13,24 +13,9 @@ async function initData() {
   }
 
   try {
-    const Chargeback = require('./models/Chargeback');
-    const count = await Chargeback.countDocuments();
-    if (count === 0) {
-      const { seedAllDemoData } = require('./seed/demoData');
-      const counts = await seedAllDemoData();
-      console.log('[data] MongoDB demo seeded:', counts);
-    } else {
-      const missingPartner = await Chargeback.countDocuments({
-        $or: [{ partnerId: null }, { partnerId: { $exists: false } }]
-      });
-      if (missingPartner > 0) {
-        await Chargeback.updateMany(
-          { $or: [{ partnerId: null }, { partnerId: { $exists: false } }] },
-          { $set: { partnerId: mockStore.PARTNER_ID } }
-        );
-        console.log(`[data] Backfilled partnerId on ${missingPartner} chargebacks`);
-      }
-    }
+    const { seedAllDemoData } = require('./seed/demoData');
+    const counts = await seedAllDemoData();
+    console.log('[data] MongoDB demo seeded fresh:', counts);
   } catch (err) {
     console.warn('[data] Mongo unavailable, using in-memory demo:', err.message);
     global.MOCK_MODE = true;

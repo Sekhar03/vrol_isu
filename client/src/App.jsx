@@ -1121,7 +1121,7 @@ function MerchantPortal({
                     )}
                   </div>
                 </div>
-                <div className="stats-grid">
+                <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
                   {/* Total Disputes Card */}
                   <div className="stat-card received" onClick={() => navigateToMerchantReport('')}>
                     <div className="stat-icon">📥</div>
@@ -3567,7 +3567,7 @@ function AdminPortal({
                   </div>
                 </div>
 
-                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', padding: '10px 0' }}>
+                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(6, 1fr)', gap: '20px', padding: '10px 0' }}>
                   <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Total Transactions</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
@@ -4800,7 +4800,7 @@ function PartnerPortal({
                   <div className="wb-date">{new Date().toLocaleDateString('en-IN')}</div>
                 </div>
 
-                <div className="stats-grid">
+                <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
                   <div className="stat-card received" onClick={() => navigateToPartnerReport('')}>
                     <div className="stat-icon">📥</div>
                     <div className="stat-content">
