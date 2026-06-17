@@ -569,6 +569,7 @@ function MerchantPortal({
   const [raisedFilter, setRaisedFilter] = useState({ from: DEFAULT_FROM, to: TODAY_STR, rrn: '', txnId: '', status: '', subStatus: '', disputeType: '', scheme: '' });
   const [reportFilter, setReportFilter] = useState({ from: DEFAULT_FROM, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' });
   const [reportTab, setReportTab] = useState('dispute-mgmt'); // 'dispute-mgmt' | 'doc-pending' | 'doc-verification'
+  const [merchantSearchFocused, setMerchantSearchFocused] = useState(false);
 
   // Pagination states
   const [respondPage, setRespondPage] = useState(1);
@@ -618,19 +619,29 @@ function MerchantPortal({
     const wonList = list.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success'));
     const wonAmt = wonList.reduce((sum, c) => sum + c.txnAmt, 0);
 
+    const slaList = list.filter(cb => matchesDisputeStatusFilter(cb, 'sla_today'));
+    const slaAmt = slaList.reduce((sum, c) => sum + c.txnAmt, 0);
+
     const wonPct = totalCount > 0 ? Math.round((wonList.length / totalCount) * 100) : 0;
     const lostPct = totalCount > 0 ? Math.round((lostList.length / totalCount) * 100) : 0;
     const openPct = totalCount > 0 ? Math.round((openList.length / totalCount) * 100) : 0;
+    const slaPct = totalCount > 0 ? Math.round((slaList.length / totalCount) * 100) : 0;
 
     return {
       totalAmt, totalCount,
       openAmt, openCount: openList.length, openPct,
       lostAmt, lostCount: lostList.length, lostPct,
-      wonAmt, wonCount: wonList.length, wonPct
+      wonAmt, wonCount: wonList.length, wonPct,
+      slaAmt, slaCount: slaList.length, slaPct
     };
   };
 
   const stats = getDashboardStats();
+
+  const navigateToMerchantReport = (status) => {
+    setReportFilter(prev => ({ ...prev, disputeStatus: status }));
+    setActivePage('reports');
+  };
 
   // Filters respond table
   const getFilteredRespond = () => {
@@ -1112,7 +1123,7 @@ function MerchantPortal({
                 </div>
                 <div className="stats-grid">
                   {/* Total Disputes Card */}
-                  <div className="stat-card received">
+                  <div className="stat-card received" onClick={() => navigateToMerchantReport('')}>
                     <div className="stat-icon">📥</div>
                     <div className="stat-content">
                       <div className="stat-val">{formatINR(stats.totalAmt)}</div>
@@ -1124,7 +1135,7 @@ function MerchantPortal({
                   </div>
 
                   {/* Open Disputes Card */}
-                  <div className="stat-card open">
+                  <div className="stat-card open" onClick={() => navigateToMerchantReport('open')}>
                     <div className="stat-icon">🔄</div>
                     <div className="stat-content">
                       <div className="stat-val">{formatINR(stats.openAmt)}</div>
@@ -1140,7 +1151,7 @@ function MerchantPortal({
                   </div>
 
                   {/* Disputes Lost Card */}
-                  <div className="stat-card lost">
+                  <div className="stat-card lost" onClick={() => navigateToMerchantReport('lost')}>
                     <div className="stat-icon">❌</div>
                     <div className="stat-content">
                       <div className="stat-val">{formatINR(stats.lostAmt)}</div>
@@ -1157,7 +1168,7 @@ function MerchantPortal({
                   </div>
 
                   {/* Disputes Won Card */}
-                  <div className="stat-card won">
+                  <div className="stat-card won" onClick={() => navigateToMerchantReport('won')}>
                     <div className="stat-icon">✅</div>
                     <div className="stat-content">
                       <div className="stat-val">{formatINR(stats.wonAmt)}</div>
@@ -1170,6 +1181,22 @@ function MerchantPortal({
                         <div className="stat-progress-fill won-fill" style={{ width: `${stats.wonPct}%` }}></div>
                       </div>
                       <div className="stat-outcome-label won-label">📈 Win Rate</div>
+                    </div>
+                  </div>
+
+                  {/* SLA Expiring Today Card */}
+                  <div className="stat-card sla" onClick={() => navigateToMerchantReport('sla_today')}>
+                    <div className="stat-icon">⏰</div>
+                    <div className="stat-content">
+                      <div className="stat-val">{formatINR(stats.slaAmt)}</div>
+                      <div className="stat-lbl">SLA Expiring Today</div>
+                      <div className="stat-meta-row">
+                        <span className="stat-cnt">{stats.slaCount} cases</span>
+                        <span className="stat-pct-badge won-pct" style={{ background: '#f3e8ff', color: '#7c3aed' }}>{stats.slaPct}%</span>
+                      </div>
+                      <div className="stat-progress-bar">
+                        <div className="stat-progress-fill won-fill" style={{ width: `${stats.slaPct}%`, background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1730,12 +1757,43 @@ function MerchantPortal({
                         <option value="Case ID">Case ID</option>
                       </select>
                     </div>
-                    {reportFilter.searchBy && (
-                      <div className="sp-field">
+                     {reportFilter.searchBy && (
+                      <div className="sp-field" style={{ position: 'relative' }}>
                         <label>Search {reportFilter.searchBy}</label>
                         <input type="text" className="sp-input" placeholder={`Enter ${reportFilter.searchBy}`}
                           value={reportFilter.searchText}
-                          onChange={(e) => setReportFilter(prev => ({ ...prev, searchText: e.target.value }))} />
+                          onChange={(e) => setReportFilter(prev => ({ ...prev, searchText: e.target.value }))}
+                          onFocus={() => setMerchantSearchFocused(true)}
+                          onBlur={() => setTimeout(() => setMerchantSearchFocused(false), 200)}
+                          style={{ width: '100%' }} />
+                        {merchantSearchFocused && reportFilter.searchText && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, maxHeight: '180px', overflowY: 'auto' }}>
+                            {merchantDisputes
+                              .map(cb => {
+                                if (reportFilter.searchBy === 'Txn ID') return cb.txnId;
+                                if (reportFilter.searchBy === 'RRN') return cb.rrn;
+                                if (reportFilter.searchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
+                                if (reportFilter.searchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
+                                if (reportFilter.searchBy === 'Case ID') return cb.caseId || cb.id;
+                                return '';
+                              })
+                              .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(reportFilter.searchText.toLowerCase()))
+                              .slice(0, 5)
+                              .map(val => (
+                                <div
+                                  key={val}
+                                  onMouseDown={() => {
+                                    setReportFilter(prev => ({ ...prev, searchText: val }));
+                                  }}
+                                  style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#333', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
+                                  onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                >
+                                  🔍 {val}
+                                </div>
+                              ))}
+                          </div>
+                        )}
                       </div>
                     )}
                     <div className="sp-field" style={{ visibility: 'hidden' }}></div>
@@ -2443,6 +2501,7 @@ function AdminPortal({
 
   // Search Filter View Chargebacks
   const [filterRrn, setFilterRrn] = useState('');
+  const [adminSearchFocused, setAdminSearchFocused] = useState(false);
   const [filterMid, setFilterMid] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterSubStatus, setFilterSubStatus] = useState('');
@@ -2543,15 +2602,25 @@ function AdminPortal({
     const wonList = list.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success'));
     const wonAmt = wonList.reduce((sum, c) => sum + c.txnAmt, 0);
 
+    const slaList = list.filter(cb => matchesDisputeStatusFilter(cb, 'sla_today'));
+    const slaAmt = slaList.reduce((sum, c) => sum + c.txnAmt, 0);
+
     return {
       totalCount, totalAmt,
       openCount: openList.length, openAmt,
       lostCount: lostList.length, lostAmt,
-      wonCount: wonList.length, wonAmt
+      wonCount: wonList.length, wonAmt,
+      slaCount: slaList.length, slaAmt
     };
   };
 
   const stats = getAdminDashboardStats();
+
+  const navigateToAdminReport = (status) => {
+    setFilterStatus(status);
+    setAdminTab('management');
+    setActivePage('a-view-cb');
+  };
 
   // Pending representations
   const pendingReviews = chargebacks.filter(cb => cb.merchantAction === 'rejected' && cb.acquirerAction === null);
@@ -3498,8 +3567,8 @@ function AdminPortal({
                   </div>
                 </div>
 
-                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', padding: '10px 0' }}>
-                  <div className="stat-card received" style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
+                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px', padding: '10px 0' }}>
+                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Total Transactions</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--text)' }}>{stats.totalCount}</span>
@@ -3508,7 +3577,7 @@ function AdminPortal({
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--brand)' }}>{formatINR(stats.totalAmt)}</div>
                   </div>
 
-                  <div className="stat-card received" style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
+                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Received</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--text)' }}>{stats.totalCount}</span>
@@ -3517,7 +3586,7 @@ function AdminPortal({
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--brand)' }}>{formatINR(stats.totalAmt)}</div>
                   </div>
                   
-                  <div className="stat-card open" style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
+                  <div className="stat-card open" onClick={() => navigateToAdminReport('open')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Open</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--yellow)' }}>{stats.openCount}</span>
@@ -3526,7 +3595,7 @@ function AdminPortal({
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--yellow)' }}>{formatINR(stats.openAmt)}</div>
                   </div>
                   
-                  <div className="stat-card lost" style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
+                  <div className="stat-card lost" onClick={() => navigateToAdminReport('lost')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Lost</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--red)' }}>{stats.lostCount}</span>
@@ -3535,13 +3604,22 @@ function AdminPortal({
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--red)' }}>{formatINR(stats.lostAmt)}</div>
                   </div>
                   
-                  <div className="stat-card won" style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
+                  <div className="stat-card won" onClick={() => navigateToAdminReport('won')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Won</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--green)' }}>{stats.wonCount}</span>
                       <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '500' }}>Re-presentments</span>
                     </div>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--green)' }}>{formatINR(stats.wonAmt)}</div>
+                  </div>
+
+                  <div className="stat-card sla" onClick={() => navigateToAdminReport('sla_today')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>SLA Expiring Today</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: '#7c3aed' }}>{stats.slaCount}</span>
+                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '500' }}>Urgent review</span>
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#7c3aed' }}>{formatINR(stats.slaAmt)}</div>
                   </div>
                 </div>
 
@@ -3717,9 +3795,41 @@ function AdminPortal({
                         </div>
                         <div style={{ height: '0px' }}></div>
                         {filterSearchBy && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}>
                             <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search {filterSearchBy}</label>
-                            <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder={`Enter ${filterSearchBy}`} value={filterRrn} onChange={(e) => setFilterRrn(e.target.value)} />
+                            <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder={`Enter ${filterSearchBy}`} value={filterRrn}
+                              onChange={(e) => setFilterRrn(e.target.value)}
+                              onFocus={() => setAdminSearchFocused(true)}
+                              onBlur={() => setTimeout(() => setAdminSearchFocused(false), 200)} />
+                            {adminSearchFocused && filterRrn && (
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, maxHeight: '180px', overflowY: 'auto' }}>
+                                {chargebacks
+                                  .map(cb => {
+                                    if (filterSearchBy === 'Txn ID') return cb.txnId;
+                                    if (filterSearchBy === 'RRN') return cb.rrn;
+                                    if (filterSearchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
+                                    if (filterSearchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
+                                    if (filterSearchBy === 'Case ID') return cb.caseId || cb.id;
+                                    if (filterSearchBy === 'Merchant Name') return cb.userName;
+                                    return '';
+                                  })
+                                  .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(filterRrn.toLowerCase()))
+                                  .slice(0, 5)
+                                  .map(val => (
+                                    <div
+                                      key={val}
+                                      onMouseDown={() => {
+                                        setFilterRrn(val);
+                                      }}
+                                      style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#333', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
+                                      onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                      onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                    >
+                                      🔍 {val}
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -4521,6 +4631,7 @@ function PartnerPortal({
   const [filterScheme, setFilterScheme] = useState('');
   const [filterDisputeType, setFilterDisputeType] = useState('');
   const [filterSearchBy, setFilterSearchBy] = useState('');
+  const [partnerSearchFocused, setPartnerSearchFocused] = useState(false);
   const [filterSearchText, setFilterSearchText] = useState('');
   const [filterMerchant, setFilterMerchant] = useState('');
 
@@ -4613,6 +4724,15 @@ function PartnerPortal({
   const totalAmt = allDisputes.reduce((s, c) => s + c.txnAmt, 0);
   const wonAmt = allDisputes.filter(c => c.mSubStatus.includes('Won') || c.mSubStatus.includes('Success')).reduce((s, c) => s + c.txnAmt, 0);
   const lostAmt = allDisputes.filter(c => c.mSubStatus.includes('Lost')).reduce((s, c) => s + c.txnAmt, 0);
+  const slaTodayDisputes = allDisputes.filter(cb => matchesDisputeStatusFilter(cb, 'sla_today'));
+  const slaCount = slaTodayDisputes.length;
+  const slaAmt = slaTodayDisputes.reduce((s, c) => s + c.txnAmt, 0);
+
+  const navigateToPartnerReport = (status) => {
+    setFilterStatus(status);
+    setPartnerTab('management');
+    setActivePage('p-disputes');
+  };
 
   const renderStatusBadge = (s) => {
     const m = { 'Chargeback Raise': 'badge-cb', 'Pre-Arbitration Raise': 'badge-prearb', 'Arbitration Raise': 'badge-arb', 'Fraud Chargeback Raise': 'badge-fraud', 'Differed Chargeback Raise': 'badge-deferred', 'VROL Inquiry': 'badge-pending', 'VROL Chargeback': 'badge-cb', 'VROL Pre-Arbitration': 'badge-prearb', 'VROL Arbitration': 'badge-arb' };
@@ -4681,7 +4801,7 @@ function PartnerPortal({
                 </div>
 
                 <div className="stats-grid">
-                  <div className="stat-card received">
+                  <div className="stat-card received" onClick={() => navigateToPartnerReport('')}>
                     <div className="stat-icon">📥</div>
                     <div className="stat-content">
                       <div className="stat-val">{formatINR(totalAmt)}</div>
@@ -4689,7 +4809,7 @@ function PartnerPortal({
                       <div className="stat-meta-row"><span className="stat-cnt">{allDisputes.length} cases</span></div>
                     </div>
                   </div>
-                  <div className="stat-card open">
+                  <div className="stat-card open" onClick={() => navigateToPartnerReport('evidence')}>
                     <div className="stat-icon">📋</div>
                     <div className="stat-content">
                       <div className="stat-val">{evidenceDisputes.length}</div>
@@ -4697,7 +4817,7 @@ function PartnerPortal({
                       <div className="stat-meta-row"><span className="stat-cnt">Acquirer review</span></div>
                     </div>
                   </div>
-                  <div className="stat-card won">
+                  <div className="stat-card won" onClick={() => navigateToPartnerReport('won')}>
                     <div className="stat-icon">✅</div>
                     <div className="stat-content">
                       <div className="stat-val">{formatINR(wonAmt)}</div>
@@ -4705,12 +4825,20 @@ function PartnerPortal({
                       <div className="stat-meta-row"><span className="stat-cnt">{allDisputes.filter(c => c.mSubStatus.includes('Won') || c.mSubStatus.includes('Success')).length} cases</span></div>
                     </div>
                   </div>
-                  <div className="stat-card lost">
+                  <div className="stat-card lost" onClick={() => navigateToPartnerReport('visa_escalation')}>
                     <div className="stat-icon">🌐</div>
                     <div className="stat-content">
                       <div className="stat-val">{visaDisputes.length}</div>
                       <div className="stat-lbl">Visa Escalations</div>
                       <div className="stat-meta-row"><span className="stat-cnt">Pending Visa review</span></div>
+                    </div>
+                  </div>
+                  <div className="stat-card sla" onClick={() => navigateToPartnerReport('sla_today')}>
+                    <div className="stat-icon">⏰</div>
+                    <div className="stat-content">
+                      <div className="stat-val">{formatINR(slaAmt)}</div>
+                      <div className="stat-lbl">SLA Expiring Today</div>
+                      <div className="stat-meta-row"><span className="stat-cnt">{slaCount} cases</span></div>
                     </div>
                   </div>
                 </div>
@@ -4725,7 +4853,7 @@ function PartnerPortal({
                     <table>
                       <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr>
-                          <th>Case ID</th><th>RRN</th><th>Merchant</th><th>Scheme</th>
+                          <th>Case ID</th><th>RRN</th><th>Merchant</th>
                           <th>Status</th><th>Sub Status</th><th>Amount</th><th>Date</th>
                         </tr>
                       </thead>
@@ -4735,7 +4863,6 @@ function PartnerPortal({
                             <td className="mono" style={{ fontSize: '11px' }}>{cb.caseId}</td>
                             <td className="mono">{cb.rrn}</td>
                             <td>{cb.userName}</td>
-                            <td><span className="badge badge-new">{cb.product}</span></td>
                             <td>{renderStatusBadge(cb.mStatus)}</td>
                             <td>{renderSubBadge(cb.mSubStatus)}</td>
                             <td><strong>{formatINR(cb.txnAmt)}</strong></td>
@@ -4809,13 +4936,51 @@ function PartnerPortal({
                       <label>Search By</label>
                       <select className="sp-input" value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
                         <option value="">Select Field...</option>
+                        <option value="Txn ID">Transaction ID (Txn ID)</option>
+                        <option value="RRN">RRN</option>
+                        <option value="TID">TID</option>
+                        <option value="MID">MID</option>
+                        <option value="Case ID">Case ID</option>
                         <option value="ARN">ARN Number</option>
                       </select>
                     </div>
                     {filterSearchBy && (
-                      <div className="sp-field">
+                      <div className="sp-field" style={{ position: 'relative' }}>
                         <label>Search {filterSearchBy}</label>
-                        <input type="text" className="sp-input" placeholder={`Enter ${filterSearchBy}`} value={filterSearchText} onChange={(e) => setFilterSearchText(e.target.value)} />
+                        <input type="text" className="sp-input" placeholder={`Enter ${filterSearchBy}`} value={filterSearchText}
+                          onChange={(e) => setFilterSearchText(e.target.value)}
+                          onFocus={() => setPartnerSearchFocused(true)}
+                          onBlur={() => setTimeout(() => setPartnerSearchFocused(false), 200)}
+                          style={{ width: '100%' }} />
+                        {partnerSearchFocused && filterSearchText && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, maxHeight: '180px', overflowY: 'auto' }}>
+                            {allDisputes
+                              .map(cb => {
+                                if (filterSearchBy === 'Txn ID') return cb.txnId;
+                                if (filterSearchBy === 'RRN') return cb.rrn;
+                                if (filterSearchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
+                                if (filterSearchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
+                                if (filterSearchBy === 'Case ID') return cb.caseId || cb.id;
+                                if (filterSearchBy === 'ARN') return cb.arn || cb.rrn;
+                                return '';
+                              })
+                              .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(filterSearchText.toLowerCase()))
+                              .slice(0, 5)
+                              .map(val => (
+                                <div
+                                  key={val}
+                                  onMouseDown={() => {
+                                    setFilterSearchText(val);
+                                  }}
+                                  style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#333', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
+                                  onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                >
+                                  🔍 {val}
+                                </div>
+                              ))}
+                          </div>
+                        )}
                       </div>
                     )}
                     <div className="sp-field" style={{ visibility: 'hidden' }}></div>
@@ -4854,7 +5019,6 @@ function PartnerPortal({
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
@@ -4872,7 +5036,6 @@ function PartnerPortal({
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
@@ -4916,7 +5079,7 @@ function PartnerPortal({
                     <table>
                       <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr>
-                          <th>Case ID</th><th>RRN</th><th>Merchant</th><th>Scheme</th>
+                          <th>Case ID</th><th>RRN</th><th>Merchant</th>
                           <th>Status</th><th>Amount</th><th>Date</th><th>Visa Status</th><th>Timeline</th>
                         </tr>
                       </thead>
@@ -4926,7 +5089,6 @@ function PartnerPortal({
                             <td className="mono" style={{ fontSize: '11px' }}>{cb.caseId}</td>
                             <td className="mono">{cb.rrn}</td>
                             <td>{cb.userName}</td>
-                            <td><span className="badge badge-new">{cb.product}</span></td>
                             <td>{renderSubBadge(cb.mSubStatus)}</td>
                             <td><strong>{formatINR(cb.txnAmt)}</strong></td>
                             <td>{formatDateDisp(cb.createdDate)}</td>
@@ -4939,7 +5101,7 @@ function PartnerPortal({
                           </tr>
                         )) : (
                           <tr>
-                            <td colSpan="9" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                            <td colSpan="8" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                               <div style={{ fontSize: '36px', marginBottom: '8px' }}>🌐</div>
                               <div>No disputes currently pending Visa review</div>
                             </td>

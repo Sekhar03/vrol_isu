@@ -232,7 +232,7 @@ const buildSeedData = (TODAY) => {
       id: 'CB010', caseId: 'CASE000010', userName: 'masteruser', userId: '2575789089',
       rrn: '5512348800', txnId: '7700011', terminalId: '5690004',
       beneMobile: '9600001111', remMobile: '9100001111',
-      createdDate: dA(7), txnDate: dA(12), adjDate: dA(7), respondByDate: dL(1),
+      createdDate: dA(7), txnDate: dA(12), adjDate: dA(7), respondByDate: dL(0),
       mStatus: 'Chargeback Raise', mSubStatus: 'Chargeback In Progress',
       adjType: 'Differed Chargeback Raise', remitter: 'KOTAK', beneficiary: 'FIP',
       txnAmt: 750, adjAmt: 750, glNo: '354422',
