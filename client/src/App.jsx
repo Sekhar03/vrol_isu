@@ -6,6 +6,46 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const DISPUTE_TYPE_OPTIONS = ['Chargeback', 'Pre-Arbitration', 'Retrieval Request', 'Arbitration'];
 
+// Format respond-by date as "17 May" style
+const formatRespondByOnlyDate = (s) => {
+  if (!s) return '-';
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + ' ' + months[d.getMonth()];
+};
+
+// Return pill style based on how close respond-by date is
+const getRespondByStyle = (s) => {
+  if (!s) return {};
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return {};
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(d); target.setHours(0,0,0,0);
+  const diffDays = Math.round((target - today) / 86400000);
+  if (diffDays === 0) return { display:'inline-block', padding:'2px 8px', borderRadius:'999px', fontSize:'11px', fontWeight:'700', background:'#FEE2E2', color:'#DC2626', border:'1px solid #FECACA' };
+  if (diffDays === -1) return { display:'inline-block', padding:'2px 8px', borderRadius:'999px', fontSize:'11px', fontWeight:'700', background:'#FEF3C7', color:'#D97706', border:'1px solid #FDE68A' };
+  return { fontWeight:'600' };
+};
+
+// Gather unique autocomplete suggestions matching RRN / TxnID / TID / MID
+const getElasticSuggestions = (disputesList, query) => {
+  if (!query || query.length < 2) return [];
+  const q = query.toLowerCase();
+  const seen = new Set();
+  const results = [];
+  for (const cb of disputesList) {
+    for (const val of [cb.rrn, cb.txnId, cb.tid, cb.userId, cb.userName]) {
+      if (val && val.toLowerCase().includes(q) && !seen.has(val)) {
+        seen.add(val);
+        results.push(val);
+        if (results.length >= 8) return results;
+      }
+    }
+  }
+  return results;
+};
+
 const DISPUTE_STATUS_OPTIONS = [
   'Dispute Won Partially',
   'Dispute Won Fully',
@@ -642,46 +682,6 @@ export default function App() {
     const d = new Date(s);
     if (isNaN(d.getTime())) return s;
     return d.toLocaleDateString('en-IN') + ' ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // Format respond-by date as "17 May" style
-  const formatRespondByOnlyDate = (s) => {
-    if (!s) return '-';
-    const d = new Date(s);
-    if (isNaN(d.getTime())) return s;
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return d.getDate() + ' ' + months[d.getMonth()];
-  };
-
-  // Return pill style based on how close respond-by date is
-  const getRespondByStyle = (s) => {
-    if (!s) return {};
-    const d = new Date(s);
-    if (isNaN(d.getTime())) return {};
-    const today = new Date(); today.setHours(0,0,0,0);
-    const target = new Date(d); target.setHours(0,0,0,0);
-    const diffDays = Math.round((target - today) / 86400000);
-    if (diffDays === 0) return { display:'inline-block', padding:'2px 8px', borderRadius:'999px', fontSize:'11px', fontWeight:'700', background:'#FEE2E2', color:'#DC2626', border:'1px solid #FECACA' };
-    if (diffDays === -1) return { display:'inline-block', padding:'2px 8px', borderRadius:'999px', fontSize:'11px', fontWeight:'700', background:'#FEF3C7', color:'#D97706', border:'1px solid #FDE68A' };
-    return { fontWeight:'600' };
-  };
-
-  // Gather unique autocomplete suggestions matching RRN / TxnID / TID / MID
-  const getElasticSuggestions = (disputesList, query) => {
-    if (!query || query.length < 2) return [];
-    const q = query.toLowerCase();
-    const seen = new Set();
-    const results = [];
-    for (const cb of disputesList) {
-      for (const val of [cb.rrn, cb.txnId, cb.tid, cb.userId, cb.userName]) {
-        if (val && val.toLowerCase().includes(q) && !seen.has(val)) {
-          seen.add(val);
-          results.push(val);
-          if (results.length >= 8) return results;
-        }
-      }
-    }
-    return results;
   };
 
   const handleLogin = async (e, username, password) => {
