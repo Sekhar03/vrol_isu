@@ -1587,7 +1587,6 @@ function MerchantPortal({
                 <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Status</th>
                 <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>TXN Ref. Number</th>
                 <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Responded By</th>
-                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
           )}
@@ -1734,103 +1733,6 @@ function MerchantPortal({
                     {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Responded By</div>}
                     <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
                   </td>
-                  <td style={{ 
-                    padding: targetDisputeId ? '8px 0 4px 0' : '10px 8px', 
-                    textAlign: 'center',
-                    display: targetDisputeId ? 'inline-block' : 'table-cell',
-                    flex: targetDisputeId ? '1 1 100%' : 'none',
-                    borderTop: targetDisputeId ? '1px dashed #e2e8f0' : 'none',
-                    marginTop: targetDisputeId ? '8px' : '0',
-                    boxSizing: 'border-box'
-                  }}>
-                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '6px' }}>Actions</div>}
-                    {isFirstRow ? (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '6px 14px',
-                          border: '1.5px solid #6B38FB',
-                          borderRadius: '6px',
-                          background: '#fff',
-                          color: '#6B38FB',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#6B38FB';
-                          e.currentTarget.style.color = '#fff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#fff';
-                          e.currentTarget.style.color = '#6B38FB';
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.3-2-1.9-3.6-3.9-3.9-3.1-.4-5.7 1.6-6.1 4.5-.1.4-.4.7-.8.7H4c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h14c1.8 0 3.3-1.2 3.8-2.9z"></path>
-                          <polyline points="16 16 12 12 8 16"></polyline>
-                          <line x1="12" y1="12" x2="12" y2="21"></line>
-                        </svg>
-                        <span>Upload Evidence</span>
-                      </button>
-                    ) : isClosed ? (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
-                        style={{
-                          padding: '6px 16px',
-                          border: '1.5px solid #6B38FB',
-                          borderRadius: '6px',
-                          background: '#fff',
-                          color: '#6B38FB',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          minWidth: '110px',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#6B38FB';
-                          e.currentTarget.style.color = '#fff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#fff';
-                          e.currentTarget.style.color = '#6B38FB';
-                        }}
-                      >
-                        View Details
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
-                        style={{
-                          padding: '6px 16px',
-                          border: '1.5px solid #6B38FB',
-                          borderRadius: '6px',
-                          background: '#fff',
-                          color: '#6B38FB',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          minWidth: '110px',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#6B38FB';
-                          e.currentTarget.style.color = '#fff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#fff';
-                          e.currentTarget.style.color = '#6B38FB';
-                        }}
-                      >
-                        Take Action
-                      </button>
-                    )}
-                  </td>
                 </tr>
               );
             })}
@@ -1872,30 +1774,31 @@ function MerchantPortal({
       </header>
 
       <div className="app-body">
-        <nav className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`} id="mSidebar">
+        <nav className={`sidebar ${sidebarCollapsed || targetDisputeId ? 'collapsed' : ''}`} id="mSidebar">
           <div className="sb-welcome">Welcome, masteruser</div>
           <div className="sb-section">
-            <div 
-              className={`sb-item ${activePage === 'dashboard' ? 'active' : ''}`} 
-              onClick={() => setActivePage('dashboard')}
-            >
-              <span className="si">⊞</span> Dashboard
-            </div>
-            <div 
-              className={`sb-item ${activePage === 'reports' ? 'active' : ''}`} 
-              onClick={() => setActivePage('reports')}
-            >
-              <span className="si">📋</span> Dispute Management
-            </div>
-            <div 
-              className={`sb-item ${activePage === 'faq' ? 'active' : ''}`} 
-              onClick={() => setActivePage('faq')}
-            >
-              <span className="si">❓</span> FAQ & Help
-            </div>
-
-
-
+            {!targetDisputeId && (
+              <>
+                <div 
+                  className={`sb-item ${activePage === 'dashboard' ? 'active' : ''}`} 
+                  onClick={() => setActivePage('dashboard')}
+                >
+                  <span className="si">⊞</span> Dashboard
+                </div>
+                <div 
+                  className={`sb-item ${activePage === 'reports' ? 'active' : ''}`} 
+                  onClick={() => setActivePage('reports')}
+                >
+                  <span className="si">📋</span> Dispute Management
+                </div>
+                <div 
+                  className={`sb-item ${activePage === 'faq' ? 'active' : ''}`} 
+                  onClick={() => setActivePage('faq')}
+                >
+                  <span className="si">❓</span> FAQ & Help
+                </div>
+              </>
+            )}
           </div>
         </nav>
 
@@ -2535,6 +2438,7 @@ function MerchantPortal({
                         onClick={() => {
                           setReportTab(tab.key);
                           setReportsPage(1); // Reset page on tab change
+                          setTargetDisputeId(null); // Collapse vertical view
                         }}
                         style={{
                           padding: '12px 24px',
@@ -2571,288 +2475,433 @@ function MerchantPortal({
                 </div>
 
                 {/* Summary Cards Row */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(5, 1fr)',
-                  gap: '16px',
-                  marginTop: '24px',
-                  marginBottom: '24px'
-                }}>
-                  {/* Card 1: Due Today */}
-                  {(() => {
-                    const dueTodayList = merchantDisputes.filter(cb => cb.respondByDate === TODAY_STR && !isClosedDispute(cb));
-                    const dueTodayCount = dueTodayList.length;
-                    const dueTodayAmount = dueTodayList.reduce((sum, cb) => sum + cb.txnAmt, 0);
-                    const isActive = reportFilter.disputeStatus === 'due_today';
-                    return (
-                      <div
-                        onClick={() => {
-                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_today' ? '' : 'due_today' }));
-                          setReportTab('dispute-mgmt');
-                          setReportsPage(1);
-                        }}
-                        style={{
-                          background: '#FFFFFF',
-                          borderTop: '3px solid #f97316',
-                          borderRadius: '12px',
-                          padding: '18px 20px',
-                          boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
-                          border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
-                          borderTopWidth: '3px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '12px',
-                          minHeight: '100px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due Today</span>
-                            <span style={{
-                              background: '#ef4444',
-                              color: '#FFFFFF',
-                              padding: '3px 10px',
-                              borderRadius: '12px',
-                              fontSize: '10px',
-                              fontWeight: '700',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}>Urgent</span>
+                {reportTab === 'doc-pending' && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: '16px',
+                    marginTop: '24px',
+                    marginBottom: '24px'
+                  }}>
+                    {/* Card 1: Due Today */}
+                    {(() => {
+                      const dueTodayList = merchantDisputes.filter(cb => cb.respondByDate === TODAY_STR && !isClosedDispute(cb));
+                      const dueTodayCount = dueTodayList.length;
+                      const dueTodayAmount = dueTodayList.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                      const isActive = reportFilter.disputeStatus === 'due_today';
+                      return (
+                        <div
+                          onClick={() => {
+                            setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_today' ? '' : 'due_today' }));
+                            setReportTab('dispute-mgmt');
+                            setReportsPage(1);
+                            setTargetDisputeId(null);
+                          }}
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #f97316',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                            border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due Today</span>
+                              <span style={{
+                                background: '#ef4444',
+                                color: '#FFFFFF',
+                                padding: '3px 10px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Urgent</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueTodayCount}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTodayAmount)}</div>
+                            </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueTodayCount}</div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTodayAmount)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
 
-                  {/* Card 2: Due Tomorrow */}
-                  {(() => {
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-                    const dueTomorrowList = merchantDisputes.filter(cb => cb.respondByDate === tomorrowStr && !isClosedDispute(cb));
-                    const dueTomorrowCount = dueTomorrowList.length;
-                    const dueTomorrowAmount = dueTomorrowList.reduce((sum, cb) => sum + cb.txnAmt, 0);
-                    const isActive = reportFilter.disputeStatus === 'due_tomorrow';
-                    return (
-                      <div
-                        onClick={() => {
-                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_tomorrow' ? '' : 'due_tomorrow' }));
-                          setReportTab('dispute-mgmt');
-                          setReportsPage(1);
-                        }}
-                        style={{
-                          background: '#FFFFFF',
-                          borderTop: '3px solid #f97316',
-                          borderRadius: '12px',
-                          padding: '18px 20px',
-                          boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
-                          border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
-                          borderTopWidth: '3px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '12px',
-                          minHeight: '100px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due Tomorrow</span>
-                            <span style={{
-                              background: '#f97316',
-                              color: '#FFFFFF',
-                              padding: '3px 10px',
-                              borderRadius: '12px',
-                              fontSize: '10px',
-                              fontWeight: '700',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}>Critical</span>
+                    {/* Card 2: Due Tomorrow */}
+                    {(() => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                      const dueTomorrowList = merchantDisputes.filter(cb => cb.respondByDate === tomorrowStr && !isClosedDispute(cb));
+                      const dueTomorrowCount = dueTomorrowList.length;
+                      const dueTomorrowAmount = dueTomorrowList.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                      const isActive = reportFilter.disputeStatus === 'due_tomorrow';
+                      return (
+                        <div
+                          onClick={() => {
+                            setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_tomorrow' ? '' : 'due_tomorrow' }));
+                            setReportTab('dispute-mgmt');
+                            setReportsPage(1);
+                            setTargetDisputeId(null);
+                          }}
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #f97316',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                            border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due Tomorrow</span>
+                              <span style={{
+                                background: '#f97316',
+                                color: '#FFFFFF',
+                                padding: '3px 10px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Critical</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueTomorrowCount}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTomorrowAmount)}</div>
+                            </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueTomorrowCount}</div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTomorrowAmount)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
 
-                  {/* Card 3: Due 2 to 7 Days */}
-                  {(() => {
-                    const due2to7List = merchantDisputes.filter(cb => {
-                      const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
-                      return diff >= 2 && diff <= 7 && !isClosedDispute(cb);
-                    });
-                    const due2to7Count = due2to7List.length;
-                    const due2to7Amount = due2to7List.reduce((sum, cb) => sum + cb.txnAmt, 0);
-                    const isActive = reportFilter.disputeStatus === 'due_2_7';
-                    return (
-                      <div
-                        onClick={() => {
-                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_2_7' ? '' : 'due_2_7' }));
-                          setReportTab('dispute-mgmt');
-                          setReportsPage(1);
-                        }}
-                        style={{
-                          background: '#FFFFFF',
-                          borderTop: '3px solid #eab308',
-                          borderRadius: '12px',
-                          padding: '18px 20px',
-                          boxShadow: isActive ? '0 8px 20px rgba(234, 179, 8, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
-                          border: isActive ? '2px solid #eab308' : '1px solid #e2e8f0',
-                          borderTopWidth: '3px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '12px',
-                          minHeight: '100px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due 2 to 7 Days</span>
-                            <span style={{
-                              background: '#eab308',
-                              color: '#FFFFFF',
-                              padding: '3px 10px',
-                              borderRadius: '12px',
-                              fontSize: '10px',
-                              fontWeight: '700',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}>Moderate</span>
+                    {/* Card 3: Due 2 to 7 Days */}
+                    {(() => {
+                      const due2to7List = merchantDisputes.filter(cb => {
+                        const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
+                        return diff >= 2 && diff <= 7 && !isClosedDispute(cb);
+                      });
+                      const due2to7Count = due2to7List.length;
+                      const due2to7Amount = due2to7List.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                      const isActive = reportFilter.disputeStatus === 'due_2_7';
+                      return (
+                        <div
+                          onClick={() => {
+                            setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_2_7' ? '' : 'due_2_7' }));
+                            setReportTab('dispute-mgmt');
+                            setReportsPage(1);
+                            setTargetDisputeId(null);
+                          }}
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #eab308',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: isActive ? '0 8px 20px rgba(234, 179, 8, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                            border: isActive ? '2px solid #eab308' : '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due 2 to 7 Days</span>
+                              <span style={{
+                                background: '#eab308',
+                                color: '#FFFFFF',
+                                padding: '3px 10px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Moderate</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{due2to7Count}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(due2to7Amount)}</div>
+                            </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{due2to7Count}</div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(due2to7Amount)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
 
-                  {/* Card 4: Due after 7 Days */}
-                  {(() => {
-                    const dueOver7List = merchantDisputes.filter(cb => {
-                      const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
-                      return diff > 7 && !isClosedDispute(cb);
-                    });
-                    const dueOver7Count = dueOver7List.length;
-                    const dueOver7Amount = dueOver7List.reduce((sum, cb) => sum + cb.txnAmt, 0);
-                    const isActive = reportFilter.disputeStatus === 'due_over_7';
-                    return (
-                      <div
-                        onClick={() => {
-                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_over_7' ? '' : 'due_over_7' }));
-                          setReportTab('dispute-mgmt');
-                          setReportsPage(1);
-                        }}
-                        style={{
-                          background: '#FFFFFF',
-                          borderTop: '3px solid #3b82f6',
-                          borderRadius: '12px',
-                          padding: '18px 20px',
-                          boxShadow: isActive ? '0 8px 20px rgba(59, 130, 246, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
-                          border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',
-                          borderTopWidth: '3px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '12px',
-                          minHeight: '100px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due after 7 Days</span>
-                            <span style={{
-                              background: '#3b82f6',
-                              color: '#FFFFFF',
-                              padding: '3px 10px',
-                              borderRadius: '12px',
-                              fontSize: '10px',
-                              fontWeight: '700',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px'
-                            }}>Low</span>
+                    {/* Card 4: Due after 7 Days */}
+                    {(() => {
+                      const dueOver7List = merchantDisputes.filter(cb => {
+                        const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
+                        return diff > 7 && !isClosedDispute(cb);
+                      });
+                      const dueOver7Count = dueOver7List.length;
+                      const dueOver7Amount = dueOver7List.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                      const isActive = reportFilter.disputeStatus === 'due_over_7';
+                      return (
+                        <div
+                          onClick={() => {
+                            setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_over_7' ? '' : 'due_over_7' }));
+                            setReportTab('dispute-mgmt');
+                            setReportsPage(1);
+                            setTargetDisputeId(null);
+                          }}
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #3b82f6',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: isActive ? '0 8px 20px rgba(59, 130, 246, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                            border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due after 7 Days</span>
+                              <span style={{
+                                background: '#3b82f6',
+                                color: '#FFFFFF',
+                                padding: '3px 10px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Low</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueOver7Count}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueOver7Amount)}</div>
+                            </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueOver7Count}</div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueOver7Amount)}</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
 
-                  {/* Card 5: Insufficient Evidence */}
-                  {(() => {
-                    const insufficientList = merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb));
-                    const insufficientCount = insufficientList.length;
-                    const insufficientAmount = insufficientList.reduce((sum, cb) => sum + cb.txnAmt, 0);
-                    const isActive = reportFilter.disputeStatus === 'insufficient_evidence';
-                    return (
-                      <div
-                        onClick={() => {
-                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence' }));
-                          setReportTab('dispute-mgmt');
-                          setReportsPage(1);
-                        }}
-                        style={{
-                          background: '#FFFFFF',
-                          borderTop: '3px solid #f97316',
-                          borderRadius: '12px',
-                          padding: '18px 20px',
-                          boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
-                          border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
-                          borderTopWidth: '3px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '12px',
-                          minHeight: '100px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Insufficient Evidence</span>
-                            <span style={{ color: '#f97316', fontSize: '16px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center' }}>⟲</span>
+                    {/* Card 5: Insufficient Evidence */}
+                    {(() => {
+                      const insufficientList = merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb));
+                      const insufficientCount = insufficientList.length;
+                      const insufficientAmount = insufficientList.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                      const isActive = reportFilter.disputeStatus === 'insufficient_evidence';
+                      return (
+                        <div
+                          onClick={() => {
+                            setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence' }));
+                            setReportTab('dispute-mgmt');
+                            setReportsPage(1);
+                            setTargetDisputeId(null);
+                          }}
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #f97316',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                            border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Insufficient Evidence</span>
+                              <span style={{ color: '#f97316', fontSize: '16px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center' }}>⟲</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{insufficientCount}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(insufficientAmount)}</div>
+                            </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{insufficientCount}</div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(insufficientAmount)}</div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {reportTab === 'closed' && (
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '16px',
+                    marginTop: '24px',
+                    marginBottom: '24px'
+                  }}>
+                    {/* Card 1: Total Closed */}
+                    {(() => {
+                      const totalClosedCount = closedDisputes.length;
+                      const totalClosedAmount = closedDisputes.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                      return (
+                        <div
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #64748b',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                            border: '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Total Closed</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{totalClosedCount}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(totalClosedAmount)}</div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
-                </div>
+                      );
+                    })()}
+
+                    {/* Card 2: Won Disputes */}
+                    {(() => {
+                      const wonList = closedDisputes.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success'));
+                      const wonCount = wonList.length;
+                      const wonAmount = wonList.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                      return (
+                        <div
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #22c55e',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                            border: '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Won Disputes</span>
+                              <span style={{
+                                background: '#22c55e',
+                                color: '#FFFFFF',
+                                padding: '3px 10px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Won</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{wonCount}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(wonAmount)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Card 3: Lost Disputes */}
+                    {(() => {
+                      const lostList = closedDisputes.filter(cb => cb.mSubStatus.includes('Lost'));
+                      const lostCount = lostList.length;
+                      const lostAmount = lostList.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                      return (
+                        <div
+                          style={{
+                            background: '#FFFFFF',
+                            borderTop: '3px solid #ef4444',
+                            borderRadius: '12px',
+                            padding: '18px 20px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                            border: '1px solid #e2e8f0',
+                            borderTopWidth: '3px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                            minHeight: '100px'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Lost Disputes</span>
+                              <span style={{
+                                background: '#ef4444',
+                                color: '#FFFFFF',
+                                padding: '3px 10px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>Lost</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{lostCount}</div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                              <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(lostAmount)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
 
                 {/* Daily count message */}
                 <div style={{ marginBottom: '24px', fontSize: '15px', fontWeight: '700', color: '#334155' }}>
@@ -3361,110 +3410,144 @@ function MerchantPortal({
                                 <span style={{ fontSize: '11px', color: '#6B38FB', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Case Preview</span>
                                 <h2 style={{ fontSize: '15px', fontWeight: '800', margin: '2px 0 0 0', color: '#1e293b', fontFamily: 'monospace' }}>{cb.id}</h2>
                               </div>
-                              <button onClick={() => setTargetDisputeId(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94a3b8'; }}>&times;</button>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <span style={{ fontSize: '15px', fontWeight: '800', color: '#6B38FB' }}>
+                                    {formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}
+                                  </span>
+                                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#ef4444', background: '#fef2f2', padding: '4px 10px', borderRadius: '6px', border: '1px solid #fee2e2' }}>
+                                    {getDaysDifference(cb.respondByDate, TODAY_STR)} days pending
+                                  </span>
+                                </div>
+                                <button onClick={() => setTargetDisputeId(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94a3b8'; }}>&times;</button>
+                              </div>
                             </div>
                             
-                            <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
-                              {/* Original Transaction Details */}
-                              <div style={{ padding: '14px 20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#334155', alignItems: 'center' }}>
-                                <span>Transaction Details</span>
-                                <span style={{ fontWeight: 'normal', color: '#64748B', fontSize: '12px' }}>Date: <span style={{color:'#334155', fontWeight:'700'}}>{formatDateDisp(cb.txnDate)}</span></span>
-                              </div>
-                              
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px', fontSize: '13px', background: '#fff' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Case ID:</span> <strong style={{color: '#1e293b'}}>{cb.id}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>AR Number:</span> <strong style={{color: '#1e293b'}}>{cb.rrn}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>TXN Ref. Number:</span> <strong style={{color: '#1e293b'}}>{cb.txnId}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>MID:</span> <strong style={{color: '#1e293b'}}>{cb.userId}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>TID:</span> <strong style={{color: '#1e293b'}}>10515104</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Amount:</span> <strong style={{color: '#6B38FB', fontSize: '14px'}}>{formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Card Number:</span> <strong style={{color: '#1e293b'}}>457704******3989</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Merchant Name:</span> <strong style={{color: '#1e293b'}}>{cb.userName}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Approval Code:</span> <strong style={{color: '#1e293b'}}>021838</strong></div>
-                              </div>
-
-                              {/* Dispute Details */}
-                              <div style={{ padding: '14px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
-                                <span>Dispute Info</span>
-                                <span style={{ fontWeight: 'normal', color: '#64748B', fontSize: '12px' }}>Dispute Date: <span style={{color:'#334155', fontWeight:'700'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
-                              </div>
-                              
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px', fontSize: '13px', background: '#fff' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Scheme:</span> <strong style={{color: '#1e293b'}}>{cb.product || 'VISA'}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Aggregator:</span> <strong style={{color: '#1e293b'}}>{cb.aggregator || 'Payermax'}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Visa Case ID:</span> <strong style={{color: '#1e293b'}}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Reason Code:</span> <strong style={{color: '#1e293b'}}>13.1</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Remaining Days:</span> <strong style={{color: cb.aging <= 3 ? '#ef4444' : '#f59e0b'}}>{cb.aging} days</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Current Status:</span> <strong style={{color: '#1e293b'}}>{cb.mStatus}</strong></div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Dispute Description:</span> <strong style={{color: '#1e293b', fontWeight: '600', lineHeight: '1.4'}}>13.1 - Services Not Provided or Merchandise Not Received</strong></div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Admin Remarks:</span> <strong style={{color: '#ef4444'}}>{cb.rejectReason || '-'}</strong></div>
-                              </div>
-
-                              {/* Previous Documents */}
-                              <div style={{ padding: '14px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#334155' }}>
-                                <span>Evidence Documents</span>
-                              </div>
-                              
-                              <div style={{ padding: '16px 20px', background: '#fff' }}>
-                                {(cb.documents && cb.documents.length > 0) ? (
-                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    {cb.documents.map(doc => (
-                                      <div key={doc.id} style={{ padding: '12px', border: doc.status === 'Rejected' ? '1px solid #fca5a5' : '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '6px', background: doc.status === 'Rejected' ? '#fef2f2' : '#f8fafc' }}>
-                                        <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                          <span style={{ fontSize: '16px' }}>📄</span>
-                                          <span style={{ wordBreak: 'break-all' }}>{doc.filename}</span>
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '11px', color: '#64748B' }}>
-                                          <div>By: <strong style={{color: '#334155'}}>{doc.uploadedBy || 'Merchant'}</strong></div>
-                                          <div>Status: <strong style={{ color: doc.status === 'Rejected' ? '#ef4444' : doc.status === 'Accepted' ? '#22c55e' : '#eab308' }}>{doc.status}</strong></div>
-                                          <div>Date: <strong style={{color: '#334155'}}>{new Date(doc.uploadedAt).toLocaleDateString()}</strong></div>
-                                        </div>
-                                        {doc.status === 'Rejected' && (
-                                          <div style={{ fontSize: '11px', color: '#ef4444', background: '#fff', padding: '6px 10px', borderRadius: '4px', border: '1px dashed #fca5a5', marginTop: '4px' }}>
-                                            <strong>Rejection Remarks:</strong> {doc.rejectionRemarks}
+                            <div style={{ padding: '20px', overflowY: 'auto', flex: 1, background: '#f8fafc' }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'stretch' }}>
+                                {/* Left Column: Upload Evidence, Actions, and Uploaded Documents */}
+                                <div style={{ flex: '1 1 calc(50% - 10px)', minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                  {/* Upload Evidence / Action card */}
+                                  {!isClosed && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
+                                    <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                      <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span>📤</span> Upload Evidence &amp; Actions
+                                      </h3>
+                                      <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px', lineHeight: '1.4' }}>
+                                        You can upload document proof to contest this dispute or accept liability for the dispute transaction.
+                                      </p>
+                                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        {reportTab === 'doc-pending' && (
+                                          <>
+                                            <button className="btn btn-outline" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '38px', fontWeight: '600', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
+                                            <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
+                                          </>
+                                        )}
+                                        {reportTab === 'doc-verification' && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                                            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                                              <button className="btn btn-danger" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#ef4444', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => handleMerchantRejectAdminClick(cb.id)}>Reject Admin Evidence</button>
+                                              <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#22c55e', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => submitMerchantAcceptAdmin(cb.id)}>Accept Admin Evidence</button>
+                                            </div>
+                                            <button className="btn btn-outline" style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '38px', fontWeight: '600', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }} onClick={() => { setActiveModal('contest'); }}>Upload More Evidence</button>
                                           </div>
                                         )}
-                                        {doc.status === 'Rejected' && (
-                                          <div style={{ marginTop: '8px' }}>
-                                            <button style={{ fontSize: '12px', background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }} onClick={() => setActiveModal('contest')}>
-                                              Re-upload Evidence
-                                            </button>
-                                          </div>
+                                        {reportTab === 'doc-verification' && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
+                                          <>
+                                            <button className="btn btn-outline" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '38px', fontWeight: '600', border: '1px solid #cbd5e1', background: '#fff', color: '#334155' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
+                                            <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '38px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
+                                          </>
+                                        )}
+                                        {reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && (
+                                          <div style={{ width: '100%' }}>{getActionBtn(cb)}</div>
                                         )}
                                       </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div style={{ color: '#64748B', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>No evidence documents uploaded.</div>
-                                )}
-                              </div>
+                                    </div>
+                                  )}
 
-                              {/* Timeline */}
-                              {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'merchant')}
-                            </div>
-                            
-                            <div style={{ padding: '16px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', background: '#F8FAFC', borderRadius: '0 0 12px 12px' }}>
-                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', width: '100%' }}>
-                                {!isClosedDispute(cb) && reportTab === 'doc-pending' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
-                                  <>
-                                    <button className="btn btn-outline" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
-                                    <button className="btn btn-primary" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '36px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
-                                  </>
-                                )}
-                                {!isClosedDispute(cb) && reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
-                                  <>
-                                    <button className="btn btn-danger" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }} onClick={() => handleMerchantRejectAdminClick(cb.id)}>Reject Admin Evidence</button>
-                                    <button className="btn btn-outline" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }} onClick={() => { setActiveModal('contest'); }}>Upload More Evidence</button>
-                                    <button className="btn btn-primary" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#22c55e', color: '#fff', border: 'none', height: '36px', fontWeight: 'bold' }} onClick={() => submitMerchantAcceptAdmin(cb.id)}>Accept Admin Evidence</button>
-                                  </>
-                                )}
-                                {!isClosedDispute(cb) && reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
-                                  <>
-                                    <button className="btn btn-outline" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', color: '#6B38FB', border: '1px solid #6B38FB', background: '#fff', height: '36px' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
-                                    <button className="btn btn-primary" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '36px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
-                                  </>
-                                )}
-                                {!isClosedDispute(cb) && reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && getActionBtn(cb)}
+                                  {/* Evidence Documents List */}
+                                  <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                    <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span>📄</span> Evidence Documents
+                                    </h3>
+                                    {(cb.documents && cb.documents.length > 0) ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {cb.documents.map(doc => (
+                                          <div key={doc.id} style={{ padding: '12px', border: doc.status === 'Rejected' ? '1px solid #fca5a5' : '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '6px', background: doc.status === 'Rejected' ? '#fef2f2' : '#f8fafc' }}>
+                                            <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                              <span style={{ fontSize: '16px' }}>📄</span>
+                                              <span style={{ wordBreak: 'break-all' }}>{doc.filename}</span>
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '11px', color: '#64748B' }}>
+                                              <div>By: <strong style={{color: '#334155'}}>{doc.uploadedBy || 'Merchant'}</strong></div>
+                                              <div>Status: <strong style={{ color: doc.status === 'Rejected' ? '#ef4444' : doc.status === 'Accepted' ? '#22c55e' : '#eab308' }}>{doc.status}</strong></div>
+                                              <div>Date: <strong style={{color: '#334155'}}>{new Date(doc.uploadedAt).toLocaleDateString()}</strong></div>
+                                            </div>
+                                            {doc.status === 'Rejected' && (
+                                              <div style={{ fontSize: '11px', color: '#ef4444', background: '#fff', padding: '6px 10px', borderRadius: '4px', border: '1px dashed #fca5a5', marginTop: '4px' }}>
+                                                <strong>Rejection Remarks:</strong> {doc.rejectionRemarks}
+                                              </div>
+                                            )}
+                                            {doc.status === 'Rejected' && (
+                                              <div style={{ marginTop: '8px' }}>
+                                                <button style={{ fontSize: '12px', background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }} onClick={() => setActiveModal('contest')}>
+                                                  Re-upload Evidence
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div style={{ color: '#64748B', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>No evidence documents uploaded.</div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Right Column: Transaction Details, Dispute Info, and Timeline */}
+                                <div style={{ flex: '1 1 calc(50% - 10px)', minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                  {/* Transaction Details */}
+                                  <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                    <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b', marginBottom: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span>💳 Transaction Details</span>
+                                      <span style={{ fontWeight: 'normal', color: '#64748B', fontSize: '12px' }}>Date: <span style={{color:'#334155', fontWeight:'700'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                                    </h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Case ID:</span> <strong style={{color: '#1e293b'}}>{cb.id}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>AR Number:</span> <strong style={{color: '#1e293b'}}>{cb.rrn}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>TXN Ref. Number:</span> <strong style={{color: '#1e293b'}}>{cb.txnId}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>MID:</span> <strong style={{color: '#1e293b'}}>{cb.userId}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>TID:</span> <strong style={{color: '#1e293b'}}>10515104</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Amount:</span> <strong style={{color: '#6B38FB', fontSize: '14px'}}>{formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Card Number:</span> <strong style={{color: '#1e293b'}}>457704******3989</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Merchant Name:</span> <strong style={{color: '#1e293b'}}>{cb.userName}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Approval Code:</span> <strong style={{color: '#1e293b'}}>021838</strong></div>
+                                    </div>
+                                  </div>
+
+                                  {/* Dispute Details */}
+                                  <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                    <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b', marginBottom: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span>⚖️ Dispute Info</span>
+                                      <span style={{ fontWeight: 'normal', color: '#64748B', fontSize: '12px' }}>Dispute Date: <span style={{color:'#334155', fontWeight:'700'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
+                                    </h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Scheme:</span> <strong style={{color: '#1e293b'}}>{cb.product || 'VISA'}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Aggregator:</span> <strong style={{color: '#1e293b'}}>{cb.aggregator || 'Payermax'}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Visa Case ID:</span> <strong style={{color: '#1e293b'}}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Reason Code:</span> <strong style={{color: '#1e293b'}}>13.1</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Remaining Days:</span> <strong style={{color: cb.aging <= 3 ? '#ef4444' : '#f59e0b'}}>{cb.aging} days</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Current Status:</span> <strong style={{color: '#1e293b'}}>{cb.mStatus}</strong></div>
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Dispute Description:</span> <strong style={{color: '#1e293b', fontWeight: '600', lineHeight: '1.4'}}>13.1 - Services Not Provided or Merchandise Not Received</strong></div>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Admin Remarks:</span> <strong style={{color: '#ef4444'}}>{cb.rejectReason || '-'}</strong></div>
+                                    </div>
+                                  </div>
+
+                                  {/* Timeline */}
+                                  <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                    {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'merchant')}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
