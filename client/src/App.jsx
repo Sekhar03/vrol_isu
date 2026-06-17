@@ -28,7 +28,29 @@ const getDisputeType = (cb) => {
 
 const matchesDisputeTypeFilter = (cb, filterValue) => !filterValue || getDisputeType(cb) === filterValue;
 
-const matchesDisputeStatusFilter = (cb, filterValue) => !filterValue || cb.mSubStatus === filterValue;
+const matchesDisputeStatusFilter = (cb, filterValue) => {
+  if (!filterValue) return true;
+  const TODAY_STR = new Date().toISOString().split('T')[0];
+  if (filterValue === 'open') {
+    return cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold') || cb.mSubStatus.includes('Pending') || cb.mSubStatus.includes('Flight');
+  }
+  if (filterValue === 'lost') {
+    return cb.mSubStatus.includes('Lost') || cb.mSubStatus.includes('Expired') || cb.mSubStatus.includes('Accepted') || cb.mSubStatus.includes('Declined') || cb.mSubStatus.includes('rejected');
+  }
+  if (filterValue === 'won') {
+    return cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success');
+  }
+  if (filterValue === 'evidence') {
+    return cb.merchantAction === 'evidence';
+  }
+  if (filterValue === 'visa_escalation') {
+    return !!cb.visaPending;
+  }
+  if (filterValue === 'sla_today') {
+    return cb.respondByDate === TODAY_STR && !cb.mSubStatus.includes('Won') && !cb.mSubStatus.includes('Lost') && !cb.mSubStatus.includes('Success') && cb.mSubStatus !== 'Dispute Lost – TAT Expired' && cb.mSubStatus !== 'Dispute Lost – Accepted';
+  }
+  return cb.mSubStatus === filterValue;
+};
 
 const renderDisputeStatusBadge = (s) => {
   const m = {
