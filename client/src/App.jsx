@@ -961,6 +961,8 @@ function MerchantPortal({
   const [respondLimit, setRespondLimit] = useState(10);
   const [raisedPage, setRaisedPage] = useState(1);
   const [raisedLimit, setRaisedLimit] = useState(10);
+  const [reportsPage, setReportsPage] = useState(1);
+  const [reportsLimit, setReportsLimit] = useState(10);
 
   // Search filter inputs inside table toolbar
   const [respondSearchInput, setRespondSearchInput] = useState('');
@@ -1440,6 +1442,206 @@ function MerchantPortal({
 
   const reportData = getReportChartData();
 
+  const formatDateToScreenshot = (dateStr) => {
+    if (!dateStr) return '15 May 2023';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const day = d.getDate();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
+  // active list in reports page depending on tab
+  let activeReportsList = [];
+  if (reportTab === 'doc-pending') {
+    activeReportsList = actionRequiredDisputes;
+  } else if (reportTab === 'doc-verification') {
+    activeReportsList = pendingVerificationDisputes;
+  } else if (reportTab === 'closed') {
+    activeReportsList = closedDisputes;
+  } else {
+    activeReportsList = reportData.filtered;
+  }
+
+  const reportsPaging = paginateList(activeReportsList, reportsPage, reportsLimit);
+
+  const renderDisputesTable = (paging) => {
+    if (paging.paginated.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '48px', color: '#64748b', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+          <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📁</span>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', marginBottom: '8px' }}>No Data Found!</h3>
+          <p style={{ fontSize: '13px', margin: 0 }}>Try adjusting your search criteria or date ranges.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="tbl-wrap" style={{ overflowX: 'auto', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px', fontSize: '13px' }}>
+          <thead>
+            <tr style={{ background: '#F1F3F5', borderBottom: '1.5px solid #cbd5e1' }}>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Case ID</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Visa ID</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Dispute Type</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Merchant Name</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>MID</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>ARN</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Dispute Status</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>TXN Ref. Number</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Remaining Days</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>TID</th>
+              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paging.paginated.map((cb, idx) => {
+              const isFirstRow = idx === 0 && reportsPage === 1;
+              const isClosed = isClosedDispute(cb);
+              
+              return (
+                <tr 
+                  key={cb.id} 
+                  style={{ 
+                    borderBottom: '1px solid #f1f5f9',
+                    background: '#fff',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                >
+                  <td style={{ padding: '16px 12px', color: '#6B38FB', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {isFirstRow && (
+                      <span style={{ color: '#f97316', fontSize: '15px', fontWeight: 'bold' }}>⟲</span>
+                    )}
+                    <span>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</span>
+                  </td>
+                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                    {cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}
+                  </td>
+                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                    {getDisputeType(cb)}
+                  </td>
+                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                    {cb.userName}
+                  </td>
+                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                    ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}
+                  </td>
+                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                    {cb.arn || cb.rrn}
+                  </td>
+                  <td style={{ padding: '16px 12px' }}>
+                    {renderDisputeStatusBadge(cb.mSubStatus)}
+                  </td>
+                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                    {cb.txnId}
+                  </td>
+                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                  </td>
+                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                    TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}
+                  </td>
+                  <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                    {isFirstRow ? (
+                      <button 
+                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 14px',
+                          border: '1.5px solid #6B38FB',
+                          borderRadius: '6px',
+                          background: '#fff',
+                          color: '#6B38FB',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#6B38FB';
+                          e.currentTarget.style.color = '#fff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#fff';
+                          e.currentTarget.style.color = '#6B38FB';
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21.2 15c.7-1.2 1-2.5.7-3.9-.3-2-1.9-3.6-3.9-3.9-3.1-.4-5.7 1.6-6.1 4.5-.1.4-.4.7-.8.7H4c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h14c1.8 0 3.3-1.2 3.8-2.9z"></path>
+                          <polyline points="16 16 12 12 8 16"></polyline>
+                          <line x1="12" y1="12" x2="12" y2="21"></line>
+                        </svg>
+                        <span>Upload Evidence</span>
+                      </button>
+                    ) : isClosed ? (
+                      <button 
+                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                        style={{
+                          padding: '6px 16px',
+                          border: '1.5px solid #6B38FB',
+                          borderRadius: '6px',
+                          background: '#fff',
+                          color: '#6B38FB',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          minWidth: '110px',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#6B38FB';
+                          e.currentTarget.style.color = '#fff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#fff';
+                          e.currentTarget.style.color = '#6B38FB';
+                        }}
+                      >
+                        View Details
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                        style={{
+                          padding: '6px 16px',
+                          border: '1.5px solid #6B38FB',
+                          borderRadius: '6px',
+                          background: '#fff',
+                          color: '#6B38FB',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          minWidth: '110px',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#6B38FB';
+                          e.currentTarget.style.color = '#fff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#fff';
+                          e.currentTarget.style.color = '#6B38FB';
+                        }}
+                      >
+                        Take Action
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <div className="app" id="merchantApp">
       <header className="app-header">
@@ -1560,15 +1762,15 @@ function MerchantPortal({
                     )}
                   </div>
                 </div>
-                <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+                <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px' }}>
                   {/* Total Disputes Card */}
                   <div className="stat-card received" onClick={() => navigateToMerchantReport('')}>
                     <div className="stat-icon">📥</div>
                     <div className="stat-content">
-                      <div className="stat-val">{formatINR(stats.totalAmt)}</div>
                       <div className="stat-lbl">Disputes Received</div>
-                      <div className="stat-meta-row">
-                        <span className="stat-cnt">{stats.totalCount} cases</span>
+                      <div className="stat-val">{formatINR(stats.totalAmt)}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '500' }}>
+                        {stats.totalCount} cases
                       </div>
                     </div>
                   </div>
@@ -1577,14 +1779,11 @@ function MerchantPortal({
                   <div className="stat-card open" onClick={() => navigateToMerchantReport('open')}>
                     <div className="stat-icon">🔄</div>
                     <div className="stat-content">
-                      <div className="stat-val">{formatINR(stats.openAmt)}</div>
                       <div className="stat-lbl">Open Disputes</div>
-                      <div className="stat-meta-row">
-                        <span className="stat-cnt">{stats.openCount} cases</span>
-                        <span className="stat-pct-badge open-pct">{stats.openPct}%</span>
-                      </div>
-                      <div className="stat-progress-bar">
-                        <div className="stat-progress-fill open-fill" style={{ width: `${stats.openPct}%` }}></div>
+                      <div className="stat-val">{formatINR(stats.openAmt)}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '500', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{stats.openCount} cases</span>
+                        <span style={{ fontWeight: '700', color: '#6B38FB' }}>{stats.openPct}%</span>
                       </div>
                     </div>
                   </div>
@@ -1593,16 +1792,12 @@ function MerchantPortal({
                   <div className="stat-card lost" onClick={() => navigateToMerchantReport('lost')}>
                     <div className="stat-icon">❌</div>
                     <div className="stat-content">
-                      <div className="stat-val">{formatINR(stats.lostAmt)}</div>
                       <div className="stat-lbl">Disputes Lost</div>
-                      <div className="stat-meta-row">
-                        <span className="stat-cnt">{stats.lostCount} cases</span>
-                        <span className="stat-pct-badge lost-pct">{stats.lostPct}%</span>
+                      <div className="stat-val">{formatINR(stats.lostAmt)}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '500', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{stats.lostCount} cases</span>
+                        <span style={{ fontWeight: '700', color: '#EF4444' }}>{stats.lostPct}%</span>
                       </div>
-                      <div className="stat-progress-bar">
-                        <div className="stat-progress-fill lost-fill" style={{ width: `${stats.lostPct}%` }}></div>
-                      </div>
-                      <div className="stat-outcome-label lost-label">📉 Loss Rate</div>
                     </div>
                   </div>
 
@@ -1610,16 +1805,12 @@ function MerchantPortal({
                   <div className="stat-card won" onClick={() => navigateToMerchantReport('won')}>
                     <div className="stat-icon">✅</div>
                     <div className="stat-content">
-                      <div className="stat-val">{formatINR(stats.wonAmt)}</div>
                       <div className="stat-lbl">Disputes Won</div>
-                      <div className="stat-meta-row">
-                        <span className="stat-cnt">{stats.wonCount} cases</span>
-                        <span className="stat-pct-badge won-pct">{stats.wonPct}%</span>
+                      <div className="stat-val">{formatINR(stats.wonAmt)}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '500', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{stats.wonCount} cases</span>
+                        <span style={{ fontWeight: '700', color: '#10B981' }}>{stats.wonPct}%</span>
                       </div>
-                      <div className="stat-progress-bar">
-                        <div className="stat-progress-fill won-fill" style={{ width: `${stats.wonPct}%` }}></div>
-                      </div>
-                      <div className="stat-outcome-label won-label">📈 Win Rate</div>
                     </div>
                   </div>
 
@@ -1627,14 +1818,11 @@ function MerchantPortal({
                   <div className="stat-card sla" onClick={() => navigateToMerchantReport('sla_today')}>
                     <div className="stat-icon">⏰</div>
                     <div className="stat-content">
-                      <div className="stat-val">{formatINR(stats.slaAmt)}</div>
                       <div className="stat-lbl">SLA Expiring Today</div>
-                      <div className="stat-meta-row">
-                        <span className="stat-cnt">{stats.slaCount} cases</span>
-                        <span className="stat-pct-badge won-pct" style={{ background: '#f3e8ff', color: '#7c3aed' }}>{stats.slaPct}%</span>
-                      </div>
-                      <div className="stat-progress-bar">
-                        <div className="stat-progress-fill won-fill" style={{ width: `${stats.slaPct}%`, background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }}></div>
+                      <div className="stat-val">{formatINR(stats.slaAmt)}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '500', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{stats.slaCount} cases</span>
+                        <span style={{ fontWeight: '700', color: '#7C3AED' }}>{stats.slaPct}%</span>
                       </div>
                     </div>
                   </div>
@@ -2119,112 +2307,271 @@ function MerchantPortal({
                       <button className="rb-send" onClick={sendReply}>➤</button>
                     </div>
                   </div>
-                    <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
-                  <div 
-                    style={{ padding: '12px 0', color: reportTab === 'doc-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => setReportTab('doc-pending')}
-                  >Action Required ({actionRequiredDisputes.length})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: reportTab === 'doc-verification' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-verification' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => setReportTab('doc-verification')}
-                  >Under Review ({pendingVerificationDisputes.length})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: reportTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => setReportTab('closed')}
-                  >Closed ({closedDisputes.length})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: reportTab === 'dispute-mgmt' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'dispute-mgmt' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => setReportTab('dispute-mgmt')}
-                  >All Disputes ({merchantDisputes.length})</div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activePage === 'reports' && (
+            <div className="page active" id="m-dispute-reports">
+              <div className="page-inner">
+                {/* Redesigned Tab Navigation Bar */}
+                <div style={{
+                  display: 'flex',
+                  background: '#F1F5F9',
+                  borderRadius: '12px 12px 0 0',
+                  padding: '8px 16px 0 16px',
+                  borderBottom: '1px solid #E2E8F0',
+                  gap: '8px'
+                }}>
+                  {[
+                    { key: 'doc-pending', label: 'Action Required', count: actionRequiredDisputes.length },
+                    { key: 'doc-verification', label: 'Under Review', count: pendingVerificationDisputes.length },
+                    { key: 'closed', label: 'Closed', count: closedDisputes.length },
+                    { key: 'dispute-mgmt', label: 'All Disputes', count: merchantDisputes.length }
+                  ].map(tab => {
+                    const isActive = reportTab === tab.key;
+                    return (
+                      <div
+                        key={tab.key}
+                        onClick={() => {
+                          setReportTab(tab.key);
+                          setReportsPage(1); // Reset page on tab change
+                        }}
+                        style={{
+                          padding: '12px 24px',
+                          cursor: 'pointer',
+                          fontWeight: '700',
+                          fontSize: '14px',
+                          color: isActive ? '#1e293b' : '#6B38FB',
+                          background: isActive ? '#FFFFFF' : 'transparent',
+                          borderTop: isActive ? '3px solid #6B38FB' : '3px solid transparent',
+                          borderRadius: isActive ? '8px 8px 0 0' : '0',
+                          boxShadow: isActive ? '0 -2px 10px rgba(0,0,0,0.05)' : 'none',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        {tab.label}
+                        {tab.key === 'doc-pending' && (
+                          <span style={{
+                            background: isActive ? '#6B38FB' : '#E2E8F0',
+                            color: isActive ? '#FFFFFF' : '#6B38FB',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {tab.count}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Summary Cards */}
-                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                  <div 
-                    className={`premium-summary-card ${reportFilter.disputeStatus === 'due_today' ? 'active-red' : ''}`}
-                    onClick={() => {
-                      setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_today' ? '' : 'due_today' }));
-                      setReportTab('dispute-mgmt');
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}
-                  >
-                    <div className="card-badge">🚨</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{merchantDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{merchantDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#dc2626' }}>{reportFilter.disputeStatus === 'due_today' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
-                  <div 
-                    className={`premium-summary-card ${reportFilter.disputeStatus === 'due_tomorrow' ? 'active-yellow' : ''}`}
-                    onClick={() => {
-                      setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_tomorrow' ? '' : 'due_tomorrow' }));
-                      setReportTab('dispute-mgmt');
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}
-                  >
-                    <div className="card-badge">⚠️</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{merchantDisputes.filter(cb => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
-                    }).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706' }}>₹{merchantDisputes.filter(cb => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
-                    }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#d97706' }}>{reportFilter.disputeStatus === 'due_tomorrow' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
-                  <div 
-                    className={`premium-summary-card ${reportFilter.disputeStatus === 'insufficient_evidence' ? 'active-blue' : ''}`}
-                    onClick={() => {
-                      setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence' }));
-                      setReportTab('dispute-mgmt');
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' }}
-                  >
-                    <div className="card-badge">ℹ️</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#1d4ed8' }}>{reportFilter.disputeStatus === 'insufficient_evidence' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
+                {/* Summary Cards Row */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '24px',
+                  marginTop: '24px',
+                  marginBottom: '24px'
+                }}>
+                  {/* Card 1: Due Today */}
+                  {(() => {
+                    const dueTodayList = merchantDisputes.filter(cb => cb.respondByDate === TODAY_STR && !isClosedDispute(cb));
+                    const dueTodayCount = dueTodayList.length;
+                    const dueTodayAmount = dueTodayList.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                    const isActive = reportFilter.disputeStatus === 'due_today';
+                    return (
+                      <div
+                        onClick={() => {
+                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_today' ? '' : 'due_today' }));
+                          setReportTab('dispute-mgmt');
+                          setReportsPage(1);
+                        }}
+                        style={{
+                          background: '#FFFFFF',
+                          borderTop: '3px solid #f97316',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          boxShadow: isActive ? '0 10px 25px rgba(249, 115, 22, 0.15)' : '0 4px 6px rgba(0,0,0,0.05)',
+                          border: isActive ? '1px solid #f97316' : '1px solid #e2e8f0',
+                          borderTopWidth: '3px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due Today</span>
+                            <span style={{
+                              background: '#ef4444',
+                              color: '#FFFFFF',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              textTransform: 'uppercase'
+                            }}>Urgent</span>
+                          </div>
+                          <div style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b' }}>{dueTodayCount}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '4px' }}>Amount</div>
+                          <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTodayAmount)}</div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Card 2: Due Tomorrow */}
+                  {(() => {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                    const dueTomorrowList = merchantDisputes.filter(cb => cb.respondByDate === tomorrowStr && !isClosedDispute(cb));
+                    const dueTomorrowCount = dueTomorrowList.length;
+                    const dueTomorrowAmount = dueTomorrowList.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                    const isActive = reportFilter.disputeStatus === 'due_tomorrow';
+                    return (
+                      <div
+                        onClick={() => {
+                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_tomorrow' ? '' : 'due_tomorrow' }));
+                          setReportTab('dispute-mgmt');
+                          setReportsPage(1);
+                        }}
+                        style={{
+                          background: '#FFFFFF',
+                          borderTop: '3px solid #f97316',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          boxShadow: isActive ? '0 10px 25px rgba(249, 115, 22, 0.15)' : '0 4px 6px rgba(0,0,0,0.05)',
+                          border: isActive ? '1px solid #f97316' : '1px solid #e2e8f0',
+                          borderTopWidth: '3px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due Tomorrow</span>
+                            <span style={{
+                              background: '#f97316',
+                              color: '#FFFFFF',
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              textTransform: 'uppercase'
+                            }}>Critical</span>
+                          </div>
+                          <div style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b' }}>{dueTomorrowCount}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '4px' }}>Amount</div>
+                          <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTomorrowAmount)}</div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Card 3: Insufficient Evidence */}
+                  {(() => {
+                    const insufficientList = merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb));
+                    const insufficientCount = insufficientList.length;
+                    const insufficientAmount = insufficientList.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                    const isActive = reportFilter.disputeStatus === 'insufficient_evidence';
+                    return (
+                      <div
+                        onClick={() => {
+                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence' }));
+                          setReportTab('dispute-mgmt');
+                          setReportsPage(1);
+                        }}
+                        style={{
+                          background: '#FFFFFF',
+                          borderTop: '3px solid #f97316',
+                          borderRadius: '12px',
+                          padding: '20px',
+                          boxShadow: isActive ? '0 10px 25px rgba(249, 115, 22, 0.15)' : '0 4px 6px rgba(0,0,0,0.05)',
+                          border: isActive ? '1px solid #f97316' : '1px solid #e2e8f0',
+                          borderTopWidth: '3px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Insufficient Evidence</span>
+                            <span style={{ color: '#f97316', fontSize: '16px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center' }}>⟲</span>
+                          </div>
+                          <div style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b' }}>{insufficientCount}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '4px' }}>Amount</div>
+                          <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{formatINR(insufficientAmount)}</div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
-                {/* New disputes message */}
-                <div style={{ marginBottom: '20px', fontSize: '14px', fontWeight: '600', color: '#4a148c' }}>
-                  {merchantDisputes.filter(cb => cb.createdDate === new Date().toISOString().split('T')[0]).length} new Disputes added today.
+                {/* Daily count message */}
+                <div style={{ marginBottom: '24px', fontSize: '15px', fontWeight: '700', color: '#334155' }}>
+                  {merchantDisputes.filter(cb => cb.createdDate === TODAY_STR).length} new Disputes added today.
                 </div>
 
-                {/* Toolbar with dropdowns and export */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative' }}>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    {/* Date Range Dropdown */}
+                {/* Toolbar */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '20px',
+                  position: 'relative'
+                }}>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    {/* Date Preset Dropdown */}
                     <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <button 
+                      <button
                         onClick={() => { setDateDropdownOpen(!dateDropdownOpen); setFilterDropdownOpen(false); }}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          gap: '8px',
+                          gap: '12px',
                           padding: '8px 16px',
-                          border: '1.5px solid var(--border-input, #e0e0e0)',
+                          border: '1.5px solid #CBD5E1',
                           borderRadius: '8px',
-                          background: 'var(--card, #fff)',
-                          color: 'var(--text, #757575)',
+                          background: '#FFFFFF',
+                          color: '#334155',
                           fontSize: '13px',
-                          fontWeight: '500',
+                          fontWeight: '600',
                           cursor: 'pointer',
                           height: '42px',
-                          minWidth: '160px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          minWidth: '180px',
+                          transition: 'border-color 0.2s'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#6B38FB'}
+                        onMouseLeave={(e) => { if (!dateDropdownOpen) e.currentTarget.style.borderColor = '#CBD5E1'; }}
                       >
-                        <span>📅 {getPresetLabel(dateRangePreset)}</span>
-                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span>📅</span>
+                          <span>{getPresetLabel(dateRangePreset)}</span>
+                        </span>
+                        <span style={{ fontSize: '10px', color: '#6B38FB', fontWeight: 'bold' }}>▼</span>
                       </button>
 
                       {dateDropdownOpen && (
@@ -2234,12 +2581,12 @@ function MerchantPortal({
                             position: 'absolute',
                             top: 'calc(100% + 6px)',
                             left: '0',
-                            background: 'var(--card, #fff)',
-                            border: '1px solid var(--border, #e0e0e0)',
+                            background: '#FFFFFF',
+                            border: '1px solid #E2E8F0',
                             borderRadius: '8px',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                             zIndex: 1000,
-                            minWidth: '220px',
+                            minWidth: '240px',
                             padding: '8px 0',
                             display: 'flex',
                             flexDirection: 'column',
@@ -2261,49 +2608,49 @@ function MerchantPortal({
                                   padding: '10px 16px',
                                   cursor: 'pointer',
                                   fontSize: '13px',
-                                  color: dateRangePreset === preset ? '#4a148c' : 'var(--text, #333)',
-                                  fontWeight: dateRangePreset === preset ? '600' : '500',
+                                  color: dateRangePreset === preset ? '#6B38FB' : '#475569',
+                                  fontWeight: dateRangePreset === preset ? '700' : '500',
                                   textAlign: 'left',
                                   background: 'transparent',
                                   border: 'none',
                                   transition: 'background 0.2s',
                                 }}
-                                onMouseEnter={(e) => e.target.style.background = 'var(--bg-body, #f5f5f5)'}
+                                onMouseEnter={(e) => e.target.style.background = '#F8FAFC'}
                                 onMouseLeave={(e) => e.target.style.background = 'transparent'}
                               >
                                 {getPresetLabel(preset)}
                               </button>
                             ))}
-                            <div style={{ borderTop: '1px solid var(--border, #eee)', margin: '4px 0' }} />
+                            <div style={{ borderTop: '1px solid #E2E8F0', margin: '4px 0' }} />
                             <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#78909c' }}>CUSTOM RANGE</span>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#94A3B8' }}>CUSTOM RANGE</span>
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <div style={{ flex: 1 }}>
-                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>From</span>
-                                  <input 
-                                    type="date" 
-                                    value={tempFrom} 
-                                    onChange={(e) => setTempFrom(e.target.value)} 
-                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '2px' }}>From</span>
+                                  <input
+                                    type="date"
+                                    value={tempFrom}
+                                    onChange={(e) => setTempFrom(e.target.value)}
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #E2E8F0', borderRadius: '4px', background: '#FFFFFF', color: '#1E293B' }}
                                   />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>To</span>
-                                  <input 
-                                    type="date" 
-                                    value={tempTo} 
-                                    onChange={(e) => setTempTo(e.target.value)} 
-                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '2px' }}>To</span>
+                                  <input
+                                    type="date"
+                                    value={tempTo}
+                                    onChange={(e) => setTempTo(e.target.value)}
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #E2E8F0', borderRadius: '4px', background: '#FFFFFF', color: '#1E293B' }}
                                   />
                                 </div>
                               </div>
-                              <button 
+                              <button
                                 onClick={() => {
                                   setReportFilter(prev => ({ ...prev, from: tempFrom, to: tempTo }));
                                   setDateRangePreset('custom');
                                   setDateDropdownOpen(false);
                                 }}
-                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#6B38FB', border: 'none', color: '#FFFFFF', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                               >
                                 Apply Custom
                               </button>
@@ -2315,28 +2662,33 @@ function MerchantPortal({
 
                     {/* Search & Filter Dropdown */}
                     <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <button 
+                      <button
                         onClick={() => { setFilterDropdownOpen(!filterDropdownOpen); setDateDropdownOpen(false); }}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          gap: '8px',
+                          gap: '12px',
                           padding: '8px 16px',
-                          border: '1.5px solid var(--border-input, #e0e0e0)',
+                          border: '1.5px solid #CBD5E1',
                           borderRadius: '8px',
-                          background: 'var(--card, #fff)',
-                          color: 'var(--text, #757575)',
+                          background: '#FFFFFF',
+                          color: '#334155',
                           fontSize: '13px',
-                          fontWeight: '500',
+                          fontWeight: '600',
                           cursor: 'pointer',
                           height: '42px',
-                          minWidth: '160px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          minWidth: '180px',
+                          transition: 'border-color 0.2s'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#6B38FB'}
+                        onMouseLeave={(e) => { if (!filterDropdownOpen) e.currentTarget.style.borderColor = '#CBD5E1'; }}
                       >
-                        <span>🔍 Search & Filter</span>
-                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span>🔍</span>
+                          <span>Search & Filter</span>
+                        </span>
+                        <span style={{ fontSize: '10px', color: '#6B38FB', fontWeight: 'bold' }}>▼</span>
                       </button>
 
                       {filterDropdownOpen && (
@@ -2346,8 +2698,8 @@ function MerchantPortal({
                             position: 'absolute',
                             top: 'calc(100% + 6px)',
                             left: '0',
-                            background: 'var(--card, #fff)',
-                            border: '1px solid var(--border, #e0e0e0)',
+                            background: '#FFFFFF',
+                            border: '1px solid #E2E8F0',
                             borderRadius: '12px',
                             boxShadow: '0 15px 35px rgba(0,0,0,0.15)',
                             zIndex: 1000,
@@ -2359,11 +2711,11 @@ function MerchantPortal({
                           }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Type</label>
-                                <select 
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748B', textAlign: 'left' }}>Dispute Type</label>
+                                <select
                                   value={reportFilter.disputeType}
                                   onChange={(e) => setReportFilter(prev => ({ ...prev, disputeType: e.target.value }))}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '4px', fontSize: '13px', background: '#FFFFFF', color: '#1E293B' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Chargeback">Chargeback</option>
@@ -2373,11 +2725,11 @@ function MerchantPortal({
                                 </select>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Scheme</label>
-                                <select 
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748B', textAlign: 'left' }}>Scheme</label>
+                                <select
                                   value={reportFilter.scheme}
                                   onChange={(e) => setReportFilter(prev => ({ ...prev, scheme: e.target.value }))}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '4px', fontSize: '13px', background: '#FFFFFF', color: '#1E293B' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Visa">Visa</option>
@@ -2386,11 +2738,11 @@ function MerchantPortal({
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Status</label>
-                              <select 
+                              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748B', textAlign: 'left' }}>Dispute Status</label>
+                              <select
                                 value={reportFilter.disputeStatus}
                                 onChange={(e) => setReportFilter(prev => ({ ...prev, disputeStatus: e.target.value }))}
-                                style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '4px', fontSize: '13px', background: '#FFFFFF', color: '#1E293B' }}
                               >
                                 <option value="">Select All</option>
                                 <option value="Dispute Won Partially">Dispute Won Partially</option>
@@ -2405,11 +2757,11 @@ function MerchantPortal({
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search By</label>
-                                <select 
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748B', textAlign: 'left' }}>Search By</label>
+                                <select
                                   value={reportFilter.searchBy}
                                   onChange={(e) => setReportFilter(prev => ({ ...prev, searchBy: e.target.value }))}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '4px', fontSize: '13px', background: '#FFFFFF', color: '#1E293B' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Txn ID">Transaction ID (Txn ID)</option>
@@ -2421,18 +2773,18 @@ function MerchantPortal({
                               </div>
                               {reportFilter.searchBy && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}>
-                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search Value</label>
-                                  <input 
-                                    type="text" 
+                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#64748B', textAlign: 'left' }}>Search Value</label>
+                                  <input
+                                    type="text"
                                     value={reportFilter.searchText}
                                     onChange={(e) => setReportFilter(prev => ({ ...prev, searchText: e.target.value }))}
                                     onFocus={() => setMerchantSearchFocused(true)}
                                     onBlur={() => setTimeout(() => setMerchantSearchFocused(false), 200)}
                                     placeholder={`Enter ${reportFilter.searchBy}`}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '4px', fontSize: '13px', background: '#FFFFFF', color: '#1E293B' }}
                                   />
                                   {merchantSearchFocused && reportFilter.searchText && (
-                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
                                       {merchantDisputes
                                         .map(cb => {
                                           if (reportFilter.searchBy === 'Txn ID') return cb.txnId;
@@ -2448,8 +2800,8 @@ function MerchantPortal({
                                           <div
                                             key={val}
                                             onMouseDown={() => setReportFilter(prev => ({ ...prev, searchText: val }))}
-                                            style={{ padding: '6px 10px', cursor: 'pointer', fontSize: '12px', color: '#333', borderBottom: '1px solid #eee', textAlign: 'left' }}
-                                            onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                            style={{ padding: '6px 10px', cursor: 'pointer', fontSize: '12px', color: '#334155', borderBottom: '1px solid #F1F5F9', textAlign: 'left' }}
+                                            onMouseEnter={(e) => e.target.style.background = '#F8FAFC'}
                                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
                                           >
                                             🔍 {val}
@@ -2461,8 +2813,8 @@ function MerchantPortal({
                               )}
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
-                              <button 
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px', borderTop: '1px solid #E2E8F0', paddingTop: '12px' }}>
+                              <button
                                 onClick={() => {
                                   setReportFilter({ from: SIX_MONTHS_AGO, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' });
                                   setDateRangePreset('6months');
@@ -2470,16 +2822,16 @@ function MerchantPortal({
                                   setTempTo(TODAY_STR);
                                   setFilterDropdownOpen(false);
                                 }}
-                                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #e0e0e0', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: 'var(--text)' }}
+                                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #E2E8F0', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: '#64748B' }}
                               >
                                 Reset
                               </button>
-                              <button 
+                              <button
                                 onClick={() => {
                                   setFilterDropdownOpen(false);
                                   showToast('Filters applied!');
                                 }}
-                                style={{ padding: '6px 12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                                style={{ padding: '6px 12px', background: '#6B38FB', border: 'none', color: '#FFFFFF', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                               >
                                 Apply Filters
                               </button>
@@ -2489,244 +2841,121 @@ function MerchantPortal({
                       )}
                     </div>
                   </div>
-                  <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => exportToCSV('raised')}>
+
+                  <button
+                    style={{
+                      padding: '8px 24px',
+                      border: 'none',
+                      background: '#6B38FB',
+                      color: '#FFFFFF',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      height: '42px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      transition: 'opacity 0.2s'
+                    }}
+                    onClick={() => exportToCSV('raised')}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  >
                     Export
                   </button>
                 </div>
 
-                <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
-
-                  {/* Tab: All Disputes */}
-                  {reportTab === 'dispute-mgmt' && (
-                    <div>
-                      <div className="tbl-wrap">
-                        <table>
-                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
-                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
-                        </tr>
-                          </thead>
-                          <tbody>
-                            {reportData.filtered.slice(0, 10).map(cb => (
-                              <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
-                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
-                                  </td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    {isClosedDispute(cb) ? (
-                                      <button 
-                                        className="btn btn-sm btn-outline" 
-                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '4px', padding: 0 }} 
-                                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
-                                        title="View Details"
-                                      >
-                                        👁️
-                                      </button>
-                                    ) : (
-                                      <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                        Take Action
-                                      </button>
-                                    )}
-                                  </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tab: Document Pending for Merchant */}
-                  {reportTab === 'doc-pending' && (
-                    <div>
-                      <div className="tbl-toolbar">
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                          {actionRequiredDisputes.length} pending
-                        </span>
-                      </div>
-                      <div className="tbl-wrap">
-                        <table>
-                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
-                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
-                        </tr>
-                          </thead>
-                          <tbody>
-                            {actionRequiredDisputes.map(cb => (
-                              <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
-                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
-                                  </td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                      Take Action
-                                    </button>
-                                  </td>
-                              </tr>
-                            ))}
-                            {actionRequiredDisputes.length === 0 && (
-                              <tr><td colSpan="10" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>✅ No pending documents</td></tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tab: Document Pending for Verification */}
-                  {reportTab === 'doc-verification' && (
-                    <div>
-                      <div className="tbl-toolbar">
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                          {pendingVerificationDisputes.length} awaiting verification
-                        </span>
-                      </div>
-                      <div className="tbl-wrap">
-                        <table>
-                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
-                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
-                        </tr>
-                          </thead>
-                          <tbody>
-                            {pendingVerificationDisputes.map(cb => (
-                              <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
-                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
-                                  </td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                      Take Action
-                                    </button>
-                                  </td>
-                              </tr>
-                            ))}
-                            {pendingVerificationDisputes.length === 0 && (
-                              <tr><td colSpan="11" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>No documents pending verification</td></tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Tab: Closed */}
-                  {reportTab === 'closed' && (
-                    <div>
-                      <div className="tbl-toolbar">
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                          {closedDisputes.length} closed records
-                        </span>
-                      </div>
-                      <div className="tbl-wrap">
-                        <table>
-                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
-                            <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                              <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {closedDisputes.map(cb => (
-                              <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>-</td>
-                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                  <button 
-                                    className="btn btn-sm btn-outline" 
-                                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '4px', padding: 0 }} 
-                                    onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
-                                    title="View Details"
-                                  >
-                                    👁️
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                            {closedDisputes.length === 0 && (
-                              <tr><td colSpan="11" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>No closed disputes</td></tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+                {/* Table Container */}
+                <div style={{ marginBottom: '24px' }}>
+                  {renderDisputesTable(reportsPaging)}
                 </div>
 
+                {/* Pagination Footer */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: '#FFFFFF',
+                  padding: '16px 20px',
+                  borderRadius: '12px',
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                }}>
+                  {/* Bottom Left: Show X per page */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748B', fontWeight: '500' }}>
+                    <span>Show</span>
+                    <select
+                      value={reportsLimit}
+                      onChange={(e) => {
+                        setReportsPage(1);
+                        setReportsLimit(parseInt(e.target.value));
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: '1.5px solid #CBD5E1',
+                        background: '#FFFFFF',
+                        color: '#334155',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                    </select>
+                    <span>per page</span>
+                  </div>
+
+                  {/* Bottom Right: 1-10 of many, with < and > */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '600' }}>
+                      {reportsPaging.startRecord}-{reportsPaging.endRecord} of {reportsPaging.total}
+                    </span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        disabled={reportsPage === 1}
+                        onClick={() => setReportsPage(reportsPage - 1)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #CBD5E1',
+                          background: reportsPage === 1 ? '#F1F5F9' : '#FFFFFF',
+                          color: reportsPage === 1 ? '#94A3B8' : '#334155',
+                          cursor: reportsPage === 1 ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        disabled={reportsPage === reportsPaging.totalPages}
+                        onClick={() => setReportsPage(reportsPage + 1)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #CBD5E1',
+                          background: reportsPage === reportsPaging.totalPages ? '#F1F5F9' : '#FFFFFF',
+                          color: reportsPage === reportsPaging.totalPages ? '#94A3B8' : '#334155',
+                          cursor: reportsPage === reportsPaging.totalPages ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
               </div>
             </div>
@@ -4574,55 +4803,65 @@ function AdminPortal({
                   </div>
                 </div>
 
-                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(6, 1fr)', gap: '20px', padding: '10px 0' }}>
-                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Total Transactions</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--text)' }}>{stats.totalCount}</span>
+                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px', padding: '10px 0' }}>
+                  {/* Total Transactions Card */}
+                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #6B38FB', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Transactions</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
+                      <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text)', lineHeight: '1' }}>{stats.totalCount}</div>
+                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.totalAmt)}</div>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--brand)' }}>{formatINR(stats.totalAmt)}</div>
                   </div>
 
-                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Received</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--text)' }}>{stats.totalCount}</span>
+                  {/* Dispute Received Card */}
+                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #f97316', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Received</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
+                      <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text)', lineHeight: '1' }}>{stats.totalCount}</div>
+                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.totalAmt)}</div>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--brand)' }}>{formatINR(stats.totalAmt)}</div>
                   </div>
                   
-                  <div className="stat-card open" onClick={() => navigateToAdminReport('open')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Open</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--yellow)' }}>{stats.openCount}</span>
+                  {/* Dispute Open Card */}
+                  <div className="stat-card open" onClick={() => navigateToAdminReport('open')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #3B82F6', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Open</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
+                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#3B82F6', lineHeight: '1' }}>{stats.openCount}</div>
+                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.openAmt)}</div>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--yellow)' }}>{formatINR(stats.openAmt)}</div>
                   </div>
                   
-                  <div className="stat-card lost" onClick={() => navigateToAdminReport('lost')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Lost</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--red)' }}>{stats.lostCount}</span>
-                      {stats.totalCount > 0 && <span style={{ fontSize: '14px', color: 'var(--red)', marginBottom: '4px', fontWeight: '600' }}>({Math.round((stats.lostCount / stats.totalCount) * 100)}%)</span>}
+                  {/* Dispute Lost Card */}
+                  <div className="stat-card lost" onClick={() => navigateToAdminReport('lost')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #EF4444', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Lost</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
+                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#EF4444', lineHeight: '1' }}>
+                        {stats.lostCount}
+                        {stats.totalCount > 0 && <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px', fontWeight: '600' }}>({Math.round((stats.lostCount / stats.totalCount) * 100)}%)</span>}
+                      </div>
+                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.lostAmt)}</div>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--red)' }}>{formatINR(stats.lostAmt)}</div>
                   </div>
                   
-                  <div className="stat-card won" onClick={() => navigateToAdminReport('won')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Won</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--green)' }}>{stats.wonCount}</span>
-                      {stats.totalCount > 0 && <span style={{ fontSize: '14px', color: 'var(--green)', marginBottom: '4px', fontWeight: '600' }}>({Math.round((stats.wonCount / stats.totalCount) * 100)}%)</span>}
+                  {/* Dispute Won Card */}
+                  <div className="stat-card won" onClick={() => navigateToAdminReport('won')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #10B981', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Won</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
+                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#10B981', lineHeight: '1' }}>
+                        {stats.wonCount}
+                        {stats.totalCount > 0 && <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px', fontWeight: '600' }}>({Math.round((stats.wonCount / stats.totalCount) * 100)}%)</span>}
+                      </div>
+                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.wonAmt)}</div>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--green)' }}>{formatINR(stats.wonAmt)}</div>
                   </div>
 
-                  <div className="stat-card sla" onClick={() => navigateToAdminReport('sla_today')} style={{ background: 'var(--card)', border: 'none', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-md)', position: 'relative' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>SLA Expiring Today</div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: '#7c3aed' }}>{stats.slaCount}</span>
+                  {/* SLA Expiring Today Card */}
+                  <div className="stat-card sla" onClick={() => navigateToAdminReport('sla_today')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #7C3AED', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>SLA Expiring Today</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
+                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#7C3AED', lineHeight: '1' }}>{stats.slaCount}</div>
+                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.slaAmt)}</div>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#7c3aed' }}>{formatINR(stats.slaAmt)}</div>
                   </div>
                 </div>
 
@@ -4652,16 +4891,24 @@ function AdminPortal({
                 <span className="vc-breadcrumb">Dispute Management / <span>VROL Import Center</span></span>
               </div>
               <div className="page-inner">
-                <div style={{ marginTop: '32px', background: 'var(--card)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-md)' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px' }}>VROL Import Center</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px' }}>Upload VROL Dispute, Pre-Arbitration, Arbitration, or Settlement files (CSV/XLSX).</p>
+                <div style={{ marginTop: '32px', background: '#FFFFFF', border: '1px solid var(--border)', borderRadius: '12px', padding: '28px', boxShadow: 'var(--shadow)' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: 'var(--text)' }}>VROL Import Center</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '24px' }}>Upload VROL Dispute, Pre-Arbitration, Arbitration, or Settlement files (CSV/XLSX).</p>
                   
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <input 
                       type="file" 
                       id="vrolUploadInput" 
                       accept=".csv, .xlsx" 
-                      style={{ border: '1px solid var(--border)', padding: '8px', borderRadius: '4px' }}
+                      style={{ 
+                        border: '1.5px solid #CBD5E1', 
+                        padding: '10px 14px', 
+                        borderRadius: '8px',
+                        background: '#FFFFFF',
+                        color: 'var(--text-muted)',
+                        fontSize: '13px',
+                        cursor: 'pointer'
+                      }}
                     />
                     <button 
                       onClick={async () => {
@@ -4690,13 +4937,17 @@ function AdminPortal({
                           showToast('Failed to upload VROL file. Ensure backend is running.', 'error');
                         }
                       }}
-                      style={{ padding: '10px 24px', background: '#4a148c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                      style={{ padding: '12px 24px', background: '#6B38FB', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', transition: 'opacity 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                     >
                       Upload File
                     </button>
                     <button 
                       onClick={downloadVrolSampleTemplate}
-                      style={{ padding: '10px 24px', background: 'transparent', color: '#4a148c', border: '1px solid #4a148c', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}
+                      style={{ padding: '11px 24px', background: 'transparent', color: '#6B38FB', border: '1.5px solid #6B38FB', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#6B38FB'; e.currentTarget.style.color = '#fff'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6B38FB'; }}
                     >
                       Download Sample
                     </button>
@@ -4731,90 +4982,133 @@ function AdminPortal({
 
 
           {/* Admin View Chargebacks */}
+          {/* Admin View Chargebacks */}
           {activePage === 'a-view-cb' && (
             <div className="page active" id="a-view-cb">
-              <div className="view-chargeback-header">
-                <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
+              <div className="view-chargeback-header" style={{ marginBottom: '16px' }}>
+                <span className="vc-breadcrumb" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Dispute Management / <span style={{ color: 'var(--text)', fontWeight: '600' }}>View Dispute History</span></span>
               </div>
               <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
-                  <div 
-                    style={{ padding: '12px 0', color: adminTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setAdminTab('verification-pending'); setAVcPage(1); }}
-                  >Action Required ({getAdminActionRequiredCount()})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: adminTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setAdminTab('merchant-pending'); setAVcPage(1); }}
-                  >Under Review ({getAdminUnderReviewCount()})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: adminTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setAdminTab('closed'); setAVcPage(1); }}
-                  >Closed ({getAdminClosedCount()})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: adminTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setAdminTab('management'); setAVcPage(1); }}
-                  >All Disputes ({chargebacks.length})</div>
+                
+                {/* Horizontal raised card style tabs */}
+                <div style={{ 
+                  display: 'flex', 
+                  borderBottom: '1px solid var(--border)', 
+                  marginBottom: '24px', 
+                  gap: '4px',
+                  position: 'relative'
+                }}>
+                  {[
+                    { key: 'verification-pending', label: 'Action Required', count: getAdminActionRequiredCount() },
+                    { key: 'merchant-pending', label: 'Under Review', count: getAdminUnderReviewCount() },
+                    { key: 'closed', label: 'Closed', count: getAdminClosedCount() },
+                    { key: 'management', label: 'All Disputes', count: chargebacks.length }
+                  ].map(tab => {
+                    const isActive = adminTab === tab.key;
+                    return (
+                      <div
+                        key={tab.key}
+                        onClick={() => { setAdminTab(tab.key); setAVcPage(1); }}
+                        style={{
+                          padding: '12px 20px',
+                          color: isActive ? '#6B38FB' : 'rgba(107, 56, 251, 0.65)',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          background: isActive ? 'var(--card)' : 'transparent',
+                          borderTop: isActive ? '3px solid #6B38FB' : '3px solid transparent',
+                          borderLeft: isActive ? '1px solid var(--border)' : '1px solid transparent',
+                          borderRight: isActive ? '1px solid var(--border)' : '1px solid transparent',
+                          borderBottom: isActive ? '1px solid var(--card)' : '1px solid transparent',
+                          borderRadius: '8px 8px 0 0',
+                          cursor: 'pointer',
+                          marginBottom: '-1px',
+                          zIndex: isActive ? 2 : 1,
+                          transition: 'all 0.15s ease-in-out',
+                          boxShadow: isActive ? '0 -2px 4px rgba(0, 0, 0, 0.02)' : 'none'
+                        }}
+                      >
+                        {tab.label} ({tab.count})
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Summary Cards */}
-                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                  <div 
-                    className={`premium-summary-card ${filterStatus === 'due_today' ? 'active-red' : ''}`}
-                    onClick={() => {
-                      setFilterStatus(filterStatus === 'due_today' ? '' : 'due_today');
-                      setAdminTab('management');
-                      setAVcPage(1);
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}
-                  >
-                    <div className="card-badge">🚨</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{chargebacks.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{chargebacks.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#dc2626' }}>{filterStatus === 'due_today' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
-                  <div 
-                    className={`premium-summary-card ${filterStatus === 'due_tomorrow' ? 'active-yellow' : ''}`}
-                    onClick={() => {
-                      setFilterStatus(filterStatus === 'due_tomorrow' ? '' : 'due_tomorrow');
-                      setAdminTab('management');
-                      setAVcPage(1);
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}
-                  >
-                    <div className="card-badge">⚠️</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{chargebacks.filter(cb => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
-                    }).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706' }}>₹{chargebacks.filter(cb => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
-                    }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#d97706' }}>{filterStatus === 'due_tomorrow' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
-                  <div 
-                    className={`premium-summary-card ${filterStatus === 'insufficient_evidence' ? 'active-blue' : ''}`}
-                    onClick={() => {
-                      setFilterStatus(filterStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence');
-                      setAdminTab('management');
-                      setAVcPage(1);
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' }}
-                  >
-                    <div className="card-badge">ℹ️</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{chargebacks.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{chargebacks.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#1d4ed8' }}>{filterStatus === 'insufficient_evidence' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
+                  {[
+                    {
+                      id: 'due_today',
+                      label: '🚨 Due Today Urgent',
+                      count: chargebacks.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length,
+                      amount: chargebacks.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0),
+                      activeClass: 'active-red'
+                    },
+                    {
+                      id: 'due_tomorrow',
+                      label: '⚠️ Due Tomorrow Critical',
+                      count: chargebacks.filter(cb => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                      }).length,
+                      amount: chargebacks.filter(cb => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                      }).reduce((sum, cb) => sum + cb.txnAmt, 0),
+                      activeClass: 'active-yellow'
+                    },
+                    {
+                      id: 'insufficient_evidence',
+                      label: 'ℹ️ Insufficient Evidence',
+                      count: chargebacks.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length,
+                      amount: chargebacks.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0),
+                      activeClass: 'active-blue'
+                    }
+                  ].map(card => {
+                    const isActive = filterStatus === card.id;
+                    return (
+                      <div
+                        key={card.id}
+                        className={`premium-summary-card ${isActive ? card.activeClass : ''}`}
+                        onClick={() => {
+                          setFilterStatus(filterStatus === card.id ? '' : card.id);
+                          setAdminTab('management');
+                          setAVcPage(1);
+                        }}
+                        style={{
+                          background: '#FFFFFF',
+                          border: '1px solid var(--border)',
+                          borderTop: '3px solid #f97316',
+                          borderRadius: '12px',
+                          padding: '24px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          boxShadow: isActive ? '0 0 0 2px rgba(249, 115, 22, 0.2), var(--shadow-md)' : 'var(--shadow)',
+                          cursor: 'pointer',
+                          flex: 1,
+                          transition: 'all 0.2s ease-in-out',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px' }}>{card.label}</div>
+                          <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text)' }}>{card.count}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-light)', marginBottom: '8px' }}>Total Amount</div>
+                          <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>₹{card.amount.toLocaleString('en-IN')}</div>
+                          <span className="card-hint-text" style={{ fontSize: '11px', fontWeight: '600', color: '#f97316', display: 'block', marginTop: '6px' }}>
+                            {isActive ? 'Active filter ✓' : 'Click to filter →'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* New disputes message */}
-                <div style={{ marginBottom: '20px', fontSize: '14px', fontWeight: '600', color: '#4a148c' }}>
+                <div style={{ marginBottom: '20px', fontSize: '14px', fontWeight: '600', color: '#6B38FB' }}>
                   {chargebacks.filter(cb => cb.createdDate === new Date().toISOString().split('T')[0]).length} new Disputes added today.
                 </div>
 
@@ -4831,20 +5125,20 @@ function AdminPortal({
                           justifyContent: 'space-between',
                           gap: '8px',
                           padding: '8px 16px',
-                          border: '1.5px solid var(--border-input, #e0e0e0)',
-                          borderRadius: '8px',
-                          background: 'var(--card, #fff)',
-                          color: 'var(--text, #757575)',
+                          border: '1px solid var(--border-input, #CBD5E1)',
+                          borderRadius: '12px',
+                          background: '#FFFFFF',
+                          color: 'var(--text)',
                           fontSize: '13px',
                           fontWeight: '500',
                           cursor: 'pointer',
                           height: '42px',
                           minWidth: '160px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          boxShadow: 'var(--shadow-sm)',
                         }}
                       >
                         <span>📅 {getPresetLabel(dateRangePreset)}</span>
-                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                        <span style={{ fontSize: '10px', color: '#6B38FB' }}>▼</span>
                       </button>
 
                       {dateDropdownOpen && (
@@ -4855,9 +5149,9 @@ function AdminPortal({
                             top: 'calc(100% + 6px)',
                             left: '0',
                             background: 'var(--card, #fff)',
-                            border: '1px solid var(--border, #e0e0e0)',
-                            borderRadius: '8px',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                            border: '1px solid var(--border, #E2E8F0)',
+                            borderRadius: '12px',
+                            boxShadow: 'var(--shadow-lg)',
                             zIndex: 1000,
                             minWidth: '220px',
                             padding: '8px 0',
@@ -4882,39 +5176,39 @@ function AdminPortal({
                                   padding: '10px 16px',
                                   cursor: 'pointer',
                                   fontSize: '13px',
-                                  color: dateRangePreset === preset ? '#4a148c' : 'var(--text, #333)',
+                                  color: dateRangePreset === preset ? '#6B38FB' : 'var(--text)',
                                   fontWeight: dateRangePreset === preset ? '600' : '500',
                                   textAlign: 'left',
                                   background: 'transparent',
                                   border: 'none',
                                   transition: 'background 0.2s',
                                 }}
-                                onMouseEnter={(e) => e.target.style.background = 'var(--bg-body, #f5f5f5)'}
+                                onMouseEnter={(e) => e.target.style.background = 'var(--bg)'}
                                 onMouseLeave={(e) => e.target.style.background = 'transparent'}
                               >
                                 {getPresetLabel(preset)}
                               </button>
                             ))}
-                            <div style={{ borderTop: '1px solid var(--border, #eee)', margin: '4px 0' }} />
+                            <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
                             <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#78909c' }}>CUSTOM RANGE</span>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-light)' }}>CUSTOM RANGE</span>
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <div style={{ flex: 1 }}>
-                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>From</span>
+                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>From</span>
                                   <input 
                                     type="date" 
                                     value={tempFrom} 
                                     onChange={(e) => setTempFrom(e.target.value)} 
-                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid var(--border-input)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)' }} 
                                   />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>To</span>
+                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>To</span>
                                   <input 
                                     type="date" 
                                     value={tempTo} 
                                     onChange={(e) => setTempTo(e.target.value)} 
-                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid var(--border-input)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)' }} 
                                   />
                                 </div>
                               </div>
@@ -4925,7 +5219,7 @@ function AdminPortal({
                                   setDateRangePreset('custom');
                                   setDateDropdownOpen(false);
                                 }}
-                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#6B38FB', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                               >
                                 Apply Custom
                               </button>
@@ -4945,20 +5239,20 @@ function AdminPortal({
                           justifyContent: 'space-between',
                           gap: '8px',
                           padding: '8px 16px',
-                          border: '1.5px solid var(--border-input, #e0e0e0)',
-                          borderRadius: '8px',
-                          background: 'var(--card, #fff)',
-                          color: 'var(--text, #757575)',
+                          border: '1px solid var(--border-input, #CBD5E1)',
+                          borderRadius: '12px',
+                          background: '#FFFFFF',
+                          color: 'var(--text)',
                           fontSize: '13px',
                           fontWeight: '500',
                           cursor: 'pointer',
                           height: '42px',
                           minWidth: '160px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          boxShadow: 'var(--shadow-sm)',
                         }}
                       >
                         <span>🔍 Search & Filter</span>
-                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                        <span style={{ fontSize: '10px', color: '#6B38FB' }}>▼</span>
                       </button>
 
                       {filterDropdownOpen && (
@@ -4969,9 +5263,9 @@ function AdminPortal({
                             top: 'calc(100% + 6px)',
                             left: '0',
                             background: 'var(--card, #fff)',
-                            border: '1px solid var(--border, #e0e0e0)',
+                            border: '1px solid var(--border, #E2E8F0)',
                             borderRadius: '12px',
-                            boxShadow: '0 15px 35px rgba(0,0,0,0.15)',
+                            boxShadow: 'var(--shadow-lg)',
                             zIndex: 1000,
                             width: '380px',
                             padding: '20px',
@@ -4981,11 +5275,11 @@ function AdminPortal({
                           }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Type</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Dispute Type</label>
                                 <select 
                                   value={filterSubStatus}
                                   onChange={(e) => setFilterSubStatus(e.target.value)}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Chargeback">Chargeback</option>
@@ -4995,11 +5289,11 @@ function AdminPortal({
                                 </select>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Scheme</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Scheme</label>
                                 <select 
                                   value={filterScheme}
                                   onChange={(e) => setFilterScheme(e.target.value)}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Visa">Visa</option>
@@ -5009,11 +5303,11 @@ function AdminPortal({
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Status</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Dispute Status</label>
                                 <select 
                                   value={filterStatus}
                                   onChange={(e) => setFilterStatus(e.target.value)}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Dispute Won Partially">Dispute Won Partially</option>
@@ -5026,23 +5320,23 @@ function AdminPortal({
                                 </select>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Aggregator</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Aggregator</label>
                                 <input 
                                   type="text" 
                                   value="PayerMax" 
                                   readOnly 
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }} 
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', background: 'var(--bg)', color: 'var(--text-muted)', cursor: 'not-allowed' }} 
                                 />
                               </div>
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search By</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Search By</label>
                                 <select 
                                   value={filterSearchBy}
                                   onChange={(e) => setFilterSearchBy(e.target.value)}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Txn ID">Transaction ID (Txn ID)</option>
@@ -5055,7 +5349,7 @@ function AdminPortal({
                               </div>
                               {filterSearchBy && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}>
-                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search Value</label>
+                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Search Value</label>
                                   <input 
                                     type="text" 
                                     value={filterRrn}
@@ -5063,10 +5357,10 @@ function AdminPortal({
                                     onFocus={() => setAdminSearchFocused(true)}
                                     onBlur={() => setTimeout(() => setAdminSearchFocused(false), 200)}
                                     placeholder={`Enter ${filterSearchBy}`}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                   />
                                   {adminSearchFocused && filterRrn && (
-                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
                                       {chargebacks
                                         .map(cb => {
                                           if (filterSearchBy === 'Txn ID') return cb.txnId;
@@ -5083,8 +5377,8 @@ function AdminPortal({
                                           <div
                                             key={val}
                                             onMouseDown={() => setFilterRrn(val)}
-                                            style={{ padding: '6px 10px', cursor: 'pointer', fontSize: '12px', color: '#333', borderBottom: '1px solid #eee', textAlign: 'left' }}
-                                            onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                            style={{ padding: '6px 10px', cursor: 'pointer', fontSize: '12px', color: 'var(--text)', borderBottom: '1px solid var(--border)', textAlign: 'left' }}
+                                            onMouseEnter={(e) => e.target.style.background = 'var(--bg)'}
                                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
                                           >
                                             🔍 {val}
@@ -5096,7 +5390,7 @@ function AdminPortal({
                               )}
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
                               <button 
                                 onClick={() => {
                                   setFilterFrom(SIX_MONTHS_AGO);
@@ -5111,7 +5405,7 @@ function AdminPortal({
                                   setTempTo(TODAY_STR);
                                   setFilterDropdownOpen(false);
                                 }}
-                                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #e0e0e0', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: 'var(--text)' }}
+                                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)' }}
                               >
                                 Reset
                               </button>
@@ -5120,7 +5414,7 @@ function AdminPortal({
                                   setFilterDropdownOpen(false);
                                   showToast('Filters applied!');
                                 }}
-                                style={{ padding: '6px 12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                                style={{ padding: '6px 12px', background: '#6B38FB', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
                               >
                                 Apply Filters
                               </button>
@@ -5130,64 +5424,63 @@ function AdminPortal({
                       )}
                     </div>
                   </div>
-                  <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => exportExcel('admin')}>
+                  <button style={{ padding: '8px 24px', border: 'none', background: '#6B38FB', color: '#fff', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', boxShadow: 'var(--shadow-sm)' }} onClick={() => exportExcel('admin')}>
                     Export
                   </button>
                 </div>
 
-                <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
+                <div className="tbl-card" style={{ boxShadow: 'var(--shadow)', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '12px', overflow: 'hidden' }}>
                   <div className="tbl-wrap">
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
-                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
+                      <thead>
+                        <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Case ID</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Visa ID</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Dispute Type</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Merchant Name</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>MID</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>ARN</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Dispute Status</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Remaining Days</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>TID</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {adminPaging.paginated.length > 0 ? (
                           adminPaging.paginated.map(cb => {
-                            const isExpanded = expandedRowIds[cb.id];
                             return (
                               <React.Fragment key={cb.id}>
-                                <tr style={{ borderBottom: '1px solid #f0f0f0', fontSize: '12px', background: 'transparent' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
+                                <tr style={{ borderBottom: '1px solid var(--border)', fontSize: '13px', background: 'transparent', color: 'var(--text)' }}>
+                                  <td style={{ padding: '14px 16px', fontWeight: '600', color: 'var(--text)' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '14px 16px', fontWeight: '500', color: 'var(--text)' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)' }}>{getDisputeType(cb)}</td>
+                                  <td style={{ padding: '14px 16px', fontWeight: '500', color: 'var(--text)' }}>{cb.userName}</td>
+                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '14px 16px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '14px 16px', fontWeight: '500' }}>
                                     {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
                                   </td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
                                     {adminTab === 'closed' || isClosedDispute(cb) ? (
                                       <button 
                                         className="btn btn-sm btn-outline" 
-                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '4px', padding: 0 }} 
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '36px', height: '36px', borderRadius: '8px', padding: 0 }} 
                                         onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}
                                         title="View Details"
                                       >
                                         👁️
                                       </button>
                                     ) : adminTab === 'verification-pending' ? (
-                                      <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}>
+                                      <button className="btn btn-sm btn-primary" style={{ background: '#6B38FB', border: 'none', borderRadius: '8px', padding: '6px 12px', fontWeight: '600' }} onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}>
                                         Take Action
                                       </button>
                                     ) : (
-                                      <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
+                                      <button className="btn btn-sm btn-primary" style={{ background: '#6B38FB', border: 'none', borderRadius: '8px', padding: '6px 12px', fontWeight: '600' }} onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
                                         Take Action
                                       </button>
                                     )}
@@ -5198,30 +5491,31 @@ function AdminPortal({
                           })
                         ) : (
                           <tr>
-                            <td colSpan="11" style={{ textAlign: 'center', padding: '24px' }}>No records match the filter.</td>
+                            <td colSpan="11" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>No records match the filter.</td>
                           </tr>
                         )}
                       </tbody>
                     </table>
                   </div>
 
-                  <div className="tbl-footer">
-                    <div className="rpp">
+                  <div className="tbl-footer" style={{ borderTop: '1px solid var(--border)', background: 'var(--card)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="rpp" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '13px' }}>
                       Rows per page: 
-                      <select value={aVcLimit} onChange={(e) => { setAVcPage(1); setAVcLimit(parseInt(e.target.value)); }}>
+                      <select value={aVcLimit} onChange={(e) => { setAVcPage(1); setAVcLimit(parseInt(e.target.value)); }} style={{ padding: '4px 8px', border: '1px solid var(--border-input)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)' }}>
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
                       </select>
                     </div>
-                    <div className="pagination">
-                      <span style={{ marginRight: '8px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                    <div className="pagination" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ marginRight: '12px', color: 'var(--text-muted)', fontSize: '13px' }}>
                         {adminPaging.startRecord}–{adminPaging.endRecord} of {adminPaging.total} records
                       </span>
                       <button 
                         className="pg-btn" 
                         disabled={aVcPage === 1}
                         onClick={() => setAVcPage(aVcPage - 1)}
+                        style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aVcPage === 1 ? 'not-allowed' : 'pointer', opacity: aVcPage === 1 ? 0.5 : 1, color: 'var(--text)' }}
                       >
                         ‹
                       </button>
@@ -5230,6 +5524,7 @@ function AdminPortal({
                           key={p} 
                           className={`pg-btn ${aVcPage === p ? 'active' : ''}`}
                           onClick={() => setAVcPage(p)}
+                          style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: aVcPage === p ? '#6B38FB' : 'var(--card)', color: aVcPage === p ? '#FFFFFF' : 'var(--text)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontWeight: '600' }}
                         >
                           {p}
                         </button>
@@ -5238,6 +5533,7 @@ function AdminPortal({
                         className="pg-btn" 
                         disabled={aVcPage === adminPaging.totalPages}
                         onClick={() => setAVcPage(aVcPage + 1)}
+                        style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aVcPage === adminPaging.totalPages ? 'not-allowed' : 'pointer', opacity: aVcPage === adminPaging.totalPages ? 0.5 : 1, color: 'var(--text)' }}
                       >
                         ›
                       </button>
@@ -6209,30 +6505,35 @@ function PartnerPortal({
                   </div>
                 </div>
 
-                <div className="tbl-card">
-                  <div className="tbl-toolbar">
-                    <span style={{ fontSize: '14px', fontWeight: '700' }}>Recent Dispute Activity</span>
+                <div className="tbl-card" style={{ boxShadow: 'var(--shadow)', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '12px', overflow: 'hidden', marginTop: '24px' }}>
+                  <div className="tbl-toolbar" style={{ borderBottom: '1px solid var(--border)', padding: '16px 20px', display: 'flex', alignItems: 'center', background: 'var(--card)' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text)' }}>Recent Dispute Activity</span>
                     <div className="tbl-space"></div>
-                    <button className="btn btn-outline btn-sm" onClick={() => setActivePage('p-disputes')}>View All →</button>
+                    <button className="btn btn-outline btn-sm" style={{ border: '1px solid var(--border-input)', color: '#50BDC9', borderRadius: '8px', padding: '6px 12px', fontWeight: '600', background: 'transparent' }} onClick={() => setActivePage('p-disputes')}>View All →</button>
                   </div>
                   <div className="tbl-wrap">
-                    <table>
-                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
-                        <tr>
-                          <th>Case ID</th><th>RRN</th><th>Merchant</th>
-                          <th>Status</th><th>Sub Status</th><th>Amount</th><th>Date</th>
+                    <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                      <thead>
+                        <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Case ID</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>RRN</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Merchant</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Status</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Sub Status</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Amount</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Date</th>
                         </tr>
                       </thead>
                       <tbody>
                         {allDisputes.slice(0, 6).map(cb => (
-                          <tr key={cb.id}>
-                            <td className="mono" style={{ fontSize: '11px' }}>{cb.caseId}</td>
-                            <td className="mono">{cb.rrn}</td>
-                            <td>{cb.userName}</td>
-                            <td>{renderStatusBadge(cb.mStatus)}</td>
-                            <td>{renderSubBadge(cb.mSubStatus)}</td>
-                            <td><strong>{formatINR(cb.txnAmt)}</strong></td>
-                            <td>{formatDateDisp(cb.createdDate)}</td>
+                          <tr key={cb.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                            <td className="mono" style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text)', fontFamily: 'monospace' }}>{(cb.caseId || cb.id || '').substring(0, 8).toUpperCase()}</td>
+                            <td className="mono" style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.rrn}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text)', fontWeight: '500' }}>{cb.userName}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '13px' }}>{renderStatusBadge(cb.mStatus)}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '13px' }}>{renderSubBadge(cb.mSubStatus)}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text)', fontWeight: '600' }}>{formatINR(cb.txnAmt)}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-muted)' }}>{formatDateDisp(cb.createdDate)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -6243,89 +6544,131 @@ function PartnerPortal({
             </div>
           )}
 
-          {/* Partner Dispute Reports — matching image design */}
           {activePage === 'p-disputes' && (
             <div className="page active">
               <div className="page-inner">
-                <div className="page-hdr">
-                  <div><h1>Dispute Reports</h1><p>Search and track all disputes across all merchants</p></div>
+                <div className="page-hdr" style={{ marginBottom: '16px' }}>
+                  <div><h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text)', margin: '0 0 4px 0' }}>Dispute Reports</h1><p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>Search and track all disputes across all merchants</p></div>
                 </div>
 
-                <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
-                  <div 
-                    style={{ padding: '12px 0', color: partnerTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setPartnerTab('merchant-pending'); }}
-                  >Action Required ({getPartnerActionRequiredCount()})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: partnerTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setPartnerTab('verification-pending'); }}
-                  >Under Review ({getPartnerUnderReviewCount()})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: partnerTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setPartnerTab('closed'); }}
-                  >Closed ({getPartnerClosedCount()})</div>
-                  <div 
-                    style={{ padding: '12px 0', color: partnerTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setPartnerTab('management'); }}
-                  >All Disputes ({allDisputes.length})</div>
+                {/* Horizontal raised card style tabs */}
+                <div style={{ 
+                  display: 'flex', 
+                  borderBottom: '1px solid var(--border)', 
+                  marginBottom: '24px', 
+                  gap: '4px',
+                  position: 'relative'
+                }}>
+                  {[
+                    { key: 'merchant-pending', label: 'Action Required', count: getPartnerActionRequiredCount() },
+                    { key: 'verification-pending', label: 'Under Review', count: getPartnerUnderReviewCount() },
+                    { key: 'closed', label: 'Closed', count: getPartnerClosedCount() },
+                    { key: 'management', label: 'All Disputes', count: allDisputes.length }
+                  ].map(tab => {
+                    const isActive = partnerTab === tab.key;
+                    return (
+                      <div
+                        key={tab.key}
+                        onClick={() => { setPartnerTab(tab.key); }}
+                        style={{
+                          padding: '12px 20px',
+                          color: isActive ? '#50BDC9' : 'rgba(80, 189, 201, 0.65)',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          background: isActive ? 'var(--card)' : 'transparent',
+                          borderTop: isActive ? '3px solid #50BDC9' : '3px solid transparent',
+                          borderLeft: isActive ? '1px solid var(--border)' : '1px solid transparent',
+                          borderRight: isActive ? '1px solid var(--border)' : '1px solid transparent',
+                          borderBottom: isActive ? '1px solid var(--card)' : '1px solid transparent',
+                          borderRadius: '8px 8px 0 0',
+                          cursor: 'pointer',
+                          marginBottom: '-1px',
+                          zIndex: isActive ? 2 : 1,
+                          transition: 'all 0.15s ease-in-out',
+                          boxShadow: isActive ? '0 -2px 4px rgba(0, 0, 0, 0.02)' : 'none'
+                        }}
+                      >
+                        {tab.label} ({tab.count})
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Summary Cards */}
-                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-                  <div 
-                    className={`premium-summary-card ${filterStatus === 'due_today' ? 'active-red' : ''}`}
-                    onClick={() => {
-                      setFilterStatus(filterStatus === 'due_today' ? '' : 'due_today');
-                      setPartnerTab('management');
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}
-                  >
-                    <div className="card-badge">🚨</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{allDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{allDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#dc2626' }}>{filterStatus === 'due_today' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
-                  <div 
-                    className={`premium-summary-card ${filterStatus === 'due_tomorrow' ? 'active-yellow' : ''}`}
-                    onClick={() => {
-                      setFilterStatus(filterStatus === 'due_tomorrow' ? '' : 'due_tomorrow');
-                      setPartnerTab('management');
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}
-                  >
-                    <div className="card-badge">⚠️</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{allDisputes.filter(cb => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
-                    }).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706' }}>₹{allDisputes.filter(cb => {
-                      const tomorrow = new Date();
-                      tomorrow.setDate(tomorrow.getDate() + 1);
-                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
-                    }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#d97706' }}>{filterStatus === 'due_tomorrow' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
-                  <div 
-                    className={`premium-summary-card ${filterStatus === 'insufficient_evidence' ? 'active-blue' : ''}`}
-                    onClick={() => {
-                      setFilterStatus(filterStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence');
-                      setPartnerTab('management');
-                    }}
-                    style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)' }}
-                  >
-                    <div className="card-badge">ℹ️</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
-                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{allDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{allDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
-                    <span className="card-hint" style={{ color: '#1d4ed8' }}>{filterStatus === 'insufficient_evidence' ? 'Active filter ✓' : 'Click to filter →'}</span>
-                  </div>
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
+                  {[
+                    {
+                      id: 'due_today',
+                      label: '🚨 Due Today Urgent',
+                      count: allDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length,
+                      amount: allDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0),
+                      activeClass: 'active-red'
+                    },
+                    {
+                      id: 'due_tomorrow',
+                      label: '⚠️ Due Tomorrow Critical',
+                      count: allDisputes.filter(cb => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                      }).length,
+                      amount: allDisputes.filter(cb => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                      }).reduce((sum, cb) => sum + cb.txnAmt, 0),
+                      activeClass: 'active-yellow'
+                    },
+                    {
+                      id: 'insufficient_evidence',
+                      label: 'ℹ️ Insufficient Evidence',
+                      count: allDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length,
+                      amount: allDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0),
+                      activeClass: 'active-blue'
+                    }
+                  ].map(card => {
+                    const isActive = filterStatus === card.id;
+                    return (
+                      <div
+                        key={card.id}
+                        className={`premium-summary-card ${isActive ? card.activeClass : ''}`}
+                        onClick={() => {
+                          setFilterStatus(filterStatus === card.id ? '' : card.id);
+                          setPartnerTab('management');
+                        }}
+                        style={{
+                          background: '#FFFFFF',
+                          border: '1px solid var(--border)',
+                          borderTop: '3px solid #f97316',
+                          borderRadius: '12px',
+                          padding: '24px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          boxShadow: isActive ? '0 0 0 2px rgba(249, 115, 22, 0.2), var(--shadow-md)' : 'var(--shadow)',
+                          cursor: 'pointer',
+                          flex: 1,
+                          transition: 'all 0.2s ease-in-out',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px' }}>{card.label}</div>
+                          <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text)' }}>{card.count}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-light)', marginBottom: '8px' }}>Total Amount</div>
+                          <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>₹{card.amount.toLocaleString('en-IN')}</div>
+                          <span className="card-hint-text" style={{ fontSize: '11px', fontWeight: '600', color: '#f97316', display: 'block', marginTop: '6px' }}>
+                            {isActive ? 'Active filter ✓' : 'Click to filter →'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* New disputes message */}
-                <div style={{ marginBottom: '20px', fontSize: '14px', fontWeight: '600', color: '#4a148c' }}>
+                <div style={{ marginBottom: '20px', fontSize: '14px', fontWeight: '600', color: '#50BDC9' }}>
                   {allDisputes.filter(cb => cb.createdDate === new Date().toISOString().split('T')[0]).length} new Disputes added today.
                 </div>
 
@@ -6342,20 +6685,20 @@ function PartnerPortal({
                           justifyContent: 'space-between',
                           gap: '8px',
                           padding: '8px 16px',
-                          border: '1.5px solid var(--border-input, #e0e0e0)',
-                          borderRadius: '8px',
-                          background: 'var(--card, #fff)',
-                          color: 'var(--text, #757575)',
+                          border: '1px solid var(--border-input, #CBD5E1)',
+                          borderRadius: '12px',
+                          background: '#FFFFFF',
+                          color: 'var(--text)',
                           fontSize: '13px',
                           fontWeight: '500',
                           cursor: 'pointer',
                           height: '42px',
                           minWidth: '160px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          boxShadow: 'var(--shadow-sm)',
                         }}
                       >
                         <span>📅 {getPresetLabel(dateRangePreset)}</span>
-                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                        <span style={{ fontSize: '10px', color: '#50BDC9' }}>▼</span>
                       </button>
 
                       {dateDropdownOpen && (
@@ -6366,9 +6709,9 @@ function PartnerPortal({
                             top: 'calc(100% + 6px)',
                             left: '0',
                             background: 'var(--card, #fff)',
-                            border: '1px solid var(--border, #e0e0e0)',
-                            borderRadius: '8px',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                            border: '1px solid var(--border, #E2E8F0)',
+                            borderRadius: '12px',
+                            boxShadow: 'var(--shadow-lg)',
                             zIndex: 1000,
                             minWidth: '220px',
                             padding: '8px 0',
@@ -6393,39 +6736,39 @@ function PartnerPortal({
                                   padding: '10px 16px',
                                   cursor: 'pointer',
                                   fontSize: '13px',
-                                  color: dateRangePreset === preset ? '#4a148c' : 'var(--text, #333)',
+                                  color: dateRangePreset === preset ? '#50BDC9' : 'var(--text)',
                                   fontWeight: dateRangePreset === preset ? '600' : '500',
                                   textAlign: 'left',
                                   background: 'transparent',
                                   border: 'none',
                                   transition: 'background 0.2s',
                                 }}
-                                onMouseEnter={(e) => e.target.style.background = 'var(--bg-body, #f5f5f5)'}
+                                onMouseEnter={(e) => e.target.style.background = 'var(--bg)'}
                                 onMouseLeave={(e) => e.target.style.background = 'transparent'}
                               >
                                 {getPresetLabel(preset)}
                               </button>
                             ))}
-                            <div style={{ borderTop: '1px solid var(--border, #eee)', margin: '4px 0' }} />
+                            <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
                             <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#78909c' }}>CUSTOM RANGE</span>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-light)' }}>CUSTOM RANGE</span>
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <div style={{ flex: 1 }}>
-                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>From</span>
+                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>From</span>
                                   <input 
                                     type="date" 
                                     value={tempFrom} 
                                     onChange={(e) => setTempFrom(e.target.value)} 
-                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid var(--border-input)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)' }} 
                                   />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>To</span>
+                                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>To</span>
                                   <input 
                                     type="date" 
                                     value={tempTo} 
                                     onChange={(e) => setTempTo(e.target.value)} 
-                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid var(--border-input)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)' }} 
                                   />
                                 </div>
                               </div>
@@ -6436,7 +6779,7 @@ function PartnerPortal({
                                   setDateRangePreset('custom');
                                   setDateDropdownOpen(false);
                                 }}
-                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#4a148c', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                               >
                                 Apply Custom
                               </button>
@@ -6456,20 +6799,20 @@ function PartnerPortal({
                           justifyContent: 'space-between',
                           gap: '8px',
                           padding: '8px 16px',
-                          border: '1.5px solid var(--border-input, #e0e0e0)',
-                          borderRadius: '8px',
-                          background: 'var(--card, #fff)',
-                          color: 'var(--text, #757575)',
+                          border: '1px solid var(--border-input, #CBD5E1)',
+                          borderRadius: '12px',
+                          background: '#FFFFFF',
+                          color: 'var(--text)',
                           fontSize: '13px',
                           fontWeight: '500',
                           cursor: 'pointer',
                           height: '42px',
                           minWidth: '160px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                          boxShadow: 'var(--shadow-sm)',
                         }}
                       >
                         <span>🔍 Search & Filter</span>
-                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                        <span style={{ fontSize: '10px', color: '#50BDC9' }}>▼</span>
                       </button>
 
                       {filterDropdownOpen && (
@@ -6480,9 +6823,9 @@ function PartnerPortal({
                             top: 'calc(100% + 6px)',
                             left: '0',
                             background: 'var(--card, #fff)',
-                            border: '1px solid var(--border, #e0e0e0)',
+                            border: '1px solid var(--border, #E2E8F0)',
                             borderRadius: '12px',
-                            boxShadow: '0 15px 35px rgba(0,0,0,0.15)',
+                            boxShadow: 'var(--shadow-lg)',
                             zIndex: 1000,
                             width: '380px',
                             padding: '20px',
@@ -6492,11 +6835,11 @@ function PartnerPortal({
                           }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Type</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Dispute Type</label>
                                 <select 
                                   value={filterDisputeType}
                                   onChange={(e) => setFilterDisputeType(e.target.value)}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Chargeback">Chargeback</option>
@@ -6506,11 +6849,11 @@ function PartnerPortal({
                                 </select>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Scheme</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Scheme</label>
                                 <select 
                                   value={filterScheme}
                                   onChange={(e) => setFilterScheme(e.target.value)}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="visa">Visa</option>
@@ -6521,11 +6864,11 @@ function PartnerPortal({
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Status</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Dispute Status</label>
                                 <select 
                                   value={filterStatus}
                                   onChange={(e) => setFilterStatus(e.target.value)}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                 >
                                   <option value="">Select All</option>
                                   <option value="Dispute Won Partially">Dispute Won Partially</option>
@@ -6538,24 +6881,24 @@ function PartnerPortal({
                                 </select>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Merchant</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Merchant</label>
                                 <input 
                                   type="text" 
                                   value={filterMerchant} 
                                   onChange={(e) => setFilterMerchant(e.target.value)}
                                   placeholder="Merchant ID/Name"
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }} 
                                 />
                               </div>
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search By</label>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Search By</label>
                                 <select 
                                   value={filterSearchBy}
                                   onChange={(e) => setFilterSearchBy(e.target.value)}
-                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                 >
                                   <option value="">Select Field...</option>
                                   <option value="Txn ID">Transaction ID (Txn ID)</option>
@@ -6568,7 +6911,7 @@ function PartnerPortal({
                               </div>
                               {filterSearchBy && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}>
-                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search Value</label>
+                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-muted)', textAlign: 'left' }}>Search Value</label>
                                   <input 
                                     type="text" 
                                     value={filterSearchText}
@@ -6576,10 +6919,10 @@ function PartnerPortal({
                                     onFocus={() => setPartnerSearchFocused(true)}
                                     onBlur={() => setTimeout(() => setPartnerSearchFocused(false), 200)}
                                     placeholder={`Enter ${filterSearchBy}`}
-                                    style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid var(--border-input)', borderRadius: '8px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
                                   />
                                   {partnerSearchFocused && filterSearchText && (
-                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-md)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
                                       {allDisputes
                                         .map(cb => {
                                           if (filterSearchBy === 'Txn ID') return cb.txnId;
@@ -6598,8 +6941,8 @@ function PartnerPortal({
                                             onMouseDown={() => {
                                               setFilterSearchText(val);
                                             }}
-                                            style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#333', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
-                                            onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                            style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: 'var(--text)', borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}
+                                            onMouseEnter={(e) => e.target.style.background = 'var(--bg)'}
                                             onMouseLeave={(e) => e.target.style.background = 'transparent'}
                                           >
                                             🔍 {val}
@@ -6626,10 +6969,10 @@ function PartnerPortal({
                                   padding: '8px 16px',
                                   fontSize: '12px',
                                   background: 'transparent',
-                                  border: '1px solid #ccc',
-                                  borderRadius: '4px',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: '8px',
                                   cursor: 'pointer',
-                                  color: 'var(--text, #333)',
+                                  color: 'var(--text-muted)',
                                 }}
                               >
                                 Reset
@@ -6642,10 +6985,10 @@ function PartnerPortal({
                                 style={{
                                   padding: '8px 16px',
                                   fontSize: '12px',
-                                  background: '#4a148c',
+                                  background: '#50BDC9',
                                   border: 'none',
                                   color: '#fff',
-                                  borderRadius: '4px',
+                                  borderRadius: '8px',
                                   cursor: 'pointer',
                                 }}
                               >
@@ -6657,66 +7000,70 @@ function PartnerPortal({
                       )}
                     </div>
                   </div>
-                  <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Export functionality coming soon')}>
+                  <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '12px', cursor: 'pointer', fontWeight: '600', boxShadow: 'var(--shadow-sm)' }} onClick={() => showToast('Export functionality coming soon')}>
                     Export
                   </button>
                 </div>
 
-                    <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
-                    <div className="tbl-wrap">
-                    <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
-                        <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredDisputes.map(cb => (
-                          <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
-                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
-                                  </td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    {partnerTab === 'closed' || isClosedDispute(cb) ? (
-                                      <button 
-                                        className="btn btn-sm btn-outline" 
-                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '4px', padding: 0 }} 
-                                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
-                                        title="View Details"
-                                      >
-                                        👁️
-                                      </button>
-                                    ) : (
-                                      <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                        Take Action
-                                      </button>
-                                    )}
-                                  </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                    <div className="tbl-card" style={{ boxShadow: 'var(--shadow)', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '12px', overflow: 'hidden' }}>
+                      <div className="tbl-wrap">
+                        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                          <thead>
+                            <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Case ID</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Visa ID</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Dispute Type</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Merchant Name</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>MID</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>ARN</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Dispute Status</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>TXN Ref. Number</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Remaining Days</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>TID</th>
+                              <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredDisputes.map(cb => (
+                              <tr key={cb.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                                <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '13px', fontFamily: 'monospace' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px' }}>{getDisputeType(cb)}</td>
+                                <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '500', fontSize: '13px' }}>{cb.userName}</td>
+                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
+                                <td style={{ padding: '14px 16px', fontSize: '13px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.txnId}</td>
+                                <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '600', fontSize: '13px' }}>
+                                  {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                </td>
+                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                                  {partnerTab === 'closed' || isClosedDispute(cb) ? (
+                                    <button 
+                                      className="btn btn-sm btn-outline" 
+                                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', color: '#50BDC9', borderRadius: '8px', width: '32px', height: '32px', padding: 0, background: 'transparent', cursor: 'pointer' }} 
+                                      onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                                      title="View Details"
+                                    >
+                                      👁️
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      className="btn btn-sm btn-primary" 
+                                      style={{ padding: '6px 12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}
+                                      onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                                    >
+                                      Take Action
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
               </div>
             </div>
           )}
@@ -6728,41 +7075,55 @@ function PartnerPortal({
                 <div className="page-hdr">
                   <div><h1>🌐 Visa Escalations</h1><p>Disputes forwarded to Visa by acquirer on behalf of partner</p></div>
                 </div>
-                <div className="tbl-card">
-                  <div className="tbl-toolbar">
-                    <span style={{ fontSize: '14px', fontWeight: '700' }}>Pending Visa Escalations</span>
+                <div className="tbl-card" style={{ boxShadow: 'var(--shadow)', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '12px', overflow: 'hidden' }}>
+                  <div className="tbl-toolbar" style={{ borderBottom: '1px solid var(--border)', padding: '16px 20px', display: 'flex', alignItems: 'center', background: 'var(--card)' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text)' }}>Pending Visa Escalations</span>
                     <div className="tbl-space"></div>
-                    <span style={{ color: 'var(--brand)', fontWeight: '700', fontSize: '13px' }}>{visaDisputes.length} pending</span>
+                    <span style={{ color: '#50BDC9', fontWeight: '700', fontSize: '13px' }}>{visaDisputes.length} pending</span>
                   </div>
                   <div className="tbl-wrap">
-                    <table>
-                      <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
-                        <tr>
-                          <th>Case ID</th><th>RRN</th><th>Merchant</th>
-                          <th>Status</th><th>Amount</th><th>Date</th><th>Visa Status</th><th>Timeline</th>
+                    <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                      <thead>
+                        <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Case ID</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>RRN</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Merchant</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Status</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Amount</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Date</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Visa Status</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'center' }}>Timeline</th>
                         </tr>
                       </thead>
                       <tbody>
                         {visaDisputes.length > 0 ? visaDisputes.map(cb => (
-                          <tr key={cb.id}>
-                            <td className="mono" style={{ fontSize: '11px' }}>{cb.caseId}</td>
-                            <td className="mono">{cb.rrn}</td>
-                            <td>{cb.userName}</td>
-                            <td>{renderSubBadge(cb.mSubStatus)}</td>
-                            <td><strong>{formatINR(cb.txnAmt)}</strong></td>
-                            <td>{formatDateDisp(cb.createdDate)}</td>
-                            <td><span className="badge badge-visa">🌐 Pending Visa Review</span></td>
-                            <td>
-                              <button className="btn btn-sm btn-secondary" onClick={() => showToast(`Timeline: ${cb.timeline?.length || 0} entries for ${cb.rrn}`, 'warning')}>
+                          <tr key={cb.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                            <td className="mono" style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{cb.caseId}</td>
+                            <td className="mono" style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.rrn}</td>
+                            <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '500', fontSize: '13px' }}>{cb.userName}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '13px' }}>{renderSubBadge(cb.mSubStatus)}</td>
+                            <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '600', fontSize: '13px' }}>{formatINR(cb.txnAmt)}</td>
+                            <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px' }}>{formatDateDisp(cb.createdDate)}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '13px' }}>
+                              <span className="badge badge-visa" style={{ background: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', padding: '4px 8px', borderRadius: '6px', fontWeight: '600', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                🌐 Pending Visa Review
+                              </span>
+                            </td>
+                            <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                              <button 
+                                className="btn btn-sm btn-outline" 
+                                style={{ border: '1px solid var(--border-input)', color: '#50BDC9', borderRadius: '8px', padding: '6px 12px', fontWeight: '600', background: 'transparent', cursor: 'pointer', fontSize: '12px' }} 
+                                onClick={() => showToast(`Timeline: ${cb.timeline?.length || 0} entries for ${cb.rrn}`, 'warning')}
+                              >
                                 View Audit
                               </button>
                             </td>
                           </tr>
                         )) : (
                           <tr>
-                            <td colSpan="8" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                            <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
                               <div style={{ fontSize: '36px', marginBottom: '8px' }}>🌐</div>
-                              <div>No disputes currently pending Visa review</div>
+                              <div style={{ fontSize: '14px', fontWeight: '500' }}>No disputes currently pending Visa review</div>
                             </td>
                           </tr>
                         )}
@@ -6786,32 +7147,63 @@ function PartnerPortal({
           {activePage === 'p-merchants' && (
             <div className="page active">
               <div className="page-inner">
-                <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '20px' }}>Merchant Details</h3>
-                <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
-                  <input type="text" className="sp-input" placeholder="Search by Merchant Name or MID..." value={merchantSearch} onChange={(e) => setMerchantSearch(e.target.value)} style={{ maxWidth: '300px' }} />
+                <div style={{ marginBottom: '20px' }}>
+                  <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text)', margin: '0 0 4px 0' }}>Merchant Details</h1>
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>View and manage merchant configurations and credentials</p>
                 </div>
-                <div className="table-responsive">
-                  <table className="data-table">
-                    <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}><tr><th>Merchant Name</th><th>MID</th><th>TID</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody>
-                      {users && users.filter(u => u.role === 'merchant' && (!merchantSearch || u.name.toLowerCase().includes(merchantSearch.toLowerCase()) || u.id.toLowerCase().includes(merchantSearch.toLowerCase()))).map(m => (
-                        <tr key={m.id}>
-                          <td style={{ fontWeight: '600' }}>{m.name}</td>
-                          <td className="mono" style={{ fontSize: '11px' }}>{m.id}</td>
-                          <td className="mono" style={{ fontSize: '11px' }}>{m.tid || '10515104'}</td>
-                          <td>
-                            <span className="badge badge-won">Active</span>
-                          </td>
-                          <td>
-                            <button className="btn btn-sm btn-outline" onClick={() => { setTargetUserId(m.id); setActiveModal('merchantDetails'); }}>View</button>
-                          </td>
+                
+                <div style={{ marginBottom: '20px', display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Search by Merchant Name or MID..." 
+                    value={merchantSearch} 
+                    onChange={(e) => setMerchantSearch(e.target.value)} 
+                    style={{ width: '100%', maxWidth: '320px', padding: '10px 16px', border: '1px solid var(--border-input)', borderRadius: '12px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)', boxShadow: 'var(--shadow-sm)' }} 
+                  />
+                </div>
+
+                <div className="tbl-card" style={{ boxShadow: 'var(--shadow)', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '12px', overflow: 'hidden' }}>
+                  <div className="tbl-wrap">
+                    <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                      <thead>
+                        <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Merchant Name</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>MID</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>TID</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Status</th>
+                          <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
                         </tr>
-                      ))}
-                      {(!users || users.filter(u => u.role === 'merchant' && (!merchantSearch || u.name.toLowerCase().includes(merchantSearch.toLowerCase()) || u.id.toLowerCase().includes(merchantSearch.toLowerCase()))).length === 0) && (
-                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>No merchants found</td></tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {users && users.filter(u => u.role === 'merchant' && (!merchantSearch || u.name.toLowerCase().includes(merchantSearch.toLowerCase()) || u.id.toLowerCase().includes(merchantSearch.toLowerCase()))).map(m => (
+                          <tr key={m.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
+                            <td style={{ padding: '14px 16px', fontWeight: '600', color: 'var(--text)', fontSize: '13px' }}>{m.name}</td>
+                            <td className="mono" style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{m.id}</td>
+                            <td className="mono" style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{m.tid || '10515104'}</td>
+                            <td style={{ padding: '14px 16px', fontSize: '13px' }}>
+                              <span className="badge badge-won" style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '4px 8px', borderRadius: '6px', fontWeight: '600', fontSize: '11px' }}>Active</span>
+                            </td>
+                            <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                              <button 
+                                className="btn btn-sm btn-outline" 
+                                style={{ border: '1px solid var(--border-input)', color: '#50BDC9', borderRadius: '8px', padding: '6px 12px', fontWeight: '600', background: 'transparent', cursor: 'pointer', fontSize: '12px' }} 
+                                onClick={() => { setTargetUserId(m.id); setActiveModal('merchantDetails'); }}
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {(!users || users.filter(u => u.role === 'merchant' && (!merchantSearch || u.name.toLowerCase().includes(merchantSearch.toLowerCase()) || u.id.toLowerCase().includes(merchantSearch.toLowerCase()))).length === 0) && (
+                          <tr>
+                            <td colSpan="5" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                              No merchants found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
