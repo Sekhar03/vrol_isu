@@ -604,6 +604,7 @@ function MerchantPortal({
 
   // Modals state
   const [activeModal, setActiveModal] = useState(null); // null | 'action1' | 'action2' | 'contest' | 'successAccept' | 'successEvidence' | 'successAcceptPartially'
+  const [showFaq, setShowFaq] = useState(false);
   const [targetDisputeId, setTargetDisputeId] = useState(null);
   
   // Accepting remarks
@@ -1939,59 +1940,100 @@ function MerchantPortal({
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-verification' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-verification' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-verification')}
-                  >Under Review</div>
+                  >Under Review ({pendingVerificationDisputes.length})</div>
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('closed')}
-                  >Closed</div>
+                  >Closed ({closedDisputes.length})</div>
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'dispute-mgmt' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'dispute-mgmt' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('dispute-mgmt')}
-                  >All Disputes</div>
+                  >All Disputes ({merchantDisputes.length})</div>
                 </div>
                 </div>
+
+                {/* Summary Cards */}
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{merchantDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{merchantDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{merchantDisputes.filter(cb => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                    }).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706' }}>₹{merchantDisputes.filter(cb => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                    }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                </div>
+
+                {/* New disputes message */}
+                <div style={{ marginBottom: '20px', fontSize: '14px', fontWeight: '600', color: '#4a148c' }}>
+                  {merchantDisputes.filter(cb => cb.createdDate === new Date().toISOString().split('T')[0]).length} new Disputes added today.
+                </div>
+
+                {/* Toolbar with dropdowns and export */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
+                      <option>Last 6 Months</option>
+                      <option>Last 30 Days</option>
+                      <option>Last 7 Days</option>
+                      <option>Today</option>
+                    </select>
+                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
+                      <option>Search & Filter</option>
+                      <option>By Status</option>
+                      <option>By Type</option>
+                      <option>By Date</option>
+                    </select>
+                  </div>
+                  <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => exportToCSV('raised')}>
+                    Export
+                  </button>
+                </div>
+
                 <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
 
                   {/* Tab: All Disputes */}
                   {reportTab === 'dispute-mgmt' && (
                     <div>
-                      <div className="tbl-toolbar">
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{reportData.filtered.length} records</span>
-                        <div className="tbl-space"></div>
-                        <button className="btn btn-outline btn-sm" onClick={() => exportToCSV('raised')}>⬇ Export CSV</button>
-                      </div>
                       <div className="tbl-wrap">
                         <table>
                           <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Created On</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Order ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Transaction ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Amt.</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Respond By</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Action</th>
                         </tr>
                           </thead>
                           <tbody>
                             {reportData.filtered.slice(0, 10).map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.createdDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.caseId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
-                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
-                                  </td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>₹{cb.txnAmt?.toLocaleString('en-IN') || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.respondByDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     {isClosedDispute(cb) ? (
                                       <button 
@@ -2828,6 +2870,68 @@ function MerchantPortal({
           </div>
         </div>
       )}
+
+      {/* Help Button */}
+      <button 
+        onClick={() => setShowFaq(true)}
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
+          border: 'none',
+          color: '#fff',
+          fontSize: '24px',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(124, 58, 237, 0.4)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+      >
+        ?
+      </button>
+
+      {/* FAQ Modal */}
+      {showFaq && (
+        <div className="overlay open" onClick={() => setShowFaq(false)}>
+          <div className="modal" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#4a148c' }}>Frequently Asked Questions</h2>
+              <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#9e9e9e' }}>&times;</button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What is the Dispute Management Portal?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes efficiently.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I filter disputes?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What do the summary cards show?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I take action on a dispute?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Take Action" button in the Action column to view details, upload evidence, or respond to the dispute.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I export dispute data?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2858,6 +2962,7 @@ function AdminPortal({
 
   // Modal active
   const [activeModal, setActiveModal] = useState(null); 
+  const [showFaq, setShowFaq] = useState(false);
   const [targetWebhook, setTargetWebhook] = useState(null);
   const [targetDisputeId, setTargetDisputeId] = useState(null);
   const [visaAcceptedAmount, setVisaAcceptedAmount] = useState('');
@@ -2918,6 +3023,12 @@ function AdminPortal({
 
   const getAdminActionRequiredCount = () => {
     return chargebacks.filter(cb => !isClosedDispute(cb) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending).length;
+  };
+  const getAdminUnderReviewCount = () => {
+    return chargebacks.filter(cb => !isClosedDispute(cb) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending).length;
+  };
+  const getAdminClosedCount = () => {
+    return chargebacks.filter(isClosedDispute).length;
   };
 
   const handleAdminEscalate = async (id) => {
@@ -3961,7 +4072,6 @@ function AdminPortal({
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Total Transactions</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--text)' }}>{stats.totalCount}</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '500' }}>Overall</span>
                     </div>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--brand)' }}>{formatINR(stats.totalAmt)}</div>
                   </div>
@@ -3970,7 +4080,6 @@ function AdminPortal({
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Received</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--text)' }}>{stats.totalCount}</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '500' }}>Claims log</span>
                     </div>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--brand)' }}>{formatINR(stats.totalAmt)}</div>
                   </div>
@@ -3979,7 +4088,6 @@ function AdminPortal({
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Open</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--yellow)' }}>{stats.openCount}</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '500' }}>In SLA flight</span>
                     </div>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--yellow)' }}>{formatINR(stats.openAmt)}</div>
                   </div>
@@ -3988,7 +4096,7 @@ function AdminPortal({
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Lost</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--red)' }}>{stats.lostCount}</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '500' }}>Auto-TAT/Conceded</span>
+                      {stats.totalCount > 0 && <span style={{ fontSize: '14px', color: 'var(--red)', marginBottom: '4px', fontWeight: '600' }}>({Math.round((stats.lostCount / stats.totalCount) * 100)}%)</span>}
                     </div>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--red)' }}>{formatINR(stats.lostAmt)}</div>
                   </div>
@@ -3997,7 +4105,7 @@ function AdminPortal({
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>Dispute Won</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: 'var(--green)' }}>{stats.wonCount}</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '500' }}>Re-presentments</span>
+                      {stats.totalCount > 0 && <span style={{ fontSize: '14px', color: 'var(--green)', marginBottom: '4px', fontWeight: '600' }}>({Math.round((stats.wonCount / stats.totalCount) * 100)}%)</span>}
                     </div>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--green)' }}>{formatINR(stats.wonAmt)}</div>
                   </div>
@@ -4006,7 +4114,6 @@ function AdminPortal({
                     <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>SLA Expiring Today</div>
                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '32px', fontWeight: '800', lineHeight: '1', color: '#7c3aed' }}>{stats.slaCount}</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '500' }}>Urgent review</span>
                     </div>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: '#7c3aed' }}>{formatINR(stats.slaAmt)}</div>
                   </div>
@@ -4250,16 +4357,69 @@ function AdminPortal({
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('merchant-pending'); setAVcPage(1); }}
-                  >Under Review</div>
+                  >Under Review ({getAdminUnderReviewCount()})</div>
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('closed'); setAVcPage(1); }}
-                  >Closed</div>
+                  >Closed ({getAdminClosedCount()})</div>
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('management'); setAVcPage(1); }}
-                  >All Disputes</div>
+                  >All Disputes ({chargebacks.length})</div>
                 </div>
+                </div>
+
+                {/* Summary Cards */}
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{chargebacks.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{chargebacks.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{chargebacks.filter(cb => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                    }).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706' }}>₹{chargebacks.filter(cb => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                    }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{chargebacks.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{chargebacks.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                </div>
+
+                {/* New disputes message */}
+                <div style={{ marginBottom: '20px', fontSize: '14px', fontWeight: '600', color: '#4a148c' }}>
+                  {chargebacks.filter(cb => cb.createdDate === new Date().toISOString().split('T')[0]).length} new Disputes added today.
+                </div>
+
+                {/* Toolbar with dropdowns and export */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
+                      <option>Last 6 Months</option>
+                      <option>Last 30 Days</option>
+                      <option>Last 7 Days</option>
+                      <option>Today</option>
+                    </select>
+                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
+                      <option>Search & Filter</option>
+                      <option>By Status</option>
+                      <option>By Type</option>
+                      <option>By Date</option>
+                    </select>
+                  </div>
+                  <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => exportExcel('admin')}>
+                    Export
+                  </button>
                 </div>
 
                 <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
@@ -4267,17 +4427,14 @@ function AdminPortal({
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                       <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, borderBottom: '1px solid #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Created On</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Order ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Transaction ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Amt.</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Respond By</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4287,18 +4444,13 @@ function AdminPortal({
                             return (
                               <React.Fragment key={cb.id}>
                                 <tr style={{ borderBottom: '1px solid #f0f0f0', fontSize: '12px', background: 'transparent' }}>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.createdDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.caseId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
-                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
-                                  </td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>₹{cb.txnAmt?.toLocaleString('en-IN') || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.respondByDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     {adminTab === 'closed' || isClosedDispute(cb) ? (
                                       <button 
@@ -4325,7 +4477,7 @@ function AdminPortal({
                           })
                         ) : (
                           <tr>
-                            <td colSpan="17" style={{ textAlign: 'center', padding: '24px' }}>No records match the filter.</td>
+                            <td colSpan="8" style={{ textAlign: 'center', padding: '24px' }}>No records match the filter.</td>
                           </tr>
                         )}
                       </tbody>
@@ -4380,6 +4532,68 @@ function AdminPortal({
 
         </main>
       </div>
+
+      {/* Help Button */}
+      <button 
+        onClick={() => setShowFaq(true)}
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
+          border: 'none',
+          color: '#fff',
+          fontSize: '24px',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(124, 58, 237, 0.4)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+      >
+        ?
+      </button>
+
+      {/* FAQ Modal */}
+      {showFaq && (
+        <div className="overlay open" onClick={() => setShowFaq(false)}>
+          <div className="modal" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#4a148c' }}>Frequently Asked Questions</h2>
+              <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#9e9e9e' }}>&times;</button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What is the Dispute Management Portal?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes efficiently across all merchants.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I filter disputes?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What do the summary cards show?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I take action on a dispute?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Take Action" button in the Action column to view details, upload evidence, or respond to the dispute.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I export dispute data?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeModal === 'disputeDetails' && (
         <div className="overlay open">
@@ -5042,6 +5256,7 @@ function PartnerPortal({
 
   const [activeTab, setActiveTab] = useState('dispute-mgmt');
   const [activeModal, setActiveModal] = useState(null);
+  const [showFaq, setShowFaq] = useState(false);
   const [targetDisputeId, setTargetDisputeId] = useState(null);
   const [targetUserId, setTargetUserId] = useState(null);
   const [merchantSearch, setMerchantSearch] = useState('');
@@ -5099,6 +5314,12 @@ function PartnerPortal({
   const allDisputes = chargebacks;
   const getPartnerActionRequiredCount = () => {
     return allDisputes.filter(cb => !isClosedDispute(cb) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending).length;
+  };
+  const getPartnerUnderReviewCount = () => {
+    return allDisputes.filter(cb => !isClosedDispute(cb) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending).length;
+  };
+  const getPartnerClosedCount = () => {
+    return allDisputes.filter(isClosedDispute).length;
   };
   const visaDisputes = allDisputes.filter(cb => cb.visaPending);
   const evidenceDisputes = allDisputes.filter(cb => cb.merchantAction === 'evidence');
@@ -5413,49 +5634,95 @@ function PartnerPortal({
                   <div 
                     style={{ padding: '12px 0', color: partnerTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setPartnerTab('verification-pending'); }}
-                  >Under Review</div>
+                  >Under Review ({getPartnerUnderReviewCount()})</div>
                   <div 
                     style={{ padding: '12px 0', color: partnerTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setPartnerTab('closed'); }}
-                  >Closed</div>
+                  >Closed ({getPartnerClosedCount()})</div>
                   <div 
                     style={{ padding: '12px 0', color: partnerTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setPartnerTab('management'); }}
-                  >All Disputes</div>
+                  >All Disputes ({allDisputes.length})</div>
                 </div>
+
+                {/* Summary Cards */}
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626', marginBottom: '8px' }}>Due Today Urgent</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626', marginBottom: '4px' }}>{allDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>₹{allDisputes.filter(cb => cb.respondByDate === new Date().toISOString().split('T')[0] && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706', marginBottom: '8px' }}>Due Tomorrow Critical</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#d97706', marginBottom: '4px' }}>{allDisputes.filter(cb => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                    }).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#d97706' }}>₹{allDisputes.filter(cb => {
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      return cb.respondByDate === tomorrow.toISOString().split('T')[0] && !isClosedDispute(cb);
+                    }).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                  <div style={{ flex: 1, background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8', marginBottom: '8px' }}>Insufficient Evidence</div>
+                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1d4ed8', marginBottom: '4px' }}>{allDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).length}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d4ed8' }}>₹{allDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb)).reduce((sum, cb) => sum + cb.txnAmt, 0).toLocaleString('en-IN')}</div>
+                  </div>
+                </div>
+
+                {/* New disputes message */}
+                <div style={{ marginBottom: '20px', fontSize: '14px', fontWeight: '600', color: '#4a148c' }}>
+                  {allDisputes.filter(cb => cb.createdDate === new Date().toISOString().split('T')[0]).length} new Disputes added today.
+                </div>
+
+                {/* Toolbar with dropdowns and export */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
+                      <option>Last 6 Months</option>
+                      <option>Last 30 Days</option>
+                      <option>Last 7 Days</option>
+                      <option>Today</option>
+                    </select>
+                    <select style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}>
+                      <option>Search & Filter</option>
+                      <option>By Status</option>
+                      <option>By Type</option>
+                      <option>By Date</option>
+                    </select>
+                  </div>
+                  <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Export functionality coming soon')}>
+                    Export
+                  </button>
+                </div>
+
                     <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
                     <div className="tbl-wrap">
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                       <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Created On</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Order ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Transaction ID</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Type</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Amt.</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Respond By</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredDisputes.map(cb => (
                           <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.createdDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.caseId || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId || '-'}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>
-                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
-                                  </td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>₹{cb.txnAmt?.toLocaleString('en-IN') || '-'}</td>
+                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.respondByDate || '-'}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                                     {partnerTab === 'closed' || isClosedDispute(cb) ? (
                                       <button 
@@ -5939,6 +6206,68 @@ function PartnerPortal({
         </main>
       </div>
 
+      {/* Help Button */}
+      <button 
+        onClick={() => setShowFaq(true)}
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
+          border: 'none',
+          color: '#fff',
+          fontSize: '24px',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(124, 58, 237, 0.4)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 0.2s'
+        }}
+        onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+      >
+        ?
+      </button>
+
+      {/* FAQ Modal */}
+      {showFaq && (
+        <div className="overlay open" onClick={() => setShowFaq(false)}>
+          <div className="modal" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#4a148c' }}>Frequently Asked Questions</h2>
+              <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#9e9e9e' }}>&times;</button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What is the Dispute Management Portal?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes on behalf of your merchants.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I filter disputes?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What do the summary cards show?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I take action on a dispute?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Take Action" button in the Action column to view details, upload evidence, or respond to the dispute on behalf of the merchant.</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I export dispute data?</h3>
+                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Partner Onboarding Tour Overlay */}
       {showTour && (() => {
         const STEPS = [
@@ -6060,7 +6389,7 @@ function PieChart({ dataSegments, darkMode }) {
     return <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: '500', textAlign: 'center', width: '100%' }}>No data matches reports filter</div>;
   }
 
-  const r = 50;
+  const r = 40;
   const cx = 80;
   const cy = 80;
   const circumference = 2 * Math.PI * r;
@@ -6093,10 +6422,10 @@ function PieChart({ dataSegments, darkMode }) {
               key={idx}
               cx={cx} 
               cy={cy} 
-              r={r/2} 
+              r={r} 
               fill="transparent" 
               stroke={segment.color} 
-              strokeWidth={r} 
+              strokeWidth={20} 
               strokeDasharray={strokeDash} 
               strokeDashoffset={strokeOffset} 
               transform={`rotate(-90 ${cx} ${cy})`}
