@@ -111,6 +111,206 @@ const isClosedDispute = (cb) => {
   );
 };
 
+const getTimelineData = (cb) => {
+  if (!cb) return [];
+  const list = [];
+
+  // 1. Initial Step: Dispute Raised
+  const raisedTime = cb.createdDate ? new Date(cb.createdDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ', 10:00 AM' : '15 May 2023, 10:57 AM';
+  list.push({
+    title: 'Dispute Raised',
+    time: raisedTime,
+    remarks: 'Dispute case initiated by the issuer bank.'
+  });
+
+  // 2. If Merchant evidence is submitted:
+  if (cb.merchantAction === 'evidence' || cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.length > 0)) {
+    const docName = cb.documents && cb.documents.length > 0 ? cb.documents[0].filename : 'disputeSampleFile.pdf';
+    const uploadTime = cb.documents && cb.documents.length > 0 ? new Date(cb.documents[0].uploadedAt).toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '15 May 2023, 10:57 AM';
+    list.push({
+      title: 'Remarks Updated by ' + (cb.userName || 'Merchant'),
+      time: uploadTime,
+      remarks: cb.rejectReason || 'Arlean',
+      file: docName
+    });
+  }
+
+  // 3. If closed:
+  if (isClosedDispute(cb)) {
+    const closedTime = cb.respondByDate ? new Date(cb.respondByDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ', 05:30 PM' : '17 May 2023, 05:30 PM';
+    list.push({
+      title: cb.mSubStatus || 'Dispute Closed',
+      time: closedTime,
+      remarks: 'Final status updated by Scheme/Acquirer.'
+    });
+  }
+
+  return list.reverse();
+};
+
+const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, portalType) => {
+  const timelineItems = getTimelineData(cb);
+  if (!timelineItems || timelineItems.length === 0) return null;
+
+  // Decide button color based on portal type
+  // Merchant: cyan/teal #50BDC9
+  // Admin/Partner: purple #4a148c
+  const themeColor = portalType === 'merchant' ? '#50BDC9' : '#4a148c';
+
+  return (
+    <div style={{ marginTop: '24px', borderTop: '1px solid #eee', padding: '20px 0', background: '#fff' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '0 20px' }}>
+        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#333' }}>Timeline</h3>
+        <button 
+          onClick={() => {
+            if (showToast) {
+              showToast('Messaging is currently unavailable', 'info');
+            } else {
+              alert('Messaging is currently unavailable');
+            }
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: themeColor,
+            color: '#fff',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: '600',
+            transition: 'opacity 0.2s',
+          }}
+          onMouseOver={(e) => e.currentTarget.style.opacity = 0.9}
+          onMouseOut={(e) => e.currentTarget.style.opacity = 1}
+        >
+          <span style={{ fontSize: '14px' }}>💬</span> Message
+        </button>
+      </div>
+      
+      <div style={{ position: 'relative', paddingLeft: '45px', paddingRight: '20px' }}>
+        {/* Vertical timeline connector line */}
+        {timelineItems.length > 1 && (
+          <div style={{
+            position: 'absolute',
+            left: '24px',
+            top: '12px',
+            bottom: '12px',
+            width: '2px',
+            backgroundColor: '#e0e0e0',
+            zIndex: 0
+          }} />
+        )}
+        
+        {timelineItems.map((item, index) => {
+          const isExpanded = expandedTimeline[index] !== undefined ? expandedTimeline[index] : (index === 0);
+          return (
+            <div key={index} style={{ position: 'relative', marginBottom: '20px', zIndex: 1 }}>
+              {/* Green circular bullet with check icon */}
+              <div style={{
+                position: 'absolute',
+                left: '-32px',
+                top: '6px',
+                width: '22px',
+                height: '22px',
+                borderRadius: '50%',
+                backgroundColor: '#2e7d32', // green
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                boxShadow: '0 0 0 4px #fff'
+              }}>
+                ✓
+              </div>
+              
+              {/* Timeline Card */}
+              <div style={{
+                background: isExpanded ? '#fafafa' : '#fff',
+                border: '1px solid #e0e0e0',
+                borderRadius: '4px',
+                overflow: 'hidden',
+                transition: 'background-color 0.2s'
+              }}>
+                {/* Header (clickable) */}
+                <div 
+                  onClick={() => setExpandedTimeline(prev => ({ ...prev, [index]: !isExpanded }))}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '12px 16px',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#333' }}>{item.title}</div>
+                    <div style={{ fontSize: '11px', color: '#757575', marginTop: '2px' }}>{item.time}</div>
+                  </div>
+                  <div style={{ fontSize: '14px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    {isExpanded ? (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                      </svg>
+                    ) : (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Collapsible Details Panel */}
+                {isExpanded && (
+                  <div style={{
+                    padding: '16px 20px',
+                    borderTop: '1px solid #e0e0e0',
+                    background: '#fff',
+                    fontSize: '12px',
+                    color: '#424242'
+                  }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px', marginBottom: item.file ? '12px' : '0' }}>
+                      <div style={{ color: '#757575' }}>Remarks</div>
+                      <div style={{ fontWeight: '600', color: '#333' }}>{item.remarks}</div>
+                    </div>
+                    {item.file && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ color: '#757575' }}>File</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '14px' }}>📄</span>
+                          <a 
+                            href="#" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (showToast) {
+                                showToast(`Downloading ${item.file}`, 'success');
+                              } else {
+                                alert(`Downloading ${item.file}`);
+                              }
+                            }}
+                            style={{ color: '#1890ff', textDecoration: 'none', fontWeight: 'bold' }}
+                          >
+                            {item.file}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const getPresetDates = (preset) => {
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -693,6 +893,7 @@ function MerchantPortal({
   const [reportFilter, setReportFilter] = useState({ from: SIX_MONTHS_AGO, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' });
   const [reportTab, setReportTab] = useState('doc-pending'); // 'dispute-mgmt' | 'doc-pending' | 'doc-verification' | 'closed'
   const [merchantSearchFocused, setMerchantSearchFocused] = useState(false);
+  const [expandedTimeline, setExpandedTimeline] = useState({});
 
   // Pagination states
   const [respondPage, setRespondPage] = useState(1);
@@ -2718,6 +2919,7 @@ function MerchantPortal({
                         )}
                       </div>
                   </>
+                  {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'merchant')}
                 </div>
                 
                 <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10 }}>
@@ -3200,6 +3402,7 @@ function AdminPortal({
   const [showFaq, setShowFaq] = useState(false);
   const [targetWebhook, setTargetWebhook] = useState(null);
   const [targetDisputeId, setTargetDisputeId] = useState(null);
+  const [expandedTimeline, setExpandedTimeline] = useState({});
   const [visaAcceptedAmount, setVisaAcceptedAmount] = useState('');
   const [visaRemarks, setVisaRemarks] = useState('');
   const [visaEvidenceFile, setVisaEvidenceFile] = useState(null);
@@ -5160,6 +5363,7 @@ function AdminPortal({
                       <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No previous evidence uploaded.</div>
                     )}
                   </div>
+                  {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'admin')}
                 </div>
                 
                 <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10, flexWrap: 'wrap', gap: '12px' }}>
@@ -5725,6 +5929,7 @@ function PartnerPortal({
   const [targetDisputeId, setTargetDisputeId] = useState(null);
   const [targetUserId, setTargetUserId] = useState(null);
   const [merchantSearch, setMerchantSearch] = useState('');
+  const [expandedTimeline, setExpandedTimeline] = useState({});
   
   const [evidenceFiles, setEvidenceFiles] = useState({ 1: null, 2: null, 3: null });
   const [contestRemarks, setContestRemarks] = useState('');
@@ -6652,6 +6857,7 @@ function PartnerPortal({
                           <div style={{ color: 'var(--text-muted)', fontSize: '13px', padding: '10px' }}>No documents uploaded yet.</div>
                         )}
                       </div>
+                      {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'partner')}
                     </div>
                     
                     <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, gap: '12px' }}>
