@@ -52,6 +52,16 @@ const matchesDisputeStatusFilter = (cb, filterValue) => {
   return cb.mSubStatus === filterValue;
 };
 
+const ensureTodaySLA = (list) => {
+  const TODAY_STR = new Date().toISOString().split('T')[0];
+  return list.map(cb => {
+    if (['CB010', 'CB024', 'CB_PEND_1', 'CB_PEND_2', 'CB_PEND_3', 'CB_PEND_4'].includes(cb.id)) {
+      return { ...cb, respondByDate: TODAY_STR };
+    }
+    return cb;
+  });
+};
+
 const renderDisputeStatusBadge = (s) => {
   const m = {
     'Chargeback New': 'badge-new',
@@ -160,7 +170,7 @@ export default function App() {
       const resDisputes = await fetch(`${API_URL}/disputes`, { headers });
       if (!resDisputes.ok) throw new Error('Disputes fetch failed');
       const dataDisputes = await resDisputes.json();
-      if (Array.isArray(dataDisputes)) setChargebacks(dataDisputes);
+      if (Array.isArray(dataDisputes)) setChargebacks(ensureTodaySLA(dataDisputes));
 
       const resLedger = await fetch(`${API_URL}/ledger`, { headers }).catch(() => null);
       if (resLedger && resLedger.ok) {
@@ -185,9 +195,10 @@ export default function App() {
   const hydrateDemoBundle = useCallback((bundle, user) => {
     if (Array.isArray(bundle.users)) setUsers(bundle.users);
     if (Array.isArray(bundle.chargebacks)) {
+      const TODAY_STR = new Date().toISOString().split('T')[0];
       const autoLossCbs = bundle.chargebacks.map(cb => {
         if ((cb.mSubStatus === 'Chargeback New' || cb.mSubStatus === 'Chargeback In Progress') && cb.respondByDate) {
-          if (new Date(cb.respondByDate) < new Date()) {
+          if (cb.respondByDate < TODAY_STR) {
             return { ...cb, mStatus: 'Dispute Lost – TAT Expired', mSubStatus: 'Dispute Lost – TAT Expired' };
           }
         }
@@ -200,7 +211,7 @@ export default function App() {
         if (!aResolved && bResolved) return -1;
         return new Date(b.createdDate || b.txnDate) - new Date(a.createdDate || a.txnDate);
       });
-      setChargebacks(autoLossCbs);
+      setChargebacks(ensureTodaySLA(autoLossCbs));
     }
     if (Array.isArray(bundle.ledger)) setLedger(bundle.ledger);
     if (user && Array.isArray(bundle.users)) {
@@ -1861,8 +1872,6 @@ function MerchantPortal({
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
@@ -1879,8 +1888,6 @@ function MerchantPortal({
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
@@ -1918,8 +1925,6 @@ function MerchantPortal({
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
@@ -1936,8 +1941,6 @@ function MerchantPortal({
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
@@ -1978,8 +1981,6 @@ function MerchantPortal({
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
@@ -1996,8 +1997,6 @@ function MerchantPortal({
                               <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
@@ -2085,12 +2084,13 @@ function MerchantPortal({
                   {/* Dispute Details */}
                   <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
                     <span>Dispute Details</span>
-                    <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                    <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
                   </div>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>VISA</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.product || 'VISA'}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Aggregator <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.aggregator || 'Payermax'}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Visa Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Dispute Reason Code <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>13.1</strong></div>
@@ -3885,10 +3885,6 @@ function AdminPortal({
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
-
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Aggregator</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Scheme</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
@@ -3909,10 +3905,6 @@ function AdminPortal({
                                 <tr style={{ borderBottom: '1px solid #f0f0f0', fontSize: '12px', background: 'transparent' }}>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
-
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Payermax</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>Visa</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
@@ -4061,12 +4053,13 @@ function AdminPortal({
                   {/* Dispute Details */}
                   <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
                     <span>Dispute Details</span>
-                    <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                    <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
                   </div>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>VISA</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.product || 'VISA'}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Aggregator <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.aggregator || 'Payermax'}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Visa Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Dispute Reason Code <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>13.1</strong></div>
@@ -5040,7 +5033,6 @@ function PartnerPortal({
                         <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Date</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
@@ -5057,7 +5049,6 @@ function PartnerPortal({
                           <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{formatDateDisp(cb.createdDate || cb.txnDate)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
@@ -5230,12 +5221,13 @@ function PartnerPortal({
                       {/* Dispute Details */}
                       <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #eee', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
                         <span>Dispute Details</span>
-                        <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                        <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
                       </div>
                       
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.product || 'VISA'}</strong></div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Aggregator <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.aggregator || 'Payermax'}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Visa Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Dispute Reason Code <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.reasonCode || '13.1'}</strong></div>
