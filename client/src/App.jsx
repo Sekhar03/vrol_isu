@@ -68,6 +68,35 @@ const getDisputeType = (cb) => {
 
 const matchesDisputeTypeFilter = (cb, filterValue) => !filterValue || getDisputeType(cb) === filterValue;
 
+const getDaysDifference = (d1, d2) => {
+  if (!d1 || !d2) return 0;
+  const date1 = new Date(d1);
+  const date2 = new Date(d2);
+  date1.setHours(0, 0, 0, 0);
+  date2.setHours(0, 0, 0, 0);
+  const diffTime = date1.getTime() - date2.getTime();
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
+};
+
+const isClosedDispute = (cb) => {
+  if (!cb) return false;
+  const status = cb.mSubStatus || cb.mStatus || '';
+  const statusLower = status.toLowerCase();
+  return (
+    status === 'Dispute Won Partially' ||
+    status === 'Dispute Won Fully' ||
+    status === 'Dispute Lost – TAT Expired' ||
+    status === 'Dispute Lost – Accepted' ||
+    status === 'Chargeback Lost' ||
+    status === 'Arbitration Lost' ||
+    status === 'Dispute Lost' ||
+    statusLower.includes('lost') ||
+    statusLower.includes('won') ||
+    cb.resolution === 'Lost' ||
+    cb.merchantAction === 'accepted'
+  );
+};
+
 const matchesDisputeStatusFilter = (cb, filterValue) => {
   if (!filterValue) return true;
   const TODAY_STR = new Date().toISOString().split('T')[0];
@@ -87,17 +116,24 @@ const matchesDisputeStatusFilter = (cb, filterValue) => {
     return !!cb.visaPending;
   }
   if (filterValue === 'sla_today' || filterValue === 'due_today') {
-    return cb.respondByDate === TODAY_STR && !cb.mSubStatus.includes('Won') && !cb.mSubStatus.includes('Lost') && !cb.mSubStatus.includes('Success') && cb.mSubStatus !== 'Dispute Lost – TAT Expired' && cb.mSubStatus !== 'Dispute Lost – Accepted';
+    return cb.respondByDate === TODAY_STR && !isClosedDispute(cb);
   }
   if (filterValue === 'due_tomorrow') {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const TOMORROW_STR = tomorrow.toISOString().split('T')[0];
-    return cb.respondByDate === TOMORROW_STR && !cb.mSubStatus.includes('Won') && !cb.mSubStatus.includes('Lost') && !cb.mSubStatus.includes('Success') && cb.mSubStatus !== 'Dispute Lost – TAT Expired' && cb.mSubStatus !== 'Dispute Lost – Accepted';
+    return cb.respondByDate === TOMORROW_STR && !isClosedDispute(cb);
+  }
+  if (filterValue === 'due_2_7') {
+    const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
+    return diff >= 2 && diff <= 7 && !isClosedDispute(cb);
+  }
+  if (filterValue === 'due_over_7') {
+    const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
+    return diff > 7 && !isClosedDispute(cb);
   }
   if (filterValue === 'insufficient_evidence') {
-    const isClosed = cb.mSubStatus?.includes('Won') || cb.mSubStatus?.includes('Lost') || cb.mSubStatus?.includes('Success') || cb.mSubStatus === 'Dispute Won Partially' || cb.mSubStatus === 'Dispute Won Fully' || cb.mSubStatus === 'Dispute Lost – TAT Expired' || cb.mSubStatus === 'Dispute Lost – Accepted';
-    return cb.merchantAction === 'rejected' && !isClosed;
+    return cb.merchantAction === 'rejected' && !isClosedDispute(cb);
   }
   return cb.mSubStatus === filterValue;
 };
@@ -175,24 +211,6 @@ const renderDisputeStatusBadge = (s) => {
   return <span className={`badge ${m[s] || 'badge-pending'}`}>{s}</span>;
 };
 
-const isClosedDispute = (cb) => {
-  if (!cb) return false;
-  const status = cb.mSubStatus || cb.mStatus || '';
-  const statusLower = status.toLowerCase();
-  return (
-    status === 'Dispute Won Partially' ||
-    status === 'Dispute Won Fully' ||
-    status === 'Dispute Lost – TAT Expired' ||
-    status === 'Dispute Lost – Accepted' ||
-    status === 'Chargeback Lost' ||
-    status === 'Arbitration Lost' ||
-    status === 'Dispute Lost' ||
-    statusLower.includes('lost') ||
-    statusLower.includes('won') ||
-    cb.resolution === 'Lost' ||
-    cb.merchantAction === 'accepted'
-  );
-};
 
 const getTimelineData = (cb) => {
   if (!cb) return [];
@@ -1525,7 +1543,9 @@ function MerchantPortal({
     );
   }
 
-  const reportsPaging = paginateList(activeReportsList, reportsPage, reportsLimit);
+  const reportsPaging = targetDisputeId
+    ? { paginated: activeReportsList, total: activeReportsList.length, startRecord: 1, endRecord: activeReportsList.length, totalPages: 1 }
+    : paginateList(activeReportsList, reportsPage, reportsLimit);
 
   const renderDisputesTable = (paging) => {
     if (paging.paginated.length === 0) {
@@ -1539,23 +1559,39 @@ function MerchantPortal({
     }
 
     return (
-      <div className="tbl-wrap" style={{ overflowX: 'auto', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ background: '#F1F3F5', borderBottom: '1.5px solid #cbd5e1' }}>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Case ID</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Visa ID</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Type</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Merchant Name</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>MID</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>ARN</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Status</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>TXN Ref. Number</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Responded By</th>
-              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="tbl-wrap" style={{ 
+        overflowX: 'auto', 
+        overflowY: 'auto',
+        maxHeight: 'calc(100vh - 280px)',
+        background: '#fff', 
+        border: '1px solid #e2e8f0', 
+        borderRadius: '8px' 
+      }}>
+        <table style={{ 
+          width: '100%', 
+          borderCollapse: 'collapse', 
+          textAlign: 'left', 
+          minWidth: targetDisputeId ? 'auto' : '1000px', 
+          fontSize: '13px',
+          display: targetDisputeId ? 'block' : 'table'
+        }}>
+          {!targetDisputeId && (
+            <thead>
+              <tr style={{ background: '#F1F3F5', borderBottom: '1.5px solid #cbd5e1' }}>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Case ID</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Visa ID</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Type</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Merchant Name</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>MID</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>ARN</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Status</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>TXN Ref. Number</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Responded By</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>Actions</th>
+              </tr>
+            </thead>
+          )}
+          <tbody style={{ display: targetDisputeId ? 'block' : 'table-row-group' }}>
             {paging.paginated.map((cb, idx) => {
               const isFirstRow = idx === 0 && reportsPage === 1;
               const isClosed = isClosedDispute(cb);
@@ -1572,7 +1608,11 @@ function MerchantPortal({
                     background: isSelected ? 'rgba(107, 56, 251, 0.08)' : '#fff',
                     borderLeft: isSelected ? '4px solid #6B38FB' : '4px solid transparent',
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    display: targetDisputeId ? 'flex' : 'table-row',
+                    flexWrap: targetDisputeId ? 'wrap' : 'nowrap',
+                    gap: targetDisputeId ? '8px 12px' : '0',
+                    padding: targetDisputeId ? '12px' : '0'
                   }}
                   onMouseEnter={(e) => {
                     if (!isSelected) e.currentTarget.style.backgroundColor = '#f8fafc';
@@ -1581,37 +1621,129 @@ function MerchantPortal({
                     if (!isSelected) e.currentTarget.style.backgroundColor = '#fff';
                   }}
                 >
-                  <td style={{ padding: '10px 8px', color: '#6B38FB', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {isFirstRow && (
-                      <span style={{ color: '#f97316', fontSize: '15px', fontWeight: 'bold' }}>⟲</span>
-                    )}
-                    <span>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</span>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    color: '#6B38FB', 
+                    fontWeight: '700', 
+                    display: targetDisputeId ? 'inline-block' : 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Case ID</div>}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {isFirstRow && (
+                        <span style={{ color: '#f97316', fontSize: '15px', fontWeight: 'bold' }}>⟲</span>
+                      )}
+                      <span>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</span>
+                    </div>
                   </td>
-                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    color: '#334155', 
+                    fontWeight: '500', 
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Visa ID</div>}
                     {cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}
                   </td>
-                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    color: '#334155', 
+                    fontWeight: '500', 
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Dispute Type</div>}
                     {getDisputeType(cb)}
                   </td>
-                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    color: '#334155', 
+                    fontWeight: '500', 
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Merchant Name</div>}
                     {cb.userName}
                   </td>
-                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    color: '#334155', 
+                    fontWeight: '500', 
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>MID</div>}
                     ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}
                   </td>
-                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    color: '#334155', 
+                    fontWeight: '500', 
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>ARN</div>}
                     {cb.arn || cb.rrn}
                   </td>
-                  <td style={{ padding: '10px 8px' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Dispute Status</div>}
                     {renderDisputeStatusBadge(cb.mSubStatus)}
                   </td>
-                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    color: '#334155', 
+                    fontWeight: '500', 
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>TXN Ref. Number</div>}
                     {cb.txnId}
                   </td>
-                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '4px 0' : '10px 8px', 
+                    color: '#334155', 
+                    fontWeight: '500', 
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 45%' : 'none',
+                    minWidth: targetDisputeId ? '120px' : 'auto',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Responded By</div>}
                     <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
                   </td>
-                  <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                  <td style={{ 
+                    padding: targetDisputeId ? '8px 0 4px 0' : '10px 8px', 
+                    textAlign: 'center',
+                    display: targetDisputeId ? 'inline-block' : 'table-cell',
+                    flex: targetDisputeId ? '1 1 100%' : 'none',
+                    borderTop: targetDisputeId ? '1px dashed #e2e8f0' : 'none',
+                    marginTop: targetDisputeId ? '8px' : '0',
+                    boxSizing: 'border-box'
+                  }}>
+                    {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '6px' }}>Actions</div>}
                     {isFirstRow ? (
                       <button 
                         onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
@@ -2441,8 +2573,8 @@ function MerchantPortal({
                 {/* Summary Cards Row */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '20px',
+                  gridTemplateColumns: 'repeat(5, 1fr)',
+                  gap: '16px',
                   marginTop: '24px',
                   marginBottom: '24px'
                 }}>
@@ -2559,7 +2691,123 @@ function MerchantPortal({
                     );
                   })()}
 
-                  {/* Card 3: Insufficient Evidence */}
+                  {/* Card 3: Due 2 to 7 Days */}
+                  {(() => {
+                    const due2to7List = merchantDisputes.filter(cb => {
+                      const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
+                      return diff >= 2 && diff <= 7 && !isClosedDispute(cb);
+                    });
+                    const due2to7Count = due2to7List.length;
+                    const due2to7Amount = due2to7List.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                    const isActive = reportFilter.disputeStatus === 'due_2_7';
+                    return (
+                      <div
+                        onClick={() => {
+                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_2_7' ? '' : 'due_2_7' }));
+                          setReportTab('dispute-mgmt');
+                          setReportsPage(1);
+                        }}
+                        style={{
+                          background: '#FFFFFF',
+                          borderTop: '3px solid #eab308',
+                          borderRadius: '12px',
+                          padding: '18px 20px',
+                          boxShadow: isActive ? '0 8px 20px rgba(234, 179, 8, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                          border: isActive ? '2px solid #eab308' : '1px solid #e2e8f0',
+                          borderTopWidth: '3px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '12px',
+                          minHeight: '100px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due 2 to 7 Days</span>
+                            <span style={{
+                              background: '#eab308',
+                              color: '#FFFFFF',
+                              padding: '3px 10px',
+                              borderRadius: '12px',
+                              fontSize: '10px',
+                              fontWeight: '700',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
+                            }}>Moderate</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{due2to7Count}</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(due2to7Amount)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Card 4: Due after 7 Days */}
+                  {(() => {
+                    const dueOver7List = merchantDisputes.filter(cb => {
+                      const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
+                      return diff > 7 && !isClosedDispute(cb);
+                    });
+                    const dueOver7Count = dueOver7List.length;
+                    const dueOver7Amount = dueOver7List.reduce((sum, cb) => sum + cb.txnAmt, 0);
+                    const isActive = reportFilter.disputeStatus === 'due_over_7';
+                    return (
+                      <div
+                        onClick={() => {
+                          setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_over_7' ? '' : 'due_over_7' }));
+                          setReportTab('dispute-mgmt');
+                          setReportsPage(1);
+                        }}
+                        style={{
+                          background: '#FFFFFF',
+                          borderTop: '3px solid #3b82f6',
+                          borderRadius: '12px',
+                          padding: '18px 20px',
+                          boxShadow: isActive ? '0 8px 20px rgba(59, 130, 246, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                          border: isActive ? '2px solid #3b82f6' : '1px solid #e2e8f0',
+                          borderTopWidth: '3px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '12px',
+                          minHeight: '100px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due after 7 Days</span>
+                            <span style={{
+                              background: '#3b82f6',
+                              color: '#FFFFFF',
+                              padding: '3px 10px',
+                              borderRadius: '12px',
+                              fontSize: '10px',
+                              fontWeight: '700',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
+                            }}>Low</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueOver7Count}</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueOver7Amount)}</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Card 5: Insufficient Evidence */}
                   {(() => {
                     const insufficientList = merchantDisputes.filter(cb => cb.merchantAction === 'rejected' && !isClosedDispute(cb));
                     const insufficientCount = insufficientList.length;
@@ -2862,6 +3110,11 @@ function MerchantPortal({
                                 style={{ width: '100%', padding: '8px', border: '1px solid #E2E8F0', borderRadius: '4px', fontSize: '13px', background: '#FFFFFF', color: '#1E293B' }}
                               >
                                 <option value="">Select All</option>
+                                <option value="due_today">Due Today</option>
+                                <option value="due_tomorrow">Due Tomorrow</option>
+                                <option value="due_2_7">Due in 2 to 7 Days</option>
+                                <option value="due_over_7">Due after 7 Days</option>
+                                <option value="insufficient_evidence">Insufficient Evidence</option>
                                 <option value="Dispute Won Partially">Dispute Won Partially</option>
                                 <option value="Dispute Won Fully">Dispute Won Fully</option>
                                 <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
@@ -2983,105 +3236,108 @@ function MerchantPortal({
 
                 {/* Split Pane Container for vertical preview */}
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
-                  <div style={{ flex: targetDisputeId ? '1 1 58%' : '1 1 100%', minWidth: '300px', transition: 'all 0.3s ease' }}>
+                  <div style={{ flex: targetDisputeId ? '0 0 calc(25% - 10px)' : '1 1 100%', maxWidth: targetDisputeId ? 'calc(25% - 10px)' : '100%', minWidth: targetDisputeId ? '200px' : '300px', transition: 'all 0.3s ease' }}>
                     {/* Table Container */}
                     <div style={{ marginBottom: '24px', overflowX: 'auto' }}>
                       {renderDisputesTable(reportsPaging)}
                     </div>
 
                     {/* Pagination Footer */}
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      background: '#FFFFFF',
-                      padding: '16px 20px',
-                      borderRadius: '12px',
-                      border: '1px solid #E2E8F0',
-                      boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
-                    }}>
-                      {/* Bottom Left: Show X per page */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748B', fontWeight: '500' }}>
-                        <span>Show</span>
-                        <select
-                          value={reportsLimit}
-                          onChange={(e) => {
-                            setReportsPage(1);
-                            setReportsLimit(parseInt(e.target.value));
-                          }}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            border: '1.5px solid #CBD5E1',
-                            background: '#FFFFFF',
-                            color: '#334155',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            outline: 'none'
-                          }}
-                        >
-                          <option value="5">5</option>
-                          <option value="10">10</option>
-                          <option value="25">25</option>
-                        </select>
-                        <span>per page</span>
-                      </div>
+                    {!targetDisputeId && (
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: '#FFFFFF',
+                        padding: '16px 20px',
+                        borderRadius: '12px',
+                        border: '1px solid #E2E8F0',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                      }}>
+                        {/* Bottom Left: Show X per page */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748B', fontWeight: '500' }}>
+                          <span>Show</span>
+                          <select
+                            value={reportsLimit}
+                            onChange={(e) => {
+                              setReportsPage(1);
+                              setReportsLimit(parseInt(e.target.value));
+                            }}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              border: '1.5px solid #CBD5E1',
+                              background: '#FFFFFF',
+                              color: '#334155',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              outline: 'none'
+                            }}
+                          >
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                          </select>
+                          <span>per page</span>
+                        </div>
 
-                      {/* Bottom Right: 1-10 of many, with < and > */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '600' }}>
-                          {reportsPaging.startRecord}-{reportsPaging.endRecord} of {reportsPaging.total}
-                        </span>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button
-                            disabled={reportsPage === 1}
-                            onClick={() => setReportsPage(reportsPage - 1)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '8px',
-                              border: '1.5px solid #CBD5E1',
-                              background: reportsPage === 1 ? '#F1F5F9' : '#FFFFFF',
-                              color: reportsPage === 1 ? '#94A3B8' : '#334155',
-                              cursor: reportsPage === 1 ? 'not-allowed' : 'pointer',
-                              fontWeight: 'bold',
-                              transition: 'all 0.2s'
-                            }}
-                          >
-                            ‹
-                          </button>
-                          <button
-                            disabled={reportsPage === reportsPaging.totalPages}
-                            onClick={() => setReportsPage(reportsPage + 1)}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '8px',
-                              border: '1.5px solid #CBD5E1',
-                              background: reportsPage === reportsPaging.totalPages ? '#F1F5F9' : '#FFFFFF',
-                              color: reportsPage === reportsPaging.totalPages ? '#94A3B8' : '#334155',
-                              cursor: reportsPage === reportsPaging.totalPages ? 'not-allowed' : 'pointer',
-                              fontWeight: 'bold',
-                              transition: 'all 0.2s'
-                            }}
-                          >
-                            ›
-                          </button>
+                        {/* Bottom Right: 1-10 of many, with < and > */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '600' }}>
+                            {reportsPaging.startRecord}-{reportsPaging.endRecord} of {reportsPaging.total}
+                          </span>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              disabled={reportsPage === 1}
+                              onClick={() => setReportsPage(reportsPage - 1)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '8px',
+                                border: '1.5px solid #CBD5E1',
+                                background: reportsPage === 1 ? '#F1F5F9' : '#FFFFFF',
+                                color: reportsPage === 1 ? '#94A3B8' : '#334155',
+                                cursor: reportsPage === 1 ? 'not-allowed' : 'pointer',
+                                fontWeight: 'bold',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              ‹
+                            </button>
+                            <button
+                              disabled={reportsPage === reportsPaging.totalPages}
+                              onClick={() => setReportsPage(reportsPage + 1)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '8px',
+                                border: '1.5px solid #CBD5E1',
+                                background: reportsPage === reportsPaging.totalPages ? '#F1F5F9' : '#FFFFFF',
+                                color: reportsPage === reportsPaging.totalPages ? '#94A3B8' : '#334155',
+                                cursor: reportsPage === reportsPaging.totalPages ? 'not-allowed' : 'pointer',
+                                fontWeight: 'bold',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              ›
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {targetDisputeId && (
                     <div className="slide-in-right" style={{ 
-                      flex: '1 1 38%', 
-                      minWidth: '380px', 
+                      flex: '0 0 calc(75% - 10px)', 
+                      maxWidth: '75%',
+                      minWidth: '300px', 
                       background: '#fff', 
                       border: '1px solid #e2e8f0', 
                       borderRadius: '12px', 
