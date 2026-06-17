@@ -176,9 +176,9 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
   const themeColor = portalType === 'merchant' ? '#50BDC9' : '#4a148c';
 
   return (
-    <div style={{ marginTop: '24px', borderTop: '1px solid #eee', padding: '20px 0', background: '#fff' }}>
+    <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', padding: '20px 0', background: 'var(--card)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '0 20px' }}>
-        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: '#333' }}>Timeline</h3>
+        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: 'var(--text)' }}>Timeline</h3>
         <button 
           onClick={() => {
             if (showToast) {
@@ -217,7 +217,7 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
             top: '12px',
             bottom: '12px',
             width: '2px',
-            backgroundColor: '#e0e0e0',
+            backgroundColor: 'var(--border)',
             zIndex: 0
           }} />
         )}
@@ -241,16 +241,16 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
                 justifyContent: 'center',
                 fontSize: '11px',
                 fontWeight: 'bold',
-                boxShadow: '0 0 0 4px #fff'
+                boxShadow: '0 0 0 4px var(--card)'
               }}>
                 ✓
               </div>
               
               {/* Timeline Card */}
               <div style={{
-                background: isExpanded ? '#fafafa' : '#fff',
-                border: '1px solid #e0e0e0',
-                borderRadius: '4px',
+                background: isExpanded ? 'var(--bg)' : 'var(--card)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
                 overflow: 'hidden',
                 transition: 'background-color 0.2s'
               }}>
@@ -267,10 +267,10 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
                   }}
                 >
                   <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#333' }}>{item.title}</div>
-                    <div style={{ fontSize: '11px', color: '#757575', marginTop: '2px' }}>{item.time}</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--text)' }}>{item.title}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{item.time}</div>
                   </div>
-                  <div style={{ fontSize: '14px', color: themeColor, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <div style={{ fontSize: '14px', color: themeColor, display: 'flex', alignItems: 'center' }}>
                     {isExpanded ? (
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="18 15 12 9 6 15"></polyline>
@@ -287,18 +287,18 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
                 {isExpanded && (
                   <div style={{
                     padding: '16px 20px',
-                    borderTop: '1px solid #e0e0e0',
-                    background: '#fff',
+                    borderTop: '1px solid var(--border)',
+                    background: 'var(--card)',
                     fontSize: '12px',
-                    color: '#424242'
+                    color: 'var(--text)'
                   }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px', marginBottom: item.file ? '12px' : '0' }}>
-                      <div style={{ color: '#757575' }}>Remarks</div>
-                      <div style={{ fontWeight: '600', color: '#333' }}>{item.remarks}</div>
+                      <div style={{ color: 'var(--text-muted)' }}>Remarks</div>
+                      <div style={{ fontWeight: '600', color: 'var(--text)' }}>{item.remarks}</div>
                     </div>
                     {item.file && (
                       <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ color: '#757575' }}>File</div>
+                        <div style={{ color: 'var(--text-muted)' }}>File</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ fontSize: '14px' }}>📄</span>
                           <a 
