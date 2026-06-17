@@ -5116,7 +5116,7 @@ function AdminPortal({
                           <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{card.count}</div>
                           <div style={{ textAlign: 'right' }}>
                             <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}}</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}</div>
                           </div>
                         </div>
                       </div>
@@ -6676,7 +6676,7 @@ function PartnerPortal({
                           <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{card.count}</div>
                           <div style={{ textAlign: 'right' }}>
                             <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}}</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}</div>
                           </div>
                         </div>
                       </div>
