@@ -2876,6 +2876,10 @@ function MerchantPortal({
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_today' ? '' : 'due_today' }));
                             setReportsPage(1);
                             setTargetDisputeId(null);
+                            setTimeout(() => {
+                              const el = document.getElementById('m-reports-table-section');
+                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 50);
                           }}
                           style={{
                             background: '#FFFFFF',
@@ -2934,6 +2938,10 @@ function MerchantPortal({
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_tomorrow' ? '' : 'due_tomorrow' }));
                             setReportsPage(1);
                             setTargetDisputeId(null);
+                            setTimeout(() => {
+                              const el = document.getElementById('m-reports-table-section');
+                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 50);
                           }}
                           style={{
                             background: '#FFFFFF',
@@ -2992,6 +3000,10 @@ function MerchantPortal({
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_2_7' ? '' : 'due_2_7' }));
                             setReportsPage(1);
                             setTargetDisputeId(null);
+                            setTimeout(() => {
+                              const el = document.getElementById('m-reports-table-section');
+                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 50);
                           }}
                           style={{
                             background: '#FFFFFF',
@@ -3050,6 +3062,10 @@ function MerchantPortal({
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'due_over_7' ? '' : 'due_over_7' }));
                             setReportsPage(1);
                             setTargetDisputeId(null);
+                            setTimeout(() => {
+                              const el = document.getElementById('m-reports-table-section');
+                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 50);
                           }}
                           style={{
                             background: '#FFFFFF',
@@ -3105,6 +3121,10 @@ function MerchantPortal({
                             setReportFilter(prev => ({ ...prev, disputeStatus: prev.disputeStatus === 'insufficient_evidence' ? '' : 'insufficient_evidence' }));
                             setReportsPage(1);
                             setTargetDisputeId(null);
+                            setTimeout(() => {
+                              const el = document.getElementById('m-reports-table-section');
+                              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }, 50);
                           }}
                           style={{
                             background: '#FFFFFF',
@@ -3717,7 +3737,7 @@ function MerchantPortal({
                 <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
                   <div style={{ flex: targetDisputeId ? '0 0 calc(25% - 10px)' : '1 1 100%', maxWidth: targetDisputeId ? 'calc(25% - 10px)' : '100%', minWidth: targetDisputeId ? '200px' : '300px', transition: 'all 0.3s ease' }}>
                     {/* Table Container */}
-                    <div style={{ marginBottom: '24px', overflowX: 'auto' }}>
+                    <div id="m-reports-table-section" style={{ marginBottom: '24px', overflowX: 'auto' }}>
                       {renderDisputesTable(reportsPaging)}
                     </div>
 
