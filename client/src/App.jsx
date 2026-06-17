@@ -607,7 +607,7 @@ function MerchantPortal({
   const [respondFilter, setRespondFilter] = useState({ from: DEFAULT_FROM, to: TODAY_STR, rrn: '', txnId: '', status: '', subStatus: '', disputeType: '', scheme: '' });
   const [raisedFilter, setRaisedFilter] = useState({ from: DEFAULT_FROM, to: TODAY_STR, rrn: '', txnId: '', status: '', subStatus: '', disputeType: '', scheme: '' });
   const [reportFilter, setReportFilter] = useState({ from: DEFAULT_FROM, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' });
-  const [reportTab, setReportTab] = useState('dispute-mgmt'); // 'dispute-mgmt' | 'doc-pending' | 'doc-verification'
+  const [reportTab, setReportTab] = useState('doc-pending'); // 'dispute-mgmt' | 'doc-pending' | 'doc-verification' | 'closed'
   const [merchantSearchFocused, setMerchantSearchFocused] = useState(false);
 
   // Pagination states
@@ -633,6 +633,15 @@ function MerchantPortal({
   const pendingVerificationDisputes = merchantDisputes.filter(cb => 
     (cb.merchantAction === 'evidence' || cb.merchantAction === 'accepted_admin' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'rejected' || cb.merchantAction === 'accepted_partially') && 
     (cb.acquirerAction === null || cb.acquirerAction === 'evidence_uploaded' || cb.acquirerAction === 'request_info')
+  );
+
+  const closedDisputes = merchantDisputes.filter(cb => 
+    cb.mStatus.includes('Lost') || 
+    cb.mStatus.includes('Won') || 
+    cb.resolution === 'Lost' || 
+    cb.mSubStatus === 'Chargeback Lost' || 
+    cb.mSubStatus === 'Arbitration Lost' ||
+    cb.merchantAction === 'accepted'
   );
 
   // Dashboard calculations
@@ -1891,17 +1900,21 @@ function MerchantPortal({
 
                 <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
-                    style={{ padding: '12px 0', color: reportTab === 'dispute-mgmt' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'dispute-mgmt' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => setReportTab('dispute-mgmt')}
-                  >All Disputes</div>
-                  <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-pending')}
-                  >Document pending for Merchant</div>
+                  >Action Required ({actionRequiredDisputes.length})</div>
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-verification' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-verification' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-verification')}
-                  >Document Pending for Verification</div>
+                  >Under Review</div>
+                  <div 
+                    style={{ padding: '12px 0', color: reportTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => setReportTab('closed')}
+                  >Closed</div>
+                  <div 
+                    style={{ padding: '12px 0', color: reportTab === 'dispute-mgmt' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'dispute-mgmt' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => setReportTab('dispute-mgmt')}
+                  >All Disputes</div>
                 </div>
                 </div>
                 <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
@@ -2064,6 +2077,60 @@ function MerchantPortal({
                             ))}
                             {pendingVerificationDisputes.length === 0 && (
                               <tr><td colSpan="11" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>No documents pending verification</td></tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab: Closed */}
+                  {reportTab === 'closed' && (
+                    <div>
+                      <div className="tbl-toolbar">
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {closedDisputes.length} closed records
+                        </span>
+                      </div>
+                      <div className="tbl-wrap">
+                        <table>
+                          <thead style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, boxShadow: '0 1px 0 #f0f0f0' }}>
+                            <tr style={{ color: '#4a148c', fontSize: '11px', textAlign: 'left', background: 'transparent' }}>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Case ID</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Visa ID</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Type</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Merchant Name</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>MID</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>ARN</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Dispute Status</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
+                              <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {closedDisputes.map(cb => (
+                              <tr key={cb.id} style={{ borderBottom: '1px solid #eee' }}>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{getDisputeType(cb)}</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.userName}</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.arn || cb.rrn}</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>{cb.txnId}</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>-</td>
+                                <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                                  <button className="btn btn-sm btn-outline" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                    View Details
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                            {closedDisputes.length === 0 && (
+                              <tr><td colSpan="11" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>No closed disputes</td></tr>
                             )}
                           </tbody>
                         </table>
@@ -2658,7 +2725,7 @@ function AdminPortal({
   // Pagination view chargebacks
   const [aVcPage, setAVcPage] = useState(1);
   const [aVcLimit, setAVcLimit] = useState(10);
-  const [adminTab, setAdminTab] = useState('management');
+  const [adminTab, setAdminTab] = useState('merchant-pending');
 
   // Expanded row IDs
   const [expandedRowIds, setExpandedRowIds] = useState({});
@@ -2666,6 +2733,10 @@ function AdminPortal({
 
   const isPendingVerification = (cb) =>
     cb && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence') && !cb.acquirerAction && !cb.visaPending;
+
+  const getAdminActionRequiredCount = () => {
+    return chargebacks.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending).length;
+  };
 
   const handleAdminEscalate = async (id) => {
     try {
@@ -2781,7 +2852,9 @@ function AdminPortal({
     if (adminTab === 'merchant-pending') {
       list = list.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending);
     } else if (adminTab === 'verification-pending') {
-      list = list.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin') && cb.acquirerAction === null && !cb.visaPending);
+      list = list.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending);
+    } else if (adminTab === 'closed') {
+      list = list.filter(cb => cb.mStatus.includes('Lost') || cb.mStatus.includes('Won') || cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost' || cb.mSubStatus === 'Arbitration Lost' || cb.merchantAction === 'accepted');
     }
 
     if (aVcSearchInput) {
@@ -3976,17 +4049,21 @@ function AdminPortal({
 
                 <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
-                    style={{ padding: '12px 0', color: adminTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setAdminTab('management'); setAVcPage(1); }}
-                  >All Disputes</div>
-                  <div 
                     style={{ padding: '12px 0', color: adminTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('merchant-pending'); setAVcPage(1); }}
-                  >Document pending for Merchant</div>
+                  >Action Required ({getAdminActionRequiredCount()})</div>
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('verification-pending'); setAVcPage(1); }}
-                  >Document Pending for Verification</div>
+                  >Under Review</div>
+                  <div 
+                    style={{ padding: '12px 0', color: adminTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setAdminTab('closed'); setAVcPage(1); }}
+                  >Closed</div>
+                  <div 
+                    style={{ padding: '12px 0', color: adminTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setAdminTab('management'); setAVcPage(1); }}
+                  >All Disputes</div>
                 </div>
                 </div>
 
@@ -4028,7 +4105,11 @@ function AdminPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    {adminTab !== 'verification-pending' ? (
+                                    {adminTab === 'closed' ? (
+                                      <button className="btn btn-sm btn-outline" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
+                                        View Details
+                                      </button>
+                                    ) : adminTab !== 'verification-pending' ? (
                                       <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
                                         Take Action
                                       </button>
@@ -4729,7 +4810,7 @@ function PartnerPortal({
   currentUser, users, chargebacks, setView, toggleTheme, darkMode, formatINR, formatDateDisp, showToast, refreshAllData, resetAllSessions, handleLogout
 }) {
   const [activePage, setActivePage] = useState('p-dashboard');
-  const [partnerTab, setPartnerTab] = useState('management');
+  const [partnerTab, setPartnerTab] = useState('merchant-pending');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
@@ -4805,6 +4886,9 @@ function PartnerPortal({
 
   // Partner sees all disputes (they represent all merchants)
   const allDisputes = chargebacks;
+  const getPartnerActionRequiredCount = () => {
+    return allDisputes.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending).length;
+  };
   const visaDisputes = allDisputes.filter(cb => cb.visaPending);
   const evidenceDisputes = allDisputes.filter(cb => cb.merchantAction === 'evidence');
 
@@ -4828,7 +4912,9 @@ function PartnerPortal({
     if (partnerTab === 'merchant-pending') {
       if (!((!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending)) return false;
     } else if (partnerTab === 'verification-pending') {
-      if (!((!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin') && cb.acquirerAction === null && !cb.visaPending)) return false;
+      if (!((!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending)) return false;
+    } else if (partnerTab === 'closed') {
+      if (!(cb.mStatus.includes('Lost') || cb.mStatus.includes('Won') || cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost' || cb.mSubStatus === 'Arbitration Lost' || cb.merchantAction === 'accepted')) return false;
     }
 
     return true;
@@ -5106,23 +5192,21 @@ function PartnerPortal({
                 </div>
                 <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
-                    style={{ padding: '12px 0', color: partnerTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
-                    onClick={() => { setPartnerTab('management'); }}
-                  >
-                    All Disputes
-                  </div>
-                  <div 
                     style={{ padding: '12px 0', color: partnerTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setPartnerTab('merchant-pending'); }}
-                  >
-                    Document Pending for Merchant
-                  </div>
+                  >Action Required ({getPartnerActionRequiredCount()})</div>
                   <div 
                     style={{ padding: '12px 0', color: partnerTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setPartnerTab('verification-pending'); }}
-                  >
-                    Document verification Pending From Admin
-                  </div>
+                  >Under Review</div>
+                  <div 
+                    style={{ padding: '12px 0', color: partnerTab === 'closed' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'closed' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setPartnerTab('closed'); }}
+                  >Closed</div>
+                  <div 
+                    style={{ padding: '12px 0', color: partnerTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
+                    onClick={() => { setPartnerTab('management'); }}
+                  >All Disputes</div>
                 </div>
                     <div className="tbl-card" style={{ boxShadow: 'none', border: 'none', background: 'transparent' }}>
                     <div className="tbl-wrap">
@@ -5158,9 +5242,15 @@ function PartnerPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                      Take Action
-                                    </button>
+                                    {partnerTab === 'closed' ? (
+                                      <button className="btn btn-sm btn-outline" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                        View Details
+                                      </button>
+                                    ) : (
+                                      <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                        Take Action
+                                      </button>
+                                    )}
                                   </td>
                           </tr>
                         ))}
