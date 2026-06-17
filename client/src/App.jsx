@@ -1487,17 +1487,17 @@ function MerchantPortal({
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px', fontSize: '13px' }}>
           <thead>
             <tr style={{ background: '#F1F3F5', borderBottom: '1.5px solid #cbd5e1' }}>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Case ID</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Visa ID</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Dispute Type</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Merchant Name</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>MID</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>ARN</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Dispute Status</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>TXN Ref. Number</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>Remaining Days</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b' }}>TID</th>
-              <th style={{ padding: '14px 12px', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>Actions</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Case ID</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Visa ID</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Type</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Merchant Name</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>MID</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>ARN</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Status</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>TXN Ref. Number</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Responded By</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>TID</th>
+              <th style={{ padding: '10px 8px', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -1516,40 +1516,40 @@ function MerchantPortal({
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
                 >
-                  <td style={{ padding: '16px 12px', color: '#6B38FB', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <td style={{ padding: '10px 8px', color: '#6B38FB', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {isFirstRow && (
                       <span style={{ color: '#f97316', fontSize: '15px', fontWeight: 'bold' }}>⟲</span>
                     )}
                     <span>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</span>
                   </td>
-                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
                     {cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}
                   </td>
-                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
                     {getDisputeType(cb)}
                   </td>
-                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
                     {cb.userName}
                   </td>
-                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
                     ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}
                   </td>
-                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
                     {cb.arn || cb.rrn}
                   </td>
-                  <td style={{ padding: '16px 12px' }}>
+                  <td style={{ padding: '10px 8px' }}>
                     {renderDisputeStatusBadge(cb.mSubStatus)}
                   </td>
-                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
                     {cb.txnId}
                   </td>
-                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
-                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
+                    {cb.respondByDate ? formatDateDisp(cb.respondByDate) : '-'}
                   </td>
-                  <td style={{ padding: '16px 12px', color: '#334155', fontWeight: '500' }}>
+                  <td style={{ padding: '10px 8px', color: '#334155', fontWeight: '500' }}>
                     TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}
                   </td>
-                  <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                  <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                     {isFirstRow ? (
                       <button 
                         onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
@@ -5116,10 +5116,7 @@ function AdminPortal({
                           <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{card.count}</div>
                           <div style={{ textAlign: 'right' }}>
                             <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}</div>
-                            <span className="card-hint-text" style={{ fontSize: '10px', fontWeight: '600', color: '#f97316', display: 'block', marginTop: '4px' }}>
-                              {isActive ? 'Active ✓' : 'Click →'}
-                            </span>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}}</div>
                           </div>
                         </div>
                       </div>
@@ -5454,17 +5451,17 @@ function AdminPortal({
                     <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                       <thead>
                         <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Case ID</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Visa ID</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Dispute Type</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Merchant Name</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>MID</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>ARN</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Dispute Status</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>Remaining Days</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600' }}>TID</th>
-                          <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Case ID</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Visa ID</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Type</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Merchant Name</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>MID</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>ARN</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Status</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>TXN Ref. Number</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Responded By</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>TID</th>
+                          <th style={{ padding: '10px 8px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -5473,19 +5470,19 @@ function AdminPortal({
                             return (
                               <React.Fragment key={cb.id}>
                                 <tr style={{ borderBottom: '1px solid var(--border)', fontSize: '13px', background: 'transparent', color: 'var(--text)' }}>
-                                  <td style={{ padding: '14px 16px', fontWeight: '600', color: 'var(--text)' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '14px 16px', fontWeight: '500', color: 'var(--text)' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '14px 16px', fontWeight: '500', color: 'var(--text)' }}>{cb.userName}</td>
-                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '14px 16px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '14px 16px', fontWeight: '500' }}>
-                                    {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                  <td style={{ padding: '10px 8px', fontWeight: '600', color: 'var(--text)' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '10px 8px', fontWeight: '500', color: 'var(--text)' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)' }}>{getDisputeType(cb)}</td>
+                                  <td style={{ padding: '10px 8px', fontWeight: '500', color: 'var(--text)' }}>{cb.userName}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '10px 8px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '10px 8px', fontWeight: '500' }}>
+                                    {cb.respondByDate ? formatDateDisp(cb.respondByDate) : '-'}
                                   </td>
-                                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                                     {adminTab === 'closed' || isClosedDispute(cb) ? (
                                       <button 
                                         className="btn btn-sm btn-outline" 
@@ -6679,10 +6676,7 @@ function PartnerPortal({
                           <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{card.count}</div>
                           <div style={{ textAlign: 'right' }}>
                             <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
-                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}</div>
-                            <span className="card-hint-text" style={{ fontSize: '10px', fontWeight: '600', color: '#f97316', display: 'block', marginTop: '4px' }}>
-                              {isActive ? 'Active ✓' : 'Click →'}
-                            </span>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}}</div>
                           </div>
                         </div>
                       </div>
@@ -7033,35 +7027,35 @@ function PartnerPortal({
                         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                           <thead>
                             <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Case ID</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Visa ID</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Dispute Type</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Merchant Name</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>MID</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>ARN</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Dispute Status</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>TXN Ref. Number</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>Remaining Days</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600' }}>TID</th>
-                              <th style={{ padding: '14px 16px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Case ID</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Visa ID</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Type</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Merchant Name</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>MID</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>ARN</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Status</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>TXN Ref. Number</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Responded By</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>TID</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
                             {filteredDisputes.map(cb => (
                               <tr key={cb.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
-                                <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '13px', fontFamily: 'monospace' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px' }}>{getDisputeType(cb)}</td>
-                                <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '500', fontSize: '13px' }}>{cb.userName}</td>
-                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
-                                <td style={{ padding: '14px 16px', fontSize: '13px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.txnId}</td>
-                                <td style={{ padding: '14px 16px', color: 'var(--text)', fontWeight: '600', fontSize: '13px' }}>
-                                  {cb.respondByDate ? Math.max(0, Math.ceil((new Date(cb.respondByDate) - new Date()) / (1000 * 60 * 60 * 24))) + ' Days' : '-'}
+                                <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '13px', fontFamily: 'monospace' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px' }}>{getDisputeType(cb)}</td>
+                                <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '500', fontSize: '13px' }}>{cb.userName}</td>
+                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
+                                <td style={{ padding: '10px 8px', fontSize: '13px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.txnId}</td>
+                                <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '600', fontSize: '13px' }}>
+                                  {cb.respondByDate ? formatDateDisp(cb.respondByDate) : '-'}
                                 </td>
-                                <td style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                                   {partnerTab === 'closed' || isClosedDispute(cb) ? (
                                     <button 
                                       className="btn btn-sm btn-outline" 
