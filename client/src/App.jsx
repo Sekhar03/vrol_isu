@@ -1559,17 +1559,27 @@ function MerchantPortal({
             {paging.paginated.map((cb, idx) => {
               const isFirstRow = idx === 0 && reportsPage === 1;
               const isClosed = isClosedDispute(cb);
+              const isSelected = cb.id === targetDisputeId;
               
               return (
                 <tr 
                   key={cb.id} 
+                  onClick={() => {
+                    setTargetDisputeId(cb.id);
+                  }}
                   style={{ 
                     borderBottom: '1px solid #f1f5f9',
-                    background: '#fff',
-                    transition: 'background-color 0.2s'
+                    background: isSelected ? 'rgba(107, 56, 251, 0.08)' : '#fff',
+                    borderLeft: isSelected ? '4px solid #6B38FB' : '4px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = '#f8fafc';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = '#fff';
+                  }}
                 >
                   <td style={{ padding: '10px 8px', color: '#6B38FB', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {isFirstRow && (
@@ -1604,7 +1614,7 @@ function MerchantPortal({
                   <td style={{ padding: '10px 8px', textAlign: 'center' }}>
                     {isFirstRow ? (
                       <button 
-                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                        onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -1637,7 +1647,7 @@ function MerchantPortal({
                       </button>
                     ) : isClosed ? (
                       <button 
-                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                        onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
                         style={{
                           padding: '6px 16px',
                           border: '1.5px solid #6B38FB',
@@ -1663,7 +1673,7 @@ function MerchantPortal({
                       </button>
                     ) : (
                       <button 
-                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                        onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
                         style={{
                           padding: '6px 16px',
                           border: '1.5px solid #6B38FB',
@@ -2971,97 +2981,241 @@ function MerchantPortal({
                   </button>
                 </div>
 
-                {/* Table Container */}
-                <div style={{ marginBottom: '24px' }}>
-                  {renderDisputesTable(reportsPaging)}
-                </div>
+                {/* Split Pane Container for vertical preview */}
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
+                  <div style={{ flex: targetDisputeId ? '1 1 58%' : '1 1 100%', minWidth: '300px', transition: 'all 0.3s ease' }}>
+                    {/* Table Container */}
+                    <div style={{ marginBottom: '24px', overflowX: 'auto' }}>
+                      {renderDisputesTable(reportsPaging)}
+                    </div>
 
-                {/* Pagination Footer */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  background: '#FFFFFF',
-                  padding: '16px 20px',
-                  borderRadius: '12px',
-                  border: '1px solid #E2E8F0',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
-                }}>
-                  {/* Bottom Left: Show X per page */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748B', fontWeight: '500' }}>
-                    <span>Show</span>
-                    <select
-                      value={reportsLimit}
-                      onChange={(e) => {
-                        setReportsPage(1);
-                        setReportsLimit(parseInt(e.target.value));
-                      }}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        border: '1.5px solid #CBD5E1',
-                        background: '#FFFFFF',
-                        color: '#334155',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        outline: 'none'
-                      }}
-                    >
-                      <option value="5">5</option>
-                      <option value="10">10</option>
-                      <option value="25">25</option>
-                    </select>
-                    <span>per page</span>
-                  </div>
+                    {/* Pagination Footer */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: '#FFFFFF',
+                      padding: '16px 20px',
+                      borderRadius: '12px',
+                      border: '1px solid #E2E8F0',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                    }}>
+                      {/* Bottom Left: Show X per page */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748B', fontWeight: '500' }}>
+                        <span>Show</span>
+                        <select
+                          value={reportsLimit}
+                          onChange={(e) => {
+                            setReportsPage(1);
+                            setReportsLimit(parseInt(e.target.value));
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            border: '1.5px solid #CBD5E1',
+                            background: '#FFFFFF',
+                            color: '#334155',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            outline: 'none'
+                          }}
+                        >
+                          <option value="5">5</option>
+                          <option value="10">10</option>
+                          <option value="25">25</option>
+                        </select>
+                        <span>per page</span>
+                      </div>
 
-                  {/* Bottom Right: 1-10 of many, with < and > */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '600' }}>
-                      {reportsPaging.startRecord}-{reportsPaging.endRecord} of {reportsPaging.total}
-                    </span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        disabled={reportsPage === 1}
-                        onClick={() => setReportsPage(reportsPage - 1)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '8px',
-                          border: '1.5px solid #CBD5E1',
-                          background: reportsPage === 1 ? '#F1F5F9' : '#FFFFFF',
-                          color: reportsPage === 1 ? '#94A3B8' : '#334155',
-                          cursor: reportsPage === 1 ? 'not-allowed' : 'pointer',
-                          fontWeight: 'bold',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        ‹
-                      </button>
-                      <button
-                        disabled={reportsPage === reportsPaging.totalPages}
-                        onClick={() => setReportsPage(reportsPage + 1)}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '8px',
-                          border: '1.5px solid #CBD5E1',
-                          background: reportsPage === reportsPaging.totalPages ? '#F1F5F9' : '#FFFFFF',
-                          color: reportsPage === reportsPaging.totalPages ? '#94A3B8' : '#334155',
-                          cursor: reportsPage === reportsPaging.totalPages ? 'not-allowed' : 'pointer',
-                          fontWeight: 'bold',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        ›
-                      </button>
+                      {/* Bottom Right: 1-10 of many, with < and > */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '600' }}>
+                          {reportsPaging.startRecord}-{reportsPaging.endRecord} of {reportsPaging.total}
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            disabled={reportsPage === 1}
+                            onClick={() => setReportsPage(reportsPage - 1)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '8px',
+                              border: '1.5px solid #CBD5E1',
+                              background: reportsPage === 1 ? '#F1F5F9' : '#FFFFFF',
+                              color: reportsPage === 1 ? '#94A3B8' : '#334155',
+                              cursor: reportsPage === 1 ? 'not-allowed' : 'pointer',
+                              fontWeight: 'bold',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            ‹
+                          </button>
+                          <button
+                            disabled={reportsPage === reportsPaging.totalPages}
+                            onClick={() => setReportsPage(reportsPage + 1)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '8px',
+                              border: '1.5px solid #CBD5E1',
+                              background: reportsPage === reportsPaging.totalPages ? '#F1F5F9' : '#FFFFFF',
+                              color: reportsPage === reportsPaging.totalPages ? '#94A3B8' : '#334155',
+                              cursor: reportsPage === reportsPaging.totalPages ? 'not-allowed' : 'pointer',
+                              fontWeight: 'bold',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            ›
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
+
+                  {targetDisputeId && (
+                    <div className="slide-in-right" style={{ 
+                      flex: '1 1 38%', 
+                      minWidth: '380px', 
+                      background: '#fff', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '12px', 
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.08)', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      maxHeight: 'calc(100vh - 120px)',
+                      overflowY: 'auto',
+                      position: 'sticky',
+                      top: '24px',
+                      zIndex: 10
+                    }}>
+                      {/* Vertical Preview Panel */}
+                      {(() => {
+                        const cb = chargebacks.find(c => c.id === targetDisputeId) || {};
+                        const isClosed = isClosedDispute(cb);
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', borderRadius: '12px 12px 0 0' }}>
+                              <div>
+                                <span style={{ fontSize: '11px', color: '#6B38FB', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Case Preview</span>
+                                <h2 style={{ fontSize: '15px', fontWeight: '800', margin: '2px 0 0 0', color: '#1e293b', fontFamily: 'monospace' }}>{cb.id}</h2>
+                              </div>
+                              <button onClick={() => setTargetDisputeId(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#64748b'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94a3b8'; }}>&times;</button>
+                            </div>
+                            
+                            <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
+                              {/* Original Transaction Details */}
+                              <div style={{ padding: '14px 20px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#334155', alignItems: 'center' }}>
+                                <span>Transaction Details</span>
+                                <span style={{ fontWeight: 'normal', color: '#64748B', fontSize: '12px' }}>Date: <span style={{color:'#334155', fontWeight:'700'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px', fontSize: '13px', background: '#fff' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Case ID:</span> <strong style={{color: '#1e293b'}}>{cb.id}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>AR Number:</span> <strong style={{color: '#1e293b'}}>{cb.rrn}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>TXN Ref. Number:</span> <strong style={{color: '#1e293b'}}>{cb.txnId}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>MID:</span> <strong style={{color: '#1e293b'}}>{cb.userId}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>TID:</span> <strong style={{color: '#1e293b'}}>10515104</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Amount:</span> <strong style={{color: '#6B38FB', fontSize: '14px'}}>{formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Card Number:</span> <strong style={{color: '#1e293b'}}>457704******3989</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Merchant Name:</span> <strong style={{color: '#1e293b'}}>{cb.userName}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Approval Code:</span> <strong style={{color: '#1e293b'}}>021838</strong></div>
+                              </div>
+
+                              {/* Dispute Details */}
+                              <div style={{ padding: '14px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#334155' }}>
+                                <span>Dispute Info</span>
+                                <span style={{ fontWeight: 'normal', color: '#64748B', fontSize: '12px' }}>Dispute Date: <span style={{color:'#334155', fontWeight:'700'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px', fontSize: '13px', background: '#fff' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Scheme:</span> <strong style={{color: '#1e293b'}}>{cb.product || 'VISA'}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Aggregator:</span> <strong style={{color: '#1e293b'}}>{cb.aggregator || 'Payermax'}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Visa Case ID:</span> <strong style={{color: '#1e293b'}}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Reason Code:</span> <strong style={{color: '#1e293b'}}>13.1</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Remaining Days:</span> <strong style={{color: cb.aging <= 3 ? '#ef4444' : '#f59e0b'}}>{cb.aging} days</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Current Status:</span> <strong style={{color: '#1e293b'}}>{cb.mStatus}</strong></div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Dispute Description:</span> <strong style={{color: '#1e293b', fontWeight: '600', lineHeight: '1.4'}}>13.1 - Services Not Provided or Merchandise Not Received</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f8fafc', paddingBottom: '6px' }}><span style={{ color: '#64748B' }}>Admin Remarks:</span> <strong style={{color: '#ef4444'}}>{cb.rejectReason || '-'}</strong></div>
+                              </div>
+
+                              {/* Previous Documents */}
+                              <div style={{ padding: '14px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#334155' }}>
+                                <span>Evidence Documents</span>
+                              </div>
+                              
+                              <div style={{ padding: '16px 20px', background: '#fff' }}>
+                                {(cb.documents && cb.documents.length > 0) ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {cb.documents.map(doc => (
+                                      <div key={doc.id} style={{ padding: '12px', border: doc.status === 'Rejected' ? '1px solid #fca5a5' : '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '6px', background: doc.status === 'Rejected' ? '#fef2f2' : '#f8fafc' }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '13px', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <span style={{ fontSize: '16px' }}>📄</span>
+                                          <span style={{ wordBreak: 'break-all' }}>{doc.filename}</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '11px', color: '#64748B' }}>
+                                          <div>By: <strong style={{color: '#334155'}}>{doc.uploadedBy || 'Merchant'}</strong></div>
+                                          <div>Status: <strong style={{ color: doc.status === 'Rejected' ? '#ef4444' : doc.status === 'Accepted' ? '#22c55e' : '#eab308' }}>{doc.status}</strong></div>
+                                          <div>Date: <strong style={{color: '#334155'}}>{new Date(doc.uploadedAt).toLocaleDateString()}</strong></div>
+                                        </div>
+                                        {doc.status === 'Rejected' && (
+                                          <div style={{ fontSize: '11px', color: '#ef4444', background: '#fff', padding: '6px 10px', borderRadius: '4px', border: '1px dashed #fca5a5', marginTop: '4px' }}>
+                                            <strong>Rejection Remarks:</strong> {doc.rejectionRemarks}
+                                          </div>
+                                        )}
+                                        {doc.status === 'Rejected' && (
+                                          <div style={{ marginTop: '8px' }}>
+                                            <button style={{ fontSize: '12px', background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }} onClick={() => setActiveModal('contest')}>
+                                              Re-upload Evidence
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{ color: '#64748B', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>No evidence documents uploaded.</div>
+                                )}
+                              </div>
+
+                              {/* Timeline */}
+                              {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'merchant')}
+                            </div>
+                            
+                            <div style={{ padding: '16px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', background: '#F8FAFC', borderRadius: '0 0 12px 12px' }}>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', width: '100%' }}>
+                                {!isClosedDispute(cb) && reportTab === 'doc-pending' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
+                                  <>
+                                    <button className="btn btn-outline" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
+                                    <button className="btn btn-primary" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '36px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
+                                  </>
+                                )}
+                                {!isClosedDispute(cb) && reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
+                                  <>
+                                    <button className="btn btn-danger" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }} onClick={() => handleMerchantRejectAdminClick(cb.id)}>Reject Admin Evidence</button>
+                                    <button className="btn btn-outline" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }} onClick={() => { setActiveModal('contest'); }}>Upload More Evidence</button>
+                                    <button className="btn btn-primary" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#22c55e', color: '#fff', border: 'none', height: '36px', fontWeight: 'bold' }} onClick={() => submitMerchantAcceptAdmin(cb.id)}>Accept Admin Evidence</button>
+                                  </>
+                                )}
+                                {!isClosedDispute(cb) && reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
+                                  <>
+                                    <button className="btn btn-outline" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', color: '#6B38FB', border: '1px solid #6B38FB', background: '#fff', height: '36px' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
+                                    <button className="btn btn-primary" style={{ padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', background: '#6B38FB', color: '#fff', border: 'none', height: '36px', fontWeight: 'bold' }} onClick={() => { setActiveModal('contest'); }}>Contest &amp; Submit Proof</button>
+                                  </>
+                                )}
+                                {!isClosedDispute(cb) && reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && getActionBtn(cb)}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -3209,7 +3363,7 @@ function MerchantPortal({
         );
       })()}
 
-      {activeModal === 'disputeDetails' && (
+      {activeModal === 'disputeDetails' && activePage !== 'reports' && (
 
         <div className="overlay open">
           {(() => {
@@ -5593,114 +5747,318 @@ function AdminPortal({
                   </button>
                 </div>
 
-                <div className="tbl-card" style={{ boxShadow: 'var(--shadow)', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '12px', overflow: 'hidden' }}>
-                  <div className="tbl-wrap">
-                    <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                      <thead>
-                        <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Case ID</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Visa ID</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Type</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Merchant Name</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>MID</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>ARN</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Status</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>TXN Ref. Number</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600' }}>Responded By</th>
-                          <th style={{ padding: '10px 8px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminPaging.paginated.length > 0 ? (
-                          adminPaging.paginated.map(cb => {
-                            return (
-                              <React.Fragment key={cb.id}>
-                                <tr style={{ borderBottom: '1px solid var(--border)', fontSize: '13px', background: 'transparent', color: 'var(--text)' }}>
-                                  <td style={{ padding: '10px 8px', fontWeight: '600', color: 'var(--text)' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                  <td style={{ padding: '10px 8px', fontWeight: '500', color: 'var(--text)' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)' }}>{getDisputeType(cb)}</td>
-                                  <td style={{ padding: '10px 8px', fontWeight: '500', color: 'var(--text)' }}>{cb.userName}</td>
-                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
-                                  <td style={{ padding: '10px 8px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.txnId}</td>
-                                  <td style={{ padding: '10px 8px', fontWeight: '500' }}>
-                                    <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
-                                  </td>
-                                  <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                                    {adminTab === 'closed' || isClosedDispute(cb) ? (
-                                      <button 
-                                        className="btn btn-sm btn-outline" 
-                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '36px', height: '36px', borderRadius: '8px', padding: 0 }} 
-                                        onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}
-                                        title="View Details"
-                                      >
-                                        👁️
-                                      </button>
-                                    ) : adminTab === 'verification-pending' ? (
-                                      <button className="btn btn-sm btn-primary" style={{ background: '#6B38FB', border: 'none', borderRadius: '8px', padding: '6px 12px', fontWeight: '600' }} onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}>
-                                        Take Action
-                                      </button>
-                                    ) : (
-                                      <button className="btn btn-sm btn-primary" style={{ background: '#6B38FB', border: 'none', borderRadius: '8px', padding: '6px 12px', fontWeight: '600' }} onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
-                                        Take Action
-                                      </button>
-                                    )}
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            );
-                          })
-                        ) : (
-                          <tr>
-                            <td colSpan="11" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>No records match the filter.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
+                  <div style={{ flex: targetDisputeId ? '1 1 58%' : '1 1 100%', minWidth: '300px', transition: 'all 0.3s ease' }}>
+                    <div className="tbl-card" style={{ boxShadow: 'var(--shadow)', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '12px', overflow: 'hidden' }}>
+                      <div className="tbl-wrap">
+                        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                          <thead>
+                            <tr style={{ color: 'var(--text-muted)', fontSize: '12px', textAlign: 'left', background: darkMode ? '#1E293B' : '#F1F5F9' }}>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Case ID</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Visa ID</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Type</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Merchant Name</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>MID</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>ARN</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Dispute Status</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>TXN Ref. Number</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600' }}>Responded By</th>
+                              <th style={{ padding: '10px 8px', fontWeight: '600', textAlign: 'center' }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {adminPaging.paginated.length > 0 ? (
+                              adminPaging.paginated.map(cb => {
+                                const isSelected = cb.id === targetDisputeId;
+                                return (
+                                  <React.Fragment key={cb.id}>
+                                    <tr 
+                                      onClick={() => setTargetDisputeId(cb.id)}
+                                      style={{ 
+                                        borderBottom: '1px solid var(--border)', 
+                                        fontSize: '13px', 
+                                        background: isSelected ? 'rgba(107, 56, 251, 0.08)' : 'transparent', 
+                                        borderLeft: isSelected ? '4px solid #6B38FB' : '4px solid transparent',
+                                        cursor: 'pointer',
+                                        color: 'var(--text)',
+                                        transition: 'all 0.2s'
+                                      }}
+                                    >
+                                      <td style={{ padding: '10px 8px', fontWeight: '600', color: 'var(--text)' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                      <td style={{ padding: '10px 8px', fontWeight: '500', color: 'var(--text)' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                      <td style={{ padding: '10px 8px', color: 'var(--text-muted)' }}>{getDisputeType(cb)}</td>
+                                      <td style={{ padding: '10px 8px', fontWeight: '500', color: 'var(--text)' }}>{cb.userName}</td>
+                                      <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                      <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
+                                      <td style={{ padding: '10px 8px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                      <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{cb.txnId}</td>
+                                      <td style={{ padding: '10px 8px', fontWeight: '500' }}>
+                                        <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
+                                      </td>
+                                      <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                                        {adminTab === 'closed' || isClosedDispute(cb) ? (
+                                          <button 
+                                            className="btn btn-sm btn-outline" 
+                                            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '36px', height: '36px', borderRadius: '8px', padding: 0 }} 
+                                            onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
+                                            title="View Details"
+                                          >
+                                            👁️
+                                          </button>
+                                        ) : adminTab === 'verification-pending' ? (
+                                          <button 
+                                            className="btn btn-sm btn-primary" 
+                                            style={{ background: '#6B38FB', border: 'none', borderRadius: '8px', padding: '6px 12px', fontWeight: '600' }} 
+                                            onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
+                                          >
+                                            Take Action
+                                          </button>
+                                        ) : (
+                                          <button 
+                                            className="btn btn-sm btn-primary" 
+                                            style={{ background: '#6B38FB', border: 'none', borderRadius: '8px', padding: '6px 12px', fontWeight: '600' }} 
+                                            onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
+                                          >
+                                            Take Action
+                                          </button>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  </React.Fragment>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan="11" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>No records match the filter.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="tbl-footer" style={{ borderTop: '1px solid var(--border)', background: 'var(--card)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="rpp" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                          Rows per page: 
+                          <select value={aVcLimit} onChange={(e) => { setAVcPage(1); setAVcLimit(parseInt(e.target.value)); }} style={{ padding: '4px 8px', border: '1px solid var(--border-input)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)' }}>
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                          </select>
+                        </div>
+                        <div className="pagination" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ marginRight: '12px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                            {adminPaging.startRecord}–{adminPaging.endRecord} of {adminPaging.total} records
+                          </span>
+                          <button 
+                            className="pg-btn" 
+                            disabled={aVcPage === 1}
+                            onClick={() => setAVcPage(aVcPage - 1)}
+                            style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aVcPage === 1 ? 'not-allowed' : 'pointer', opacity: aVcPage === 1 ? 0.5 : 1, color: 'var(--text)' }}
+                          >
+                            ‹
+                          </button>
+                          {Array.from({ length: adminPaging.totalPages }, (_, idx) => idx + 1).map(p => (
+                            <button 
+                              key={p} 
+                              className={`pg-btn ${aVcPage === p ? 'active' : ''}`}
+                              onClick={() => setAVcPage(p)}
+                              style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: aVcPage === p ? '#6B38FB' : 'var(--card)', color: aVcPage === p ? '#FFFFFF' : 'var(--text)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontWeight: '600' }}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                          <button 
+                            className="pg-btn" 
+                            disabled={aVcPage === adminPaging.totalPages}
+                            onClick={() => setAVcPage(aVcPage + 1)}
+                            style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aVcPage === adminPaging.totalPages ? 'not-allowed' : 'pointer', opacity: aVcPage === adminPaging.totalPages ? 0.5 : 1, color: 'var(--text)' }}
+                          >
+                            ›
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="tbl-footer" style={{ borderTop: '1px solid var(--border)', background: 'var(--card)', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div className="rpp" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '13px' }}>
-                      Rows per page: 
-                      <select value={aVcLimit} onChange={(e) => { setAVcPage(1); setAVcLimit(parseInt(e.target.value)); }} style={{ padding: '4px 8px', border: '1px solid var(--border-input)', borderRadius: '6px', background: 'var(--card)', color: 'var(--text)' }}>
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                      </select>
+                  {targetDisputeId && (
+                    <div className="slide-in-right" style={{ 
+                      flex: '1 1 38%', 
+                      minWidth: '380px', 
+                      background: 'var(--card, #fff)', 
+                      border: '1px solid var(--border)', 
+                      borderRadius: '12px', 
+                      boxShadow: 'var(--shadow-lg)', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      maxHeight: 'calc(100vh - 120px)',
+                      overflowY: 'auto',
+                      position: 'sticky',
+                      top: '24px',
+                      zIndex: 10
+                    }}>
+                      {/* Vertical Preview Panel */}
+                      {(() => {
+                        const cb = chargebacks.find(c => c.id === targetDisputeId) || {};
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', width: '100%', color: 'var(--text)' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: darkMode ? '#1E293B' : '#F8FAFC', borderRadius: '12px 12px 0 0' }}>
+                              <div>
+                                <span style={{ fontSize: '11px', color: '#6B38FB', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Case Preview (Admin)</span>
+                                <h2 style={{ fontSize: '15px', fontWeight: '800', margin: '2px 0 0 0', color: 'var(--text)', fontFamily: 'monospace' }}>{cb.id}</h2>
+                              </div>
+                              <button onClick={() => setTargetDisputeId(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border)'; e.currentTarget.style.color = 'var(--text)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-muted)'; }}>&times;</button>
+                            </div>
+                            
+                            <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
+                              {/* Original Transaction Details */}
+                              <div style={{ padding: '14px 20px', background: darkMode ? '#1E293B' : '#f8fafc', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: 'var(--text)', alignItems: 'center' }}>
+                                <span>Transaction Details</span>
+                                <span style={{ fontWeight: 'normal', color: 'var(--text-muted)', fontSize: '12px' }}>Date: <span style={{color:'var(--text)', fontWeight:'700'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px', fontSize: '13px', background: 'var(--card)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Case ID:</span> <strong style={{color: 'var(--text)'}}>{cb.id}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>AR Number:</span> <strong style={{color: 'var(--text)'}}>{cb.rrn}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>TXN Ref. Number:</span> <strong style={{color: 'var(--text)'}}>{cb.txnId}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>MID:</span> <strong style={{color: 'var(--text)'}}>{cb.userId}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>TID:</span> <strong style={{color: 'var(--text)'}}>10515104</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Amount:</span> <strong style={{color: '#6B38FB', fontSize: '14px'}}>{formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Card Number:</span> <strong style={{color: 'var(--text)'}}>457704******3989</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Merchant Name:</span> <strong style={{color: 'var(--text)'}}>{cb.userName}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Approval Code:</span> <strong style={{color: 'var(--text)'}}>021838</strong></div>
+                              </div>
+
+                              {/* Dispute Details */}
+                              <div style={{ padding: '14px 20px', background: darkMode ? '#1E293B' : '#f8fafc', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: 'var(--text)' }}>
+                                <span>Dispute Info</span>
+                                <span style={{ fontWeight: 'normal', color: 'var(--text-muted)', fontSize: '12px' }}>Dispute Date: <span style={{color:'var(--text)', fontWeight:'700'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px', fontSize: '13px', background: 'var(--card)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Scheme:</span> <strong style={{color: 'var(--text)'}}>{cb.product || 'VISA'}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Aggregator:</span> <strong style={{color: 'var(--text)'}}>{cb.aggregator || 'Payermax'}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Visa Case ID:</span> <strong style={{color: 'var(--text)'}}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Reason Code:</span> <strong style={{color: 'var(--text)'}}>13.1</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Remaining Days:</span> <strong style={{color: cb.aging <= 3 ? '#ef4444' : '#f59e0b'}}>{cb.aging} days</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Current Status:</span> <strong style={{color: 'var(--text)'}}>{cb.mStatus}</strong></div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Dispute Description:</span> <strong style={{color: 'var(--text)', fontWeight: '600', lineHeight: '1.4'}}>13.1 - Services Not Provided or Merchandise Not Received</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Last Remarks:</span> <strong style={{color: '#6B38FB'}}>{cb.merchantAction || '-'}</strong></div>
+                              </div>
+
+                              {/* Previous Documents */}
+                              <div style={{ padding: '14px 20px', background: darkMode ? '#1E293B' : '#f8fafc', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text)' }}>
+                                <span>Evidence Documents</span>
+                              </div>
+                              
+                              <div style={{ padding: '16px 20px', background: 'var(--card)' }}>
+                                {(cb.documents && cb.documents.length > 0) ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {cb.documents.map(doc => (
+                                      <div key={doc.id} style={{ padding: '12px', border: doc.status === 'Rejected' ? '1px solid #fca5a5' : '1px solid var(--border)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '6px', background: doc.status === 'Rejected' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(107, 56, 251, 0.03)' }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <span style={{ fontSize: '16px' }}>📄</span>
+                                          <span style={{ wordBreak: 'break-all' }}>{doc.filename}</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                                          <div>By: <strong style={{color: 'var(--text)'}}>{doc.uploadedBy || 'Merchant'}</strong></div>
+                                          <div>Status: <strong style={{ color: doc.status === 'Rejected' ? '#ef4444' : doc.status === 'Accepted' ? '#22c55e' : '#eab308' }}>{doc.status}</strong></div>
+                                          <div>Date: <strong style={{color: 'var(--text)'}}>{new Date(doc.uploadedAt).toLocaleDateString()}</strong></div>
+                                        </div>
+                                        {doc.status === 'Rejected' && (
+                                          <div style={{ fontSize: '11px', color: '#ef4444', background: 'var(--card)', padding: '6px 10px', borderRadius: '4px', border: '1px dashed #fca5a5', marginTop: '4px' }}>
+                                            <strong>Remarks:</strong> {doc.rejectionRemarks}
+                                          </div>
+                                        )}
+                                        {doc.status === 'Pending Review' && doc.uploadedBy !== 'Admin' && (
+                                          <div style={{ marginTop: '8px' }}>
+                                            <button style={{ fontSize: '12px', background: '#eab308', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }} onClick={() => { setActiveModal('declineDocuments'); setTargetDisputeId(cb.id); }}>
+                                              Select & Reject
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>No evidence documents uploaded.</div>
+                                )}
+                              </div>
+
+                              {/* Timeline */}
+                              {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'admin')}
+                            </div>
+                            
+                            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', background: darkMode ? '#1E293B' : '#F8FAFC', borderRadius: '0 0 12px 12px' }}>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', width: '100%' }}>
+                                {isClosedDispute(cb) ? (
+                                  <button onClick={() => setTargetDisputeId(null)} style={{ padding: '6px 12px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }}>Close Preview</button>
+                                ) : adminTab === 'merchant-pending' ? (
+                                  <button onClick={() => setTargetDisputeId(null)} style={{ padding: '6px 12px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }}>Close Preview</button>
+                                ) : adminTab === 'verification-pending' && isPendingVerification(cb) ? (
+                                  <>
+                                    <button type="button" className="btn btn-sm btn-primary" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => setActiveModal('remarks')}>
+                                      Review Evidence
+                                    </button>
+                                    <button type="button" className="btn btn-sm btn-success" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleVisaAccept(cb.id)}>
+                                      ✓ Accept &amp; Submit to Visa
+                                    </button>
+                                    <button type="button" className="btn btn-sm btn-danger" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleDeclineClick(cb.id)}>
+                                      ✕ Request Info / Reject
+                                    </button>
+                                    <button type="button" className="btn btn-sm" style={{ background: '#0288d1', color: '#fff', padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleAdminEscalate(cb.id)}>
+                                      Pre-Arb
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    {cb.visaPending && (
+                                      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '8px' }}>
+                                        <div style={{ padding: '8px 12px', background: 'rgba(21, 101, 192, 0.1)', color: '#1565c0', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
+                                          Submitted to Visa (Pending Final Decision)
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                          <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>[Sim] Webhook:</span>
+                                          <button className="btn btn-sm btn-success" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => executeVisaWebhookSimulator(cb, true)}>
+                                            {cb.mStatus === 'Arbitration Raise' ? 'Arb Won' : cb.mStatus === 'Pre-Arbitration Raise' ? 'Pre-Arb Won' : 'Won'}
+                                          </button>
+                                          <button className="btn btn-sm btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => executeVisaWebhookSimulator(cb, false)}>
+                                            {cb.mStatus === 'Chargeback Raise' ? 'Pre-Arb (Lost)' : cb.mStatus === 'Pre-Arbitration Raise' ? 'Arb (Lost)' : 'Lost'}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+                                    {!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && !cb.visaPending && isPendingVerification(cb) && (
+                                      <>
+                                        <button type="button" className="btn btn-sm btn-primary" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => setActiveModal('remarks')}>
+                                          Review Evidence
+                                        </button>
+                                        <button type="button" className="btn btn-sm btn-success" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleVisaAccept(cb.id)}>
+                                          Accept &amp; Submit to Visa
+                                        </button>
+                                        <button type="button" className="btn btn-sm btn-danger" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleDeclineClick(cb.id)}>
+                                          Request Info
+                                        </button>
+                                      </>
+                                    )}
+                                    {cb.mStatus.includes('Arbitration') && !cb.acquirerAction && (
+                                      <button type="button" className="btn btn-sm" style={{ background: 'var(--purple)', color: '#fff', padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => { setActiveModal('arbitration'); }}>
+                                        Arb Decision
+                                      </button>
+                                    )}
+                                    {(cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Accepted')) && cb.mSubStatus !== 'Refund Success' && cb.mSubStatus !== 'Refund On Hold' && (
+                                      <button type="button" className="btn btn-sm btn-success" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => { setActiveModal('refund'); }}>
+                                        Refund
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
-                    <div className="pagination" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ marginRight: '12px', color: 'var(--text-muted)', fontSize: '13px' }}>
-                        {adminPaging.startRecord}–{adminPaging.endRecord} of {adminPaging.total} records
-                      </span>
-                      <button 
-                        className="pg-btn" 
-                        disabled={aVcPage === 1}
-                        onClick={() => setAVcPage(aVcPage - 1)}
-                        style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aVcPage === 1 ? 'not-allowed' : 'pointer', opacity: aVcPage === 1 ? 0.5 : 1, color: 'var(--text)' }}
-                      >
-                        ‹
-                      </button>
-                      {Array.from({ length: adminPaging.totalPages }, (_, idx) => idx + 1).map(p => (
-                        <button 
-                          key={p} 
-                          className={`pg-btn ${aVcPage === p ? 'active' : ''}`}
-                          onClick={() => setAVcPage(p)}
-                          style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: aVcPage === p ? '#6B38FB' : 'var(--card)', color: aVcPage === p ? '#FFFFFF' : 'var(--text)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontWeight: '600' }}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                      <button 
-                        className="pg-btn" 
-                        disabled={aVcPage === adminPaging.totalPages}
-                        onClick={() => setAVcPage(aVcPage + 1)}
-                        style={{ width: '32px', height: '32px', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aVcPage === adminPaging.totalPages ? 'not-allowed' : 'pointer', opacity: aVcPage === adminPaging.totalPages ? 0.5 : 1, color: 'var(--text)' }}
-                      >
-                        ›
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -5774,7 +6132,7 @@ function AdminPortal({
         </div>
       )}
 
-      {activeModal === 'disputeDetails' && (
+      {activeModal === 'disputeDetails' && activePage !== 'a-view-cb' && (
         <div className="overlay open">
           {(() => {
             const cb = chargebacks.find(c => c.id === targetDisputeId) || {};
@@ -7219,6 +7577,8 @@ function PartnerPortal({
                   </button>
                 </div>
 
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
+                  <div style={{ flex: targetDisputeId ? '1 1 58%' : '1 1 100%', minWidth: '300px', transition: 'all 0.3s ease' }}>
                     <div className="tbl-card" style={{ boxShadow: 'var(--shadow)', border: '1px solid var(--border)', background: 'var(--card)', borderRadius: '12px', overflow: 'hidden' }}>
                       <div className="tbl-wrap">
                         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -7237,45 +7597,177 @@ function PartnerPortal({
                             </tr>
                           </thead>
                           <tbody>
-                            {filteredDisputes.map(cb => (
-                              <tr key={cb.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
-                                <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
-                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '13px', fontFamily: 'monospace' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
-                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px' }}>{getDisputeType(cb)}</td>
-                                <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '500', fontSize: '13px' }}>{cb.userName}</td>
-                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
-                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
-                                <td style={{ padding: '10px 8px', fontSize: '13px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
-                                <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.txnId}</td>
-                                <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '600', fontSize: '13px' }}>
-                                  <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
-                                </td>
-                                <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                                  {partnerTab === 'closed' || isClosedDispute(cb) ? (
-                                    <button 
-                                      className="btn btn-sm btn-outline" 
-                                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', color: '#50BDC9', borderRadius: '8px', width: '32px', height: '32px', padding: 0, background: 'transparent', cursor: 'pointer' }} 
-                                      onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
-                                      title="View Details"
-                                    >
-                                      👁️
-                                    </button>
-                                  ) : (
-                                    <button 
-                                      className="btn btn-sm btn-primary" 
-                                      style={{ padding: '6px 12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}
-                                      onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
-                                    >
-                                      Take Action
-                                    </button>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
+                            {filteredDisputes.map(cb => {
+                              const isSelected = cb.id === targetDisputeId;
+                              return (
+                                <tr 
+                                  key={cb.id} 
+                                  onClick={() => setTargetDisputeId(cb.id)}
+                                  style={{ 
+                                    borderBottom: '1px solid var(--border)', 
+                                    background: isSelected ? 'rgba(80, 189, 201, 0.08)' : 'transparent', 
+                                    borderLeft: isSelected ? '4px solid #50BDC9' : '4px solid transparent',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.2s' 
+                                  }}
+                                >
+                                  <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{(cb.id || 'XXXX').substring(0, 8).toUpperCase()}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '13px', fontFamily: 'monospace' }}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px' }}>{getDisputeType(cb)}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '500', fontSize: '13px' }}>{cb.userName}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>ISU-{(cb.userName || '9999').substring(0,4).toUpperCase()}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.arn || cb.rrn}</td>
+                                  <td style={{ padding: '10px 8px', fontSize: '13px' }}>{renderDisputeStatusBadge(cb.mSubStatus)}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text-muted)', fontSize: '13px', fontFamily: 'monospace' }}>{cb.txnId}</td>
+                                  <td style={{ padding: '10px 8px', color: 'var(--text)', fontWeight: '600', fontSize: '13px' }}>
+                                    <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
+                                  </td>
+                                  <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                                    {partnerTab === 'closed' || isClosedDispute(cb) ? (
+                                      <button 
+                                        className="btn btn-sm btn-outline" 
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-input)', color: '#50BDC9', borderRadius: '8px', width: '32px', height: '32px', padding: 0, background: 'transparent', cursor: 'pointer' }} 
+                                        onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
+                                        title="View Details"
+                                      >
+                                        👁️
+                                      </button>
+                                    ) : (
+                                      <button 
+                                        className="btn btn-sm btn-primary" 
+                                        style={{ padding: '6px 12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}
+                                        onClick={(e) => { e.stopPropagation(); setTargetDisputeId(cb.id); }}
+                                      >
+                                        Take Action
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
                     </div>
+                  </div>
+
+                  {targetDisputeId && (
+                    <div className="slide-in-right" style={{ 
+                      flex: '1 1 38%', 
+                      minWidth: '380px', 
+                      background: 'var(--card, #fff)', 
+                      border: '1px solid var(--border)', 
+                      borderRadius: '12px', 
+                      boxShadow: 'var(--shadow-lg)', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      maxHeight: 'calc(100vh - 120px)',
+                      overflowY: 'auto',
+                      position: 'sticky',
+                      top: '24px',
+                      zIndex: 10
+                    }}>
+                      {/* Vertical Preview Panel */}
+                      {(() => {
+                        const cb = chargebacks.find(c => c.id === targetDisputeId) || {};
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', width: '100%', color: 'var(--text)' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: darkMode ? '#1E293B' : '#F8FAFC', borderRadius: '12px 12px 0 0' }}>
+                              <div>
+                                <span style={{ fontSize: '11px', color: '#50BDC9', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Case Preview (Partner)</span>
+                                <h2 style={{ fontSize: '15px', fontWeight: '800', margin: '2px 0 0 0', color: 'var(--text)', fontFamily: 'monospace' }}>{cb.id}</h2>
+                              </div>
+                              <button onClick={() => setTargetDisputeId(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--border)'; e.currentTarget.style.color = 'var(--text)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-muted)'; }}>&times;</button>
+                            </div>
+                            
+                            <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
+                              {/* Original Transaction Details */}
+                              <div style={{ padding: '14px 20px', background: darkMode ? '#1E293B' : '#f8fafc', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: 'var(--text)', alignItems: 'center' }}>
+                                <span>Transaction Details</span>
+                                <span style={{ fontWeight: 'normal', color: 'var(--text-muted)', fontSize: '12px' }}>Date: <span style={{color:'var(--text)', fontWeight:'700'}}>{formatDateDisp(cb.txnDate)}</span></span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px', fontSize: '13px', background: 'var(--card)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Case ID:</span> <strong style={{color: 'var(--text)'}}>{cb.id}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>AR Number:</span> <strong style={{color: 'var(--text)'}}>{cb.rrn}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>TXN Ref. Number:</span> <strong style={{color: 'var(--text)'}}>{cb.txnId}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>MID:</span> <strong style={{color: 'var(--text)'}}>{cb.userId}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>TID:</span> <strong style={{color: 'var(--text)'}}>10515104</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Amount:</span> <strong style={{color: '#50BDC9', fontSize: '14px'}}>{formatINR ? formatINR(cb.txnAmt) : '₹' + cb.txnAmt}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Card Number:</span> <strong style={{color: 'var(--text)'}}>457704******3989</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Merchant Name:</span> <strong style={{color: 'var(--text)'}}>{cb.userName}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Approval Code:</span> <strong style={{color: 'var(--text)'}}>021838</strong></div>
+                              </div>
+
+                              {/* Dispute Details */}
+                              <div style={{ padding: '14px 20px', background: darkMode ? '#1E293B' : '#f8fafc', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: 'var(--text)' }}>
+                                <span>Dispute Info</span>
+                                <span style={{ fontWeight: 'normal', color: 'var(--text-muted)', fontSize: '12px' }}>Dispute Date: <span style={{color:'var(--text)', fontWeight:'700'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
+                              </div>
+                              
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 20px', fontSize: '13px', background: 'var(--card)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Scheme:</span> <strong style={{color: 'var(--text)'}}>{cb.product || 'VISA'}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Aggregator:</span> <strong style={{color: 'var(--text)'}}>{cb.aggregator || 'Payermax'}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Visa Case ID:</span> <strong style={{color: 'var(--text)'}}>{cb.visaId || 'V-' + (cb.id || 'XXXX').substring(0, 6).toUpperCase()}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Reason Code:</span> <strong style={{color: 'var(--text)'}}>{cb.reasonCode || '13.1'}</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Remaining Days:</span> <strong style={{color: cb.aging <= 3 ? '#ef4444' : '#f59e0b'}}>{cb.aging} days</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Current Status:</span> <strong style={{color: 'var(--text)'}}>{cb.mStatus}</strong></div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Dispute Description:</span> <strong style={{color: 'var(--text)', fontWeight: '600', lineHeight: '1.4'}}>13.1 - Services Not Provided or Merchandise Not Received</strong></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}><span style={{ color: 'var(--text-muted)' }}>Merchant Action:</span> <strong style={{color: '#50BDC9'}}>{cb.merchantAction || '-'}</strong></div>
+                              </div>
+
+                              {/* Previous Documents */}
+                              <div style={{ padding: '14px 20px', background: darkMode ? '#1E293B' : '#f8fafc', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', fontWeight: '700', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text)' }}>
+                                <span>Evidence Documents</span>
+                              </div>
+                              
+                              <div style={{ padding: '16px 20px', background: 'var(--card)' }}>
+                                {(cb.documents && cb.documents.length > 0) ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {cb.documents.map(doc => (
+                                      <div key={doc.id} style={{ padding: '12px', border: doc.status === 'Rejected' ? '1px solid #fca5a5' : '1px solid var(--border)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '6px', background: doc.status === 'Rejected' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(80, 189, 201, 0.03)' }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <span style={{ fontSize: '16px' }}>📄</span>
+                                          <span style={{ wordBreak: 'break-all' }}>{doc.filename}</span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                                          <div>By: <strong style={{color: 'var(--text)'}}>{doc.uploadedBy || 'Merchant'}</strong></div>
+                                          <div>Status: <strong style={{ color: doc.status === 'Rejected' ? '#ef4444' : doc.status === 'Accepted' ? '#22c55e' : '#eab308' }}>{doc.status}</strong></div>
+                                          <div>Date: <strong style={{color: 'var(--text)'}}>{new Date(doc.uploadedAt).toLocaleDateString()}</strong></div>
+                                        </div>
+                                        {doc.status === 'Rejected' && (
+                                          <div style={{ fontSize: '11px', color: '#ef4444', background: 'var(--card)', padding: '6px 10px', borderRadius: '4px', border: '1px dashed #fca5a5', marginTop: '4px' }}>
+                                            <strong>Remarks:</strong> {doc.rejectionRemarks}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', textAlign: 'center', padding: '12px 0' }}>No evidence documents uploaded.</div>
+                                )}
+                              </div>
+
+                              {/* Timeline */}
+                              {renderTimeline(cb, expandedTimeline, setExpandedTimeline, showToast, 'partner')}
+                            </div>
+                            
+                            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', background: darkMode ? '#1E293B' : '#F8FAFC', borderRadius: '0 0 12px 12px' }}>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', width: '100%' }}>
+                                {!isClosedDispute(cb) && (
+                                  <button className="btn btn-sm btn-primary" style={{ padding: '6px 12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '12px', height: '36px' }} onClick={() => setActiveModal('partnerUploadEvidence')}>
+                                    Upload Representment Evidence
+                                  </button>
+                                )}
+                                <button onClick={() => setTargetDisputeId(null)} style={{ padding: '6px 12px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', height: '36px' }}>Close Preview</button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -7421,7 +7913,7 @@ function PartnerPortal({
 
 
           {/* Partner Dispute Details Modal */}
-          {activeModal === 'disputeDetails' && (
+          {activeModal === 'disputeDetails' && activePage !== 'p-disputes' && (
             <div className="overlay open">
               {(() => {
                 const cb = chargebacks.find(c => c.id === targetDisputeId) || {};

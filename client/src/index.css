@@ -2273,3 +2273,20 @@ body.dark-mode .tour-popover-footer { background-color: #0d0f17; border-top-colo
   opacity: 0.7;
   transform: translateX(0);
 }
+
+/* Custom animation for vertical preview panels */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
