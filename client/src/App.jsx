@@ -219,9 +219,9 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
   const themeColor = portalType === 'merchant' ? '#50BDC9' : '#4a148c';
 
   return (
-    <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', padding: '20px 0', background: 'var(--card)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '0 20px' }}>
-        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 'bold', color: 'var(--text)' }}>Timeline</h3>
+    <div style={{ marginTop: '28px', borderTop: '1px solid var(--border)', paddingTop: '24px', background: 'var(--card)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: 'var(--text)' }}>Timeline</h3>
         <button 
           onClick={() => {
             if (showToast) {
@@ -233,16 +233,17 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '8px',
             background: themeColor,
             color: '#fff',
             border: 'none',
-            padding: '8px 16px',
-            borderRadius: '4px',
+            padding: '10px 20px',
+            borderRadius: '8px',
             cursor: 'pointer',
             fontSize: '13px',
             fontWeight: '600',
             transition: 'opacity 0.2s',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}
           onMouseOver={(e) => e.currentTarget.style.opacity = 0.9}
           onMouseOut={(e) => e.currentTarget.style.opacity = 1}
@@ -251,14 +252,14 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
         </button>
       </div>
       
-      <div style={{ position: 'relative', paddingLeft: '45px', paddingRight: '20px' }}>
+      <div style={{ position: 'relative', paddingLeft: '50px', paddingRight: '0' }}>
         {/* Vertical timeline connector line */}
         {timelineItems.length > 1 && (
           <div style={{
             position: 'absolute',
-            left: '24px',
-            top: '12px',
-            bottom: '12px',
+            left: '19px',
+            top: '16px',
+            bottom: '16px',
             width: '2px',
             backgroundColor: 'var(--border)',
             zIndex: 0
@@ -268,23 +269,24 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
         {timelineItems.map((item, index) => {
           const isExpanded = expandedTimeline[index] !== undefined ? expandedTimeline[index] : (index === 0);
           return (
-            <div key={index} style={{ position: 'relative', marginBottom: '20px', zIndex: 1 }}>
+            <div key={index} style={{ position: 'relative', marginBottom: '24px', zIndex: 1 }}>
               {/* Green circular bullet with check icon */}
               <div style={{
                 position: 'absolute',
-                left: '-32px',
-                top: '6px',
-                width: '22px',
-                height: '22px',
+                left: '-31px',
+                top: '12px',
+                width: '24px',
+                height: '24px',
                 borderRadius: '50%',
-                backgroundColor: '#2e7d32', // green
+                backgroundColor: '#10B981', // green
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '11px',
+                fontSize: '12px',
                 fontWeight: 'bold',
-                boxShadow: '0 0 0 4px var(--card)'
+                boxShadow: '0 0 0 4px var(--card)',
+                flexShrink: 0
               }}>
                 ✓
               </div>
@@ -293,9 +295,10 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
               <div style={{
                 background: isExpanded ? 'var(--bg)' : 'var(--card)',
                 border: '1px solid var(--border)',
-                borderRadius: '8px',
+                borderRadius: '12px',
                 overflow: 'hidden',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
               }}>
                 {/* Header (clickable) */}
                 <div 
@@ -304,22 +307,23 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '12px 16px',
+                    padding: '14px 18px',
                     cursor: 'pointer',
-                    userSelect: 'none'
+                    userSelect: 'none',
+                    gap: '16px'
                   }}
                 >
-                  <div>
-                    <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--text)' }}>{item.title}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{item.time}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '14px', color: 'var(--text)', marginBottom: '4px' }}>{item.title}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.time}</div>
                   </div>
-                  <div style={{ fontSize: '14px', color: themeColor, display: 'flex', alignItems: 'center' }}>
+                  <div style={{ fontSize: '16px', color: themeColor, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                     {isExpanded ? (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="18 15 12 9 6 15"></polyline>
                       </svg>
                     ) : (
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     )}
@@ -329,21 +333,21 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
                 {/* Collapsible Details Panel */}
                 {isExpanded && (
                   <div style={{
-                    padding: '16px 20px',
+                    padding: '18px 20px',
                     borderTop: '1px solid var(--border)',
                     background: 'var(--card)',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     color: 'var(--text)'
                   }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px', marginBottom: item.file ? '12px' : '0' }}>
-                      <div style={{ color: 'var(--text-muted)' }}>Remarks</div>
-                      <div style={{ fontWeight: '600', color: 'var(--text)' }}>{item.remarks}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '12px', marginBottom: item.file ? '16px' : '0' }}>
+                      <div style={{ color: 'var(--text-muted)', fontWeight: '500', fontSize: '12px' }}>Remarks</div>
+                      <div style={{ fontWeight: '600', color: 'var(--text)', lineHeight: '1.5' }}>{item.remarks}</div>
                     </div>
                     {item.file && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ color: 'var(--text-muted)' }}>File</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '14px' }}>📄</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '12px', alignItems: 'center' }}>
+                        <div style={{ color: 'var(--text-muted)', fontWeight: '500', fontSize: '12px' }}>File</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '16px' }}>📄</span>
                           <a 
                             href="#" 
                             onClick={(e) => {
@@ -354,7 +358,7 @@ const renderTimeline = (cb, expandedTimeline, setExpandedTimeline, showToast, po
                                 alert(`Downloading ${item.file}`);
                               }
                             }}
-                            style={{ color: '#1890ff', textDecoration: 'none', fontWeight: 'bold' }}
+                            style={{ color: '#3B82F6', textDecoration: 'none', fontWeight: '600', fontSize: '13px' }}
                           >
                             {item.file}
                           </a>
@@ -2376,7 +2380,7 @@ function MerchantPortal({
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '24px',
+                  gap: '20px',
                   marginTop: '24px',
                   marginBottom: '24px'
                 }}>
@@ -2397,35 +2401,39 @@ function MerchantPortal({
                           background: '#FFFFFF',
                           borderTop: '3px solid #f97316',
                           borderRadius: '12px',
-                          padding: '20px',
-                          boxShadow: isActive ? '0 10px 25px rgba(249, 115, 22, 0.15)' : '0 4px 6px rgba(0,0,0,0.05)',
-                          border: isActive ? '1px solid #f97316' : '1px solid #e2e8f0',
+                          padding: '18px 20px',
+                          boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                          border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
                           borderTopWidth: '3px',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center'
+                          flexDirection: 'column',
+                          gap: '12px',
+                          minHeight: '100px'
                         }}
                       >
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due Today</span>
                             <span style={{
                               background: '#ef4444',
                               color: '#FFFFFF',
-                              padding: '2px 8px',
+                              padding: '3px 10px',
                               borderRadius: '12px',
-                              fontSize: '11px',
+                              fontSize: '10px',
                               fontWeight: '700',
-                              textTransform: 'uppercase'
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
                             }}>Urgent</span>
                           </div>
-                          <div style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b' }}>{dueTodayCount}</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '4px' }}>Amount</div>
-                          <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTodayAmount)}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueTodayCount}</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTodayAmount)}</div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -2451,35 +2459,39 @@ function MerchantPortal({
                           background: '#FFFFFF',
                           borderTop: '3px solid #f97316',
                           borderRadius: '12px',
-                          padding: '20px',
-                          boxShadow: isActive ? '0 10px 25px rgba(249, 115, 22, 0.15)' : '0 4px 6px rgba(0,0,0,0.05)',
-                          border: isActive ? '1px solid #f97316' : '1px solid #e2e8f0',
+                          padding: '18px 20px',
+                          boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                          border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
                           borderTopWidth: '3px',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center'
+                          flexDirection: 'column',
+                          gap: '12px',
+                          minHeight: '100px'
                         }}
                       >
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Due Tomorrow</span>
                             <span style={{
                               background: '#f97316',
                               color: '#FFFFFF',
-                              padding: '2px 8px',
+                              padding: '3px 10px',
                               borderRadius: '12px',
-                              fontSize: '11px',
+                              fontSize: '10px',
                               fontWeight: '700',
-                              textTransform: 'uppercase'
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
                             }}>Critical</span>
                           </div>
-                          <div style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b' }}>{dueTomorrowCount}</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '4px' }}>Amount</div>
-                          <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTomorrowAmount)}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{dueTomorrowCount}</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(dueTomorrowAmount)}</div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -2502,27 +2514,30 @@ function MerchantPortal({
                           background: '#FFFFFF',
                           borderTop: '3px solid #f97316',
                           borderRadius: '12px',
-                          padding: '20px',
-                          boxShadow: isActive ? '0 10px 25px rgba(249, 115, 22, 0.15)' : '0 4px 6px rgba(0,0,0,0.05)',
-                          border: isActive ? '1px solid #f97316' : '1px solid #e2e8f0',
+                          padding: '18px 20px',
+                          boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                          border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
                           borderTopWidth: '3px',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center'
+                          flexDirection: 'column',
+                          gap: '12px',
+                          minHeight: '100px'
                         }}
                       >
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>Insufficient Evidence</span>
                             <span style={{ color: '#f97316', fontSize: '16px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center' }}>⟲</span>
                           </div>
-                          <div style={{ fontSize: '32px', fontWeight: '800', color: '#1e293b' }}>{insufficientCount}</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#94a3b8', marginBottom: '4px' }}>Amount</div>
-                          <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>{formatINR(insufficientAmount)}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{insufficientCount}</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>{formatINR(insufficientAmount)}</div>
+                          </div>
                         </div>
                       </div>
                     );
@@ -2539,10 +2554,12 @@ function MerchantPortal({
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '20px',
-                  position: 'relative'
+                  marginBottom: '24px',
+                  position: 'relative',
+                  flexWrap: 'wrap',
+                  gap: '12px'
                 }}>
-                  <div style={{ display: 'flex', gap: '16px' }}>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     {/* Date Preset Dropdown */}
                     <div style={{ position: 'relative', display: 'inline-block' }}>
                       <button
@@ -3111,12 +3128,12 @@ function MerchantPortal({
                 
                 <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
                   {/* Original Transaction Details */}
-                  <div style={{ padding: '12px 20px', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
+                  <div style={{ padding: '16px 24px', background: '#fff', borderBottom: '1px solid #e5e7eb', fontWeight: 'bold', fontSize: '14px', display: 'flex', justifyContent: 'space-between', color: '#000', alignItems: 'center' }}>
                     <span>Original Transaction Details</span>
                     <span style={{ fontWeight: 'normal', color: '#757575' }}>Transaction Date & Time <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.txnDate)}</span></span>
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', padding: '24px', fontSize: '13px', background: '#fff' }}>
                     {/* Col 1 */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
@@ -3152,7 +3169,7 @@ function MerchantPortal({
                     <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', padding: '24px', fontSize: '13px', background: '#fff' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.product || 'VISA'}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Aggregator <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.aggregator || 'Payermax'}</strong></div>
@@ -5034,7 +5051,7 @@ function AdminPortal({
                 </div>
 
                 {/* Summary Cards */}
-                <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
                   {[
                     {
                       id: 'due_today',
@@ -5078,29 +5095,32 @@ function AdminPortal({
                         }}
                         style={{
                           background: '#FFFFFF',
-                          border: '1px solid var(--border)',
                           borderTop: '3px solid #f97316',
                           borderRadius: '12px',
-                          padding: '24px',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          boxShadow: isActive ? '0 0 0 2px rgba(249, 115, 22, 0.2), var(--shadow-md)' : 'var(--shadow)',
+                          padding: '18px 20px',
+                          boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                          border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
+                          borderTopWidth: '3px',
                           cursor: 'pointer',
-                          flex: 1,
-                          transition: 'all 0.2s ease-in-out',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '12px',
+                          minHeight: '100px'
                         }}
                       >
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px' }}>{card.label}</div>
-                          <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text)' }}>{card.count}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>{card.label}</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-light)', marginBottom: '8px' }}>Total Amount</div>
-                          <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>₹{card.amount.toLocaleString('en-IN')}</div>
-                          <span className="card-hint-text" style={{ fontSize: '11px', fontWeight: '600', color: '#f97316', display: 'block', marginTop: '6px' }}>
-                            {isActive ? 'Active filter ✓' : 'Click to filter →'}
-                          </span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{card.count}</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}</div>
+                            <span className="card-hint-text" style={{ fontSize: '10px', fontWeight: '600', color: '#f97316', display: 'block', marginTop: '4px' }}>
+                              {isActive ? 'Active ✓' : 'Click →'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -5113,11 +5133,11 @@ function AdminPortal({
                 </div>
 
                 {/* Toolbar with dropdowns and export */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative' }}>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', position: 'relative', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     {/* Date Range Dropdown */}
                     <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <button 
+                      <button
                         onClick={() => { setDateDropdownOpen(!dateDropdownOpen); setFilterDropdownOpen(false); }}
                         style={{
                           display: 'inline-flex',
@@ -5625,12 +5645,12 @@ function AdminPortal({
                 
                 <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
                   {/* Original Transaction Details */}
-                  <div style={{ padding: '12px 20px', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
+                  <div style={{ padding: '16px 24px', background: '#fff', borderBottom: '1px solid #e5e7eb', fontWeight: 'bold', fontSize: '14px', display: 'flex', justifyContent: 'space-between', color: '#000', alignItems: 'center' }}>
                     <span>Original Transaction Details</span>
                     <span style={{ fontWeight: 'normal', color: '#757575' }}>Transaction Date & Time <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.txnDate)}</span></span>
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', padding: '24px', fontSize: '13px', background: '#fff' }}>
                     {/* Col 1 */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
@@ -5666,7 +5686,7 @@ function AdminPortal({
                     <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', padding: '24px', fontSize: '13px', background: '#fff' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.product || 'VISA'}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Aggregator <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.aggregator || 'Payermax'}</strong></div>
@@ -6595,7 +6615,7 @@ function PartnerPortal({
                 </div>
 
                 {/* Summary Cards */}
-                <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
                   {[
                     {
                       id: 'due_today',
@@ -6638,29 +6658,32 @@ function PartnerPortal({
                         }}
                         style={{
                           background: '#FFFFFF',
-                          border: '1px solid var(--border)',
                           borderTop: '3px solid #f97316',
                           borderRadius: '12px',
-                          padding: '24px',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          boxShadow: isActive ? '0 0 0 2px rgba(249, 115, 22, 0.2), var(--shadow-md)' : 'var(--shadow)',
+                          padding: '18px 20px',
+                          boxShadow: isActive ? '0 8px 20px rgba(249, 115, 22, 0.2)' : '0 2px 8px rgba(0,0,0,0.06)',
+                          border: isActive ? '2px solid #f97316' : '1px solid #e2e8f0',
+                          borderTopWidth: '3px',
                           cursor: 'pointer',
-                          flex: 1,
-                          transition: 'all 0.2s ease-in-out',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '12px',
+                          minHeight: '100px'
                         }}
                       >
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px' }}>{card.label}</div>
-                          <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text)' }}>{card.count}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>{card.label}</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '11px', fontWeight: '500', color: 'var(--text-light)', marginBottom: '8px' }}>Total Amount</div>
-                          <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>₹{card.amount.toLocaleString('en-IN')}</div>
-                          <span className="card-hint-text" style={{ fontSize: '11px', fontWeight: '600', color: '#f97316', display: 'block', marginTop: '6px' }}>
-                            {isActive ? 'Active filter ✓' : 'Click to filter →'}
-                          </span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div style={{ fontSize: '36px', fontWeight: '800', color: '#1e293b', lineHeight: '1' }}>{card.count}</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#94a3b8', marginBottom: '2px' }}>Amount</div>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a' }}>₹{card.amount.toLocaleString('en-IN')}</div>
+                            <span className="card-hint-text" style={{ fontSize: '10px', fontWeight: '600', color: '#f97316', display: 'block', marginTop: '4px' }}>
+                              {isActive ? 'Active ✓' : 'Click →'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -6673,11 +6696,11 @@ function PartnerPortal({
                 </div>
 
                 {/* Toolbar with dropdowns and export */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative' }}>
-                  <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', position: 'relative', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     {/* Date Range Dropdown */}
                     <div style={{ position: 'relative', display: 'inline-block' }}>
-                      <button 
+                      <button
                         onClick={() => { setDateDropdownOpen(!dateDropdownOpen); setFilterDropdownOpen(false); }}
                         style={{
                           display: 'inline-flex',
@@ -7224,12 +7247,12 @@ function PartnerPortal({
                     
                     <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
                       {/* Original Transaction Details */}
-                      <div style={{ padding: '12px 20px', background: '#fff', borderBottom: '1px solid #eee', fontWeight: 'bold', fontSize: '13px', display: 'flex', justifyContent: 'space-between', color: '#000' }}>
+                      <div style={{ padding: '16px 24px', background: '#fff', borderBottom: '1px solid #e5e7eb', fontWeight: 'bold', fontSize: '14px', display: 'flex', justifyContent: 'space-between', color: '#000', alignItems: 'center' }}>
                         <span>Original Transaction Details</span>
                         <span style={{ fontWeight: 'normal', color: '#757575' }}>Transaction Date & Time <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.txnDate)}</span></span>
                       </div>
                       
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', padding: '24px', fontSize: '13px', background: '#fff' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Case ID <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.id}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>AR Number <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.rrn}</strong></div>
@@ -7262,7 +7285,7 @@ function PartnerPortal({
                         <span style={{ fontWeight: 'normal', color: '#757575' }}>Dispute Date <span style={{color:'red'}}>*</span> : <span style={{color:'#333', fontWeight:'bold'}}>{formatDateDisp(cb.createdDate || cb.txnDate)}</span></span>
                       </div>
                       
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', padding: '20px', fontSize: '12px', background: '#fff' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', padding: '24px', fontSize: '13px', background: '#fff' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Scheme <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.product || 'VISA'}</strong></div>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}><span style={{ color: '#9e9e9e' }}>Aggregator <span style={{color:'red'}}>*</span> :</span> <strong style={{color: '#000', width: '140px'}}>{cb.aggregator || 'Payermax'}</strong></div>
