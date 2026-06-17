@@ -123,15 +123,33 @@ const getTimelineData = (cb) => {
     remarks: 'Dispute case initiated by the issuer bank.'
   });
 
-  // 2. If Merchant evidence is submitted:
-  if (cb.merchantAction === 'evidence' || cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.length > 0)) {
-    const docName = cb.documents && cb.documents.length > 0 ? cb.documents[0].filename : 'disputeSampleFile.pdf';
-    const uploadTime = cb.documents && cb.documents.length > 0 ? new Date(cb.documents[0].uploadedAt).toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '15 May 2023, 10:57 AM';
+  // 2. Add entries for all uploaded documents
+  if (cb.documents && cb.documents.length > 0) {
+    const sortedDocs = [...cb.documents].sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt));
+    sortedDocs.forEach(doc => {
+      const uploadTime = new Date(doc.uploadedAt).toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      let remarks = 'Evidence document uploaded.';
+      if (doc.status === 'Rejected') {
+        remarks = `Document Rejected. Remarks: ${doc.rejectionRemarks || 'N/A'}`;
+      } else if (doc.status === 'Accepted') {
+        remarks = 'Evidence Accepted.';
+      } else if (cb.rejectReason) {
+        remarks = cb.rejectReason;
+      }
+      
+      list.push({
+        title: `Remarks Updated by ${doc.uploadedBy || 'Merchant'}`,
+        time: uploadTime,
+        remarks: remarks,
+        file: doc.filename
+      });
+    });
+  } else if (cb.merchantAction === 'evidence' || cb.acquirerAction === 'evidence_uploaded') {
     list.push({
       title: 'Remarks Updated by ' + (cb.userName || 'Merchant'),
-      time: uploadTime,
+      time: '15 May 2023, 10:57 AM',
       remarks: cb.rejectReason || 'Arlean',
-      file: docName
+      file: 'disputeSampleFile.pdf'
     });
   }
 
