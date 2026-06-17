@@ -1880,7 +1880,7 @@ function MerchantPortal({
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View / Actions</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
                         </tr>
                           </thead>
                           <tbody>
@@ -1899,8 +1899,8 @@ function MerchantPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                      👁
+                                    <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                      Take Action
                                     </button>
                                   </td>
                               </tr>
@@ -1933,7 +1933,7 @@ function MerchantPortal({
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View / Actions</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
                         </tr>
                           </thead>
                           <tbody>
@@ -1952,8 +1952,8 @@ function MerchantPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                      👁
+                                    <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                      Take Action
                                     </button>
                                   </td>
                               </tr>
@@ -1989,7 +1989,7 @@ function MerchantPortal({
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View / Actions</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
                         </tr>
                           </thead>
                           <tbody>
@@ -2008,8 +2008,8 @@ function MerchantPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                      👁
+                                    <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                      Take Action
                                     </button>
                                   </td>
                               </tr>
@@ -3893,7 +3893,7 @@ function AdminPortal({
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>{adminTab === 'verification-pending' ? 'View / Actions' : 'View'}</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3916,29 +3916,15 @@ function AdminPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
-                                      {adminTab !== 'verification-pending' && (
-                                        <button 
-                                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
-                                          onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}
-                                          title="View Details"
-                                        >
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#50BDC9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                          </svg>
-                                        </button>
-                                      )}
-                                      {adminTab === 'verification-pending' && (
-                                        <button
-                                          type="button"
-                                          className="btn btn-sm btn-primary"
-                                          onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}
-                                        >
-                                          Review
-                                        </button>
-                                      )}
-                                    </div>
+                                    {adminTab !== 'verification-pending' ? (
+                                      <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
+                                        Take Action
+                                      </button>
+                                    ) : (
+                                      <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}>
+                                        Take Action
+                                      </button>
+                                    )}
                                   </td>
                                 </tr>
                               </React.Fragment>
@@ -5041,7 +5027,7 @@ function PartnerPortal({
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TXN Ref. Number</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>Remaining Days</th>
                           <th style={{ padding: '12px 8px', fontWeight: '700' }}>TID</th>
-                          <th style={{ padding: '12px 8px', fontWeight: '700' }}>View</th>
+                          <th style={{ padding: '12px 8px', fontWeight: '700', textAlign: 'center' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -5060,10 +5046,9 @@ function PartnerPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#50BDC9', fontSize: '16px' }} onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>👁</button>
-
-                                    </div>
+                                    <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                      Take Action
+                                    </button>
                                   </td>
                           </tr>
                         ))}
