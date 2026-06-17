@@ -2156,19 +2156,25 @@ function MerchantPortal({
               <>
                 <div 
                   className={`sb-item ${activePage === 'dashboard' ? 'active' : ''}`} 
-                  onClick={() => setActivePage('dashboard')}
+                  onClick={() => {
+                    setActivePage('dashboard');
+                    setShowFaq(false);
+                  }}
                 >
                   <span className="si">⊞</span> Dashboard
                 </div>
                 <div 
                   className={`sb-item ${activePage === 'reports' ? 'active' : ''}`} 
-                  onClick={() => setActivePage('reports')}
+                  onClick={() => {
+                    setActivePage('reports');
+                    setShowFaq(false);
+                  }}
                 >
                   <span className="si">📋</span> Dispute Management
                 </div>
                 <div 
-                  className={`sb-item ${activePage === 'faq' ? 'active' : ''}`} 
-                  onClick={() => setActivePage('faq')}
+                  className={`sb-item ${showFaq ? 'active' : ''}`} 
+                  onClick={() => setShowFaq(!showFaq)}
                 >
                   <span className="si">❓</span> FAQ & Help
                 </div>
@@ -4827,33 +4833,48 @@ function MerchantPortal({
 
       {/* FAQ Modal */}
       {showFaq && (
-        <div className="overlay open" onClick={() => setShowFaq(false)}>
-          <div className="modal" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#4a148c' }}>Frequently Asked Questions</h2>
-              <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#9e9e9e' }}>&times;</button>
+        <div style={{
+          position: 'fixed',
+          bottom: '100px',
+          right: '30px',
+          width: '380px',
+          height: '500px',
+          maxHeight: 'calc(100vh - 150px)',
+          background: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 12px 32px rgba(107, 56, 251, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+          border: '1.5px solid #CBD5E1',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: '800', margin: 0, color: '#6B38FB', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>❓</span> Frequently Asked Questions
+            </h2>
+            <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; e.currentTarget.style.color = '#64748B'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94A3B8'; }}>&times;</button>
+          </div>
+          <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>What is the Dispute Management Portal?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes efficiently.</p>
             </div>
-            <div style={{ padding: '20px' }}>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What is the Dispute Management Portal?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes efficiently.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I filter disputes?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What do the summary cards show?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I take action on a dispute?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Take Action" button in the Action column to view details, upload evidence, or respond to the dispute.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I export dispute data?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
-              </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I filter disputes?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
+            </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>What do the summary cards show?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
+            </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I take action on a dispute?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Click on any dispute case in the list to open the split details preview. Under the upload column, you can either accept the dispute or upload supporting documents to contest it.</p>
+            </div>
+            <div style={{ paddingBottom: '12px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I export dispute data?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
             </div>
           </div>
         </div>
@@ -7033,33 +7054,48 @@ function AdminPortal({
 
       {/* FAQ Modal */}
       {showFaq && (
-        <div className="overlay open" onClick={() => setShowFaq(false)}>
-          <div className="modal" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#4a148c' }}>Frequently Asked Questions</h2>
-              <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#9e9e9e' }}>&times;</button>
+        <div style={{
+          position: 'fixed',
+          bottom: '100px',
+          right: '30px',
+          width: '380px',
+          height: '500px',
+          maxHeight: 'calc(100vh - 150px)',
+          background: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 12px 32px rgba(107, 56, 251, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+          border: '1.5px solid #CBD5E1',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: '800', margin: 0, color: '#6B38FB', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>❓</span> Frequently Asked Questions
+            </h2>
+            <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; e.currentTarget.style.color = '#64748B'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94A3B8'; }}>&times;</button>
+          </div>
+          <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>What is the Dispute Management Portal?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes efficiently across all merchants.</p>
             </div>
-            <div style={{ padding: '20px' }}>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What is the Dispute Management Portal?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes efficiently across all merchants.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I filter disputes?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What do the summary cards show?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I take action on a dispute?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Take Action" button in the Action column to view details, upload evidence, or respond to the dispute.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I export dispute data?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
-              </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I filter disputes?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
+            </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>What do the summary cards show?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
+            </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I take action on a dispute?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Click the "Take Action" button in the Action column to view details, upload evidence, or respond to the dispute.</p>
+            </div>
+            <div style={{ paddingBottom: '12px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I export dispute data?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
             </div>
           </div>
         </div>
@@ -7901,15 +7937,15 @@ function PartnerPortal({
         <nav className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
           <div className="sb-welcome">Welcome, Partner</div>
           <div className="sb-section">
-            <div className={`sb-item ${activePage === 'p-dashboard' ? 'active' : ''}`} onClick={() => setActivePage('p-dashboard')}>
+            <div className={`sb-item ${activePage === 'p-dashboard' ? 'active' : ''}`} onClick={() => { setActivePage('p-dashboard'); setShowFaq(false); }}>
               <span className="si">⊞</span> Portfolio Analytics
             </div>
 
-            <div className={`sb-item ${activePage === 'p-merchants' ? 'active' : ''}`} onClick={() => setActivePage('p-merchants')}>
+            <div className={`sb-item ${activePage === 'p-merchants' ? 'active' : ''}`} onClick={() => { setActivePage('p-merchants'); setShowFaq(false); }}>
               <span className="si">👥</span> Merchant Details
             </div>
 
-            <div className={`sb-item ${activePage === 'p-faq' ? 'active' : ''}`} onClick={() => setActivePage('p-faq')}>
+            <div className={`sb-item ${showFaq ? 'active' : ''}`} onClick={() => setShowFaq(!showFaq)}>
               <span className="si">❓</span> FAQ & Help
             </div>
 
@@ -9236,33 +9272,48 @@ function PartnerPortal({
 
       {/* FAQ Modal */}
       {showFaq && (
-        <div className="overlay open" onClick={() => setShowFaq(false)}>
-          <div className="modal" style={{ width: '90%', maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#4a148c' }}>Frequently Asked Questions</h2>
-              <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#9e9e9e' }}>&times;</button>
+        <div style={{
+          position: 'fixed',
+          bottom: '100px',
+          right: '30px',
+          width: '380px',
+          height: '500px',
+          maxHeight: 'calc(100vh - 150px)',
+          background: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 12px 32px rgba(107, 56, 251, 0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+          border: '1.5px solid #CBD5E1',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: '800', margin: 0, color: '#6B38FB', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>❓</span> Frequently Asked Questions
+            </h2>
+            <button onClick={() => setShowFaq(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#F1F5F9'; e.currentTarget.style.color = '#64748B'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#94A3B8'; }}>&times;</button>
+          </div>
+          <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>What is the Dispute Management Portal?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes on behalf of your merchants.</p>
             </div>
-            <div style={{ padding: '20px' }}>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What is the Dispute Management Portal?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The Dispute Management Portal allows you to view, manage, and respond to chargeback disputes on behalf of your merchants.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I filter disputes?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>What do the summary cards show?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I take action on a dispute?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Take Action" button in the Action column to view details, upload evidence, or respond to the dispute on behalf of the merchant.</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#4a148c', marginBottom: '8px' }}>How do I export dispute data?</h3>
-                <p style={{ fontSize: '13px', color: '#666', lineHeight: '1.6' }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
-              </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I filter disputes?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Use the dropdown filters at the top to filter by date range, status, type, or search by specific fields like Transaction ID, Case ID, or Merchant Name.</p>
+            </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>What do the summary cards show?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>The summary cards show urgent disputes due today, critical disputes due tomorrow, and disputes with insufficient evidence that need immediate attention.</p>
+            </div>
+            <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I take action on a dispute?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Click the "Take Action" button in the Action column to view details, upload evidence, or respond to the dispute on behalf of the merchant.</p>
+            </div>
+            <div style={{ paddingBottom: '12px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '700', color: '#1E293B', marginBottom: '6px' }}>How do I export dispute data?</h3>
+              <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.5', margin: 0 }}>Click the "Export" button in the toolbar to download dispute data as a CSV file for further analysis.</p>
             </div>
           </div>
         </div>
