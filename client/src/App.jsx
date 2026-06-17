@@ -82,8 +82,31 @@ const renderDisputeStatusBadge = (s) => {
   return <span className={`badge ${m[s] || 'badge-pending'}`}>{s}</span>;
 };
 
+const isClosedDispute = (cb) => {
+  if (!cb) return false;
+  const status = cb.mSubStatus || cb.mStatus || '';
+  const statusLower = status.toLowerCase();
+  return (
+    status === 'Dispute Won Partially' ||
+    status === 'Dispute Won Fully' ||
+    status === 'Dispute Lost – TAT Expired' ||
+    status === 'Dispute Lost – Accepted' ||
+    status === 'Chargeback Lost' ||
+    status === 'Arbitration Lost' ||
+    status === 'Dispute Lost' ||
+    statusLower.includes('lost') ||
+    statusLower.includes('won') ||
+    cb.resolution === 'Lost' ||
+    cb.merchantAction === 'accepted'
+  );
+};
+
 export default function App() {
   const isInitialized = useRef(false);
+  const [showTour, setShowTour] = useState(() => {
+    return !sessionStorage.getItem('isu_tour_completed');
+  });
+  const [tourStep, setTourStep] = useState(0);
 
   // Navigation: 'selector' | 'merchant' | 'admin' | 'partner'
   const [view, setView] = useState(() => {
@@ -569,6 +592,13 @@ function MerchantPortal({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [disputeMenuOpen, setDisputeMenuOpen] = useState(true);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  // Onboarding tour
+  const [showTour, setShowTour] = useState(() => !sessionStorage.getItem('merchant_tour_done'));
+  const [tourStep, setTourStep] = useState(0);
+  // FAQ state
+  const [faqSearch, setFaqSearch] = useState('');
+  const [faqOpenItem, setFaqOpenItem] = useState(null);
+  const [faqCategory, setFaqCategory] = useState('all');
   
   // Detail disputes states (Removed)
 
@@ -625,24 +655,21 @@ function MerchantPortal({
   const merchantDisputes = chargebacks.filter(cb => cb.userName === currentUser.username);
   
   const actionRequiredDisputes = merchantDisputes.filter(cb => 
-    !cb.merchantAction || 
-    cb.merchantAction === 'rejected' || 
-    cb.merchantAction === 'additional_evidence'
+    !isClosedDispute(cb) && (
+      !cb.merchantAction || 
+      cb.merchantAction === 'rejected' || 
+      cb.merchantAction === 'additional_evidence'
+    )
   );
   
   const pendingVerificationDisputes = merchantDisputes.filter(cb => 
-    (cb.merchantAction === 'evidence' || cb.merchantAction === 'accepted_admin' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'rejected' || cb.merchantAction === 'accepted_partially') && 
-    (cb.acquirerAction === null || cb.acquirerAction === 'evidence_uploaded' || cb.acquirerAction === 'request_info')
+    !isClosedDispute(cb) && (
+      (cb.merchantAction === 'evidence' || cb.merchantAction === 'accepted_admin' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'rejected' || cb.merchantAction === 'accepted_partially') && 
+      (cb.acquirerAction === null || cb.acquirerAction === 'evidence_uploaded' || cb.acquirerAction === 'request_info')
+    )
   );
 
-  const closedDisputes = merchantDisputes.filter(cb => 
-    cb.mStatus.includes('Lost') || 
-    cb.mStatus.includes('Won') || 
-    cb.resolution === 'Lost' || 
-    cb.mSubStatus === 'Chargeback Lost' || 
-    cb.mSubStatus === 'Arbitration Lost' ||
-    cb.merchantAction === 'accepted'
-  );
+  const closedDisputes = merchantDisputes.filter(isClosedDispute);
 
   // Dashboard calculations
   const getFilteredDashboardDisputes = () => {
@@ -1143,6 +1170,12 @@ function MerchantPortal({
               onClick={() => setActivePage('reports')}
             >
               <span className="si">📋</span> Dispute Management
+            </div>
+            <div 
+              className={`sb-item ${activePage === 'faq' ? 'active' : ''}`} 
+              onClick={() => setActivePage('faq')}
+            >
+              <span className="si">❓</span> FAQ & Help
             </div>
 
 
@@ -1960,9 +1993,20 @@ function MerchantPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                      Take Action
-                                    </button>
+                                    {isClosedDispute(cb) ? (
+                                      <button 
+                                        className="btn btn-sm btn-outline" 
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '4px', padding: 0 }} 
+                                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                                        title="View Details"
+                                      >
+                                        👁️
+                                      </button>
+                                    ) : (
+                                      <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
+                                        Take Action
+                                      </button>
+                                    )}
                                   </td>
                               </tr>
                             ))}
@@ -2123,8 +2167,13 @@ function MerchantPortal({
                                 <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>-</td>
                                 <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                 <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                  <button className="btn btn-sm btn-outline" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                    View Details
+                                  <button 
+                                    className="btn btn-sm btn-outline" 
+                                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '4px', padding: 0 }} 
+                                    onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                                    title="View Details"
+                                  >
+                                    👁️
                                   </button>
                                 </td>
                               </tr>
@@ -2145,10 +2194,143 @@ function MerchantPortal({
           )}
 
 
+
+          {/* FAQ & Help Page */}
+          {activePage === 'faq' && (() => {
+            const FAQS = [
+              { id: 1, cat: 'getting-started', q: 'What is a chargeback dispute?', a: 'A chargeback is a reversal of a credit card transaction initiated by the cardholder\'s bank. When a customer disputes a charge, the amount is temporarily debited from your account. You can contest this by submitting evidence through this portal.' },
+              { id: 2, cat: 'getting-started', q: 'How do I know when I have a new dispute?', a: 'New disputes will appear in your Dashboard under "Action Required". Check your portal regularly for new cases requiring your response.' },
+              { id: 3, cat: 'getting-started', q: 'What are the different dispute statuses?', a: 'Chargeback New = action required. In Progress = under review. Won/Lost = final outcome. Closed = fully resolved, no further action.' },
+              { id: 4, cat: 'disputes', q: 'How do I accept liability for a dispute?', a: 'Open the dispute from Action Required, click "Take Action", then choose "Accept Liability". You can accept full or partial liability. The amount will be debited from your wallet.' },
+              { id: 5, cat: 'disputes', q: 'How do I submit evidence to contest?', a: 'Go to All Disputes, Action Required tab, click "Take Action", select "Contest / Submit Evidence", upload proof documents (max 20MB each, PDF/PNG/JPEG) and add remarks.' },
+              { id: 6, cat: 'disputes', q: 'What happens after I submit evidence?', a: 'The dispute moves to "Under Review". The acquirer and scheme network will review your materials. The final outcome will appear in the Closed tab.' },
+              { id: 7, cat: 'disputes', q: 'Can I view closed disputes?', a: 'Yes. Go to Dispute Management, Closed tab. All resolved disputes are visible there. Click the eye icon to view full details.' },
+              { id: 8, cat: 'documents', q: 'What documents should I upload?', a: 'Upload proof of delivery, signed service agreements, communication records, transaction receipts, or refund proof as applicable.' },
+              { id: 9, cat: 'documents', q: 'What file formats are accepted?', a: 'PDF, JPEG, PNG. Maximum 20MB per file. Up to 3 supporting files per dispute response.' },
+              { id: 10, cat: 'sla', q: 'What is the TAT for disputes?', a: 'Each dispute has a "Remaining Days" deadline. Chargebacks: 20-45 days. Pre-Arbitration: 10-15 days. Missing the deadline = automatic loss.' },
+              { id: 11, cat: 'sla', q: 'What does "TAT Expired" mean?', a: 'If you did not respond in time, the dispute is auto-marked "Dispute Lost - TAT Expired". No further action is possible.' },
+              { id: 12, cat: 'account', q: 'How do I contact support?', a: 'Email support@isu-disputes.com or contact your relationship manager. Include your Case ID for faster resolution.' },
+            ];
+            const cats = [
+              { key: 'all', label: 'All Topics' },
+              { key: 'getting-started', label: 'Getting Started' },
+              { key: 'disputes', label: 'Disputes' },
+              { key: 'documents', label: 'Documents' },
+              { key: 'sla', label: 'TAT & SLA' },
+              { key: 'account', label: 'Account' },
+            ];
+            const filtered = FAQS.filter(f => {
+              const matchCat = faqCategory === 'all' || f.cat === faqCategory;
+              const matchSearch = !faqSearch || f.q.toLowerCase().includes(faqSearch.toLowerCase());
+              return matchCat && matchSearch;
+            });
+            const grouped = cats.filter(c => c.key !== 'all').map(c => ({ ...c, items: filtered.filter(f => f.cat === c.key) })).filter(c => c.items.length > 0);
+            return (
+              <div className="page active">
+                <div className="page-inner">
+                  <div className="faq-page">
+                    <div className="faq-hero">
+                      <div className="faq-hero-icon">{String.fromCodePoint(0x2753)}</div>
+                      <div>
+                        <h1>FAQ & Help Center</h1>
+                        <p>Find answers to common questions about managing your disputes on the ISU Merchant Portal.</p>
+                      </div>
+                    </div>
+                    <div className="faq-search">
+                      <span className="faq-search-icon">{String.fromCodePoint(0x1F50D)}</span>
+                      <input type="text" placeholder="Search your question..." value={faqSearch} onChange={e => setFaqSearch(e.target.value)} />
+                    </div>
+                    <div className="faq-categories">
+                      {cats.map(c => (
+                        <button key={c.key} className={'faq-cat-btn ' + (faqCategory === c.key ? 'active' : '')} onClick={() => setFaqCategory(c.key)}>{c.label}</button>
+                      ))}
+                    </div>
+                    {faqCategory === 'all' ? (
+                      grouped.map(grp => (
+                        <div className="faq-section" key={grp.key}>
+                          <div className="faq-section-title">{grp.label}</div>
+                          {grp.items.map(f => (
+                            <div key={f.id} className={'faq-item ' + (faqOpenItem === f.id ? 'open' : '')}>
+                              <div className="faq-q" onClick={() => setFaqOpenItem(faqOpenItem === f.id ? null : f.id)}>
+                                <span className="faq-q-text">{f.q}</span>
+                                <span className="faq-q-icon">{String.fromCodePoint(0x25BC)}</span>
+                              </div>
+                              <div className="faq-answer">{f.a}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="faq-section">
+                        {filtered.map(f => (
+                          <div key={f.id} className={'faq-item ' + (faqOpenItem === f.id ? 'open' : '')}>
+                            <div className="faq-q" onClick={() => setFaqOpenItem(faqOpenItem === f.id ? null : f.id)}>
+                              <span className="faq-q-text">{f.q}</span>
+                              <span className="faq-q-icon">{String.fromCodePoint(0x25BC)}</span>
+                            </div>
+                            <div className="faq-answer">{f.a}</div>
+                          </div>
+                        ))}
+                        {filtered.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No results found. Try a different search or category.</div>}
+                      </div>
+                    )}
+                    <div className="faq-cta">
+                      <h3>Still need help?</h3>
+                      <p>Our support team is available Monday-Friday, 9 AM - 6 PM IST. Response time: under 4 hours.</p>
+                      <div className="faq-cta-btns">
+                        <button className="btn btn-primary" onClick={() => showToast('Support request sent! Our team will contact you shortly.', 'success')}>Email Support</button>
+                        <button className="btn btn-outline" onClick={() => { setShowTour(true); setTourStep(0); setActivePage('dashboard'); }}>Restart Portal Tour</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
         </main>
       </div>
 
+
+      {/* Merchant Onboarding Tour Overlay */}
+      {showTour && (() => {
+        const TOUR_STEPS = [
+          { title: 'Welcome to Merchant Portal 👋', body: 'This quick tour highlights the key sections of your dispute management portal. You can skip at any time by clicking "Skip Tour".' },
+          { title: '📊 Dashboard', body: 'Your home screen shows live stats: total disputes received, open cases, disputes won, and SLA deadlines. Click any stat card to navigate to the relevant disputes.' },
+          { title: '📋 Dispute Management', body: 'Manage all your disputes here. Switch between Action Required, Under Review, Doc Pending, and Closed tabs to track and respond to cases.' },
+          { title: '⚡ Take Action', body: 'When a dispute needs your response, click "Take Action" to accept liability (full/partial) or submit supporting evidence documents.' },
+          { title: '❓ FAQ & Help', body: 'Visit the FAQ & Help section anytime for answers to common questions, document guidelines, and TAT/SLA information.' },
+          { title: "You're all set! 🎉", body: 'Your merchant portal is ready. Remember to respond to disputes before their TAT deadline to avoid automatic loss. Good luck!' },
+        ];
+        const step = TOUR_STEPS[tourStep];
+        const isLast = tourStep === TOUR_STEPS.length - 1;
+        const skipTour = () => { sessionStorage.setItem('merchant_tour_done', '1'); setShowTour(false); };
+        const nextStep = () => { if (isLast) { skipTour(); } else { setTourStep(tourStep + 1); } };
+        return (
+          <div className="tour-overlay" style={{ pointerEvents: 'all' }}>
+            <div className="tour-backdrop" onClick={skipTour} />
+            <div className="tour-popover" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+              <div className="tour-popover-header">
+                <h3>{step.title}</h3>
+                <span className="tour-popover-step">{tourStep + 1} / {TOUR_STEPS.length}</span>
+              </div>
+              <div className="tour-popover-body"><p>{step.body}</p></div>
+              <div className="tour-popover-footer">
+                <button className="tour-btn-skip" onClick={skipTour}>Skip Tour</button>
+                <div className="tour-dots">
+                  {TOUR_STEPS.map((_, i) => <span key={i} className={`tour-dot ${i === tourStep ? 'active' : ''}`} />)}
+                </div>
+                <button className={`tour-btn-next ${isLast ? 'tour-btn-finish' : ''}`} onClick={nextStep}>
+                  {isLast ? '✅ Done' : 'Next →'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {activeModal === 'disputeDetails' && (
+
         <div className="overlay open">
           {(() => {
             const cb = chargebacks.find(c => c.id === targetDisputeId) || {};
@@ -2264,26 +2446,26 @@ function MerchantPortal({
                 <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10 }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
-                    {reportTab === 'doc-pending' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
+                    {!isClosedDispute(cb) && reportTab === 'doc-pending' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (
                       <>
                         <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
                         <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Contest Dispute &amp; Submit Evidence</button>
                       </>
                     )}
-                    {reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
+                    {!isClosedDispute(cb) && reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && (cb.acquirerAction === 'evidence_uploaded' || (cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review'))) && (
                       <>
                         <button className="btn btn-danger" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => handleMerchantRejectAdminClick(cb.id)}>Reject Admin Evidence</button>
                         <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }} onClick={() => { setActiveModal('contest'); }}>Upload Additional Evidence</button>
                         <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#52c41a', color: '#fff', border: 'none' }} onClick={() => submitMerchantAcceptAdmin(cb.id)}>Accept Admin Evidence</button>
                       </>
                     )}
-                    {reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
+                    {!isClosedDispute(cb) && reportTab === 'doc-verification' && !cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won') && cb.acquirerAction !== 'evidence_uploaded' && !(cb.documents && cb.documents.some(d => d.uploadedBy === 'Admin' && d.status === 'Pending Review')) && (
                       <>
                         <button className="btn btn-outline" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: '#50BDC9', border: '1px solid #50BDC9', background: '#fff' }} onClick={() => { setActiveModal('action2'); }}>Accept Dispute</button>
                         <button className="btn btn-primary" style={{ padding: '6px 16px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', background: '#1890ff', color: '#fff', border: 'none' }} onClick={() => { setActiveModal('contest'); }}>Contest Dispute &amp; Submit Evidence</button>
                       </>
                     )}
-                    {reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && getActionBtn(cb)}
+                    {!isClosedDispute(cb) && reportTab !== 'doc-pending' && reportTab !== 'doc-verification' && getActionBtn(cb)}
                   </div>
                 </div>
               </div>
@@ -2735,7 +2917,7 @@ function AdminPortal({
     cb && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence') && !cb.acquirerAction && !cb.visaPending;
 
   const getAdminActionRequiredCount = () => {
-    return chargebacks.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending).length;
+    return chargebacks.filter(cb => !isClosedDispute(cb) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending).length;
   };
 
   const handleAdminEscalate = async (id) => {
@@ -2850,11 +3032,11 @@ function AdminPortal({
     });
 
     if (adminTab === 'merchant-pending') {
-      list = list.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending);
+      list = list.filter(cb => !isClosedDispute(cb) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending);
     } else if (adminTab === 'verification-pending') {
-      list = list.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending);
+      list = list.filter(cb => !isClosedDispute(cb) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending);
     } else if (adminTab === 'closed') {
-      list = list.filter(cb => cb.mStatus.includes('Lost') || cb.mStatus.includes('Won') || cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost' || cb.mSubStatus === 'Arbitration Lost' || cb.merchantAction === 'accepted');
+      list = list.filter(isClosedDispute);
     }
 
     if (aVcSearchInput) {
@@ -3830,7 +4012,20 @@ function AdminPortal({
                   </div>
                 </div>
 
-
+                {/* Pie Chart Widget for Dispute Distribution */}
+                <div style={{ marginTop: '24px', background: 'var(--card)', borderRadius: 'var(--radius-lg)', padding: '24px', boxShadow: 'var(--shadow-md)' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text)', marginBottom: '16px' }}>📊 Dispute Distribution</h4>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '180px' }}>
+                    <PieChart 
+                      dataSegments={[
+                        { label: 'Open', value: stats.openCount, color: '#eab308' },
+                        { label: 'Lost', value: stats.lostCount, color: '#ef4444' },
+                        { label: 'Won', value: stats.wonCount, color: '#10b981' }
+                      ]} 
+                      darkMode={false} 
+                    />
+                  </div>
+                </div>
 
               </div>
             </div>
@@ -4105,9 +4300,14 @@ function AdminPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    {adminTab === 'closed' ? (
-                                      <button className="btn btn-sm btn-outline" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}>
-                                        View Details
+                                    {adminTab === 'closed' || isClosedDispute(cb) ? (
+                                      <button 
+                                        className="btn btn-sm btn-outline" 
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '4px', padding: 0 }} 
+                                        onClick={() => { setTargetDisputeId(cb.id); setActiveModal('disputeDetails'); }}
+                                        title="View Details"
+                                      >
+                                        👁️
                                       </button>
                                     ) : adminTab === 'verification-pending' ? (
                                       <button className="btn btn-sm btn-primary" onClick={() => { setTargetDisputeId(cb.id); setActiveModal('remarks'); }}>
@@ -4292,7 +4492,11 @@ function AdminPortal({
                 </div>
                 
                 <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', flexShrink: 0, zIndex: 10, flexWrap: 'wrap', gap: '12px' }}>
-                  {adminTab === 'merchant-pending' ? (
+                  {isClosedDispute(cb) ? (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                      <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                    </div>
+                  ) : adminTab === 'merchant-pending' ? (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
                       <button onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
                     </div>
@@ -4813,6 +5017,13 @@ function PartnerPortal({
   const [partnerTab, setPartnerTab] = useState('merchant-pending');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  // Onboarding tour
+  const [showTour, setShowTour] = useState(() => !sessionStorage.getItem('partner_tour_done'));
+  const [tourStep, setTourStep] = useState(0);
+  // FAQ state
+  const [faqSearch, setFaqSearch] = useState('');
+  const [faqOpenItem, setFaqOpenItem] = useState(null);
+  const [faqCategory, setFaqCategory] = useState('all');
 
   const TODAY_STR = new Date().toISOString().split('T')[0];
   const DEFAULT_FROM = (() => { let d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0]; })();
@@ -4887,7 +5098,7 @@ function PartnerPortal({
   // Partner sees all disputes (they represent all merchants)
   const allDisputes = chargebacks;
   const getPartnerActionRequiredCount = () => {
-    return allDisputes.filter(cb => (!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending).length;
+    return allDisputes.filter(cb => !isClosedDispute(cb) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending).length;
   };
   const visaDisputes = allDisputes.filter(cb => cb.visaPending);
   const evidenceDisputes = allDisputes.filter(cb => cb.merchantAction === 'evidence');
@@ -4910,11 +5121,11 @@ function PartnerPortal({
     if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
 
     if (partnerTab === 'merchant-pending') {
-      if (!((!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending)) return false;
+      if (!(!isClosedDispute(cb) && (!cb.merchantAction || (cb.acquirerAction === 'considered' && cb.merchantAction !== 'additional_evidence')) && !cb.visaPending)) return false;
     } else if (partnerTab === 'verification-pending') {
-      if (!((!cb.mStatus.includes('Lost') && !cb.mStatus.includes('Won')) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending)) return false;
+      if (!(!isClosedDispute(cb) && (cb.merchantAction === 'evidence' || cb.merchantAction === 'rejected' || cb.merchantAction === 'additional_evidence' || cb.merchantAction === 'rejected_admin' || cb.merchantAction === 'accepted_partially') && cb.acquirerAction === null && !cb.visaPending)) return false;
     } else if (partnerTab === 'closed') {
-      if (!(cb.mStatus.includes('Lost') || cb.mStatus.includes('Won') || cb.resolution === 'Lost' || cb.mSubStatus === 'Chargeback Lost' || cb.mSubStatus === 'Arbitration Lost' || cb.merchantAction === 'accepted')) return false;
+      if (!isClosedDispute(cb)) return false;
     }
 
     return true;
@@ -4981,6 +5192,10 @@ function PartnerPortal({
 
             <div className={`sb-item ${activePage === 'p-merchants' ? 'active' : ''}`} onClick={() => setActivePage('p-merchants')}>
               <span className="si">👥</span> Merchant Details
+            </div>
+
+            <div className={`sb-item ${activePage === 'p-faq' ? 'active' : ''}`} onClick={() => setActivePage('p-faq')}>
+              <span className="si">❓</span> FAQ & Help
             </div>
 
           </div>
@@ -5242,9 +5457,14 @@ function PartnerPortal({
                                   </td>
                                   <td style={{ padding: '12px 8px', color: '#4a148c', fontWeight: '600' }}>TID-{(cb.userId || cb.userName || '9999').substring(0,4).toUpperCase()}</td>
                                   <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                                    {partnerTab === 'closed' ? (
-                                      <button className="btn btn-sm btn-outline" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
-                                        View Details
+                                    {partnerTab === 'closed' || isClosedDispute(cb) ? (
+                                      <button 
+                                        className="btn btn-sm btn-outline" 
+                                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '32px', height: '32px', borderRadius: '4px', padding: 0 }} 
+                                        onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}
+                                        title="View Details"
+                                      >
+                                        👁️
                                       </button>
                                     ) : (
                                       <button className="btn btn-sm btn-primary" onClick={() => { setActiveModal('disputeDetails'); setTargetDisputeId(cb.id); }}>
@@ -5463,7 +5683,7 @@ function PartnerPortal({
                     
                     <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', background: '#fff', flexShrink: 0, gap: '12px' }}>
                       <button onClick={() => setActiveModal(null)} style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>Close</button>
-                      {partnerTab !== 'verification-pending' && (!cb.mStatus.includes('Won') && !cb.mStatus.includes('Lost')) && !cb.visaPending && (
+                      {partnerTab !== 'verification-pending' && !isClosedDispute(cb) && !cb.visaPending && (
                         <>
                           <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }} onClick={() => { setActiveModal('partnerUploadEvidence'); }}>Reject & Upload Evidence</button>
                         </>
@@ -5621,8 +5841,141 @@ function PartnerPortal({
             </div>
           )}
 
+
+          {/* Partner FAQ & Help Page */}
+          {activePage === 'p-faq' && (() => {
+            const FAQS = [
+              { id: 1, cat: 'getting-started', q: 'What is the Partner Portal?', a: 'The Partner Portal lets you monitor and manage disputes on behalf of your onboarded merchants from a single dashboard.' },
+              { id: 2, cat: 'getting-started', q: 'How do I see disputes for my merchants?', a: 'All disputes for your affiliated merchants are displayed on the Portfolio Analytics dashboard. Click any stat card or go to Dispute Management to see individual cases.' },
+              { id: 3, cat: 'getting-started', q: 'What are the different dispute tabs?', a: 'Action Required = disputes needing your action. Under Review = cases submitted, awaiting decision. Closed = fully resolved disputes.' },
+              { id: 4, cat: 'disputes', q: 'How do I submit evidence for a merchant?', a: 'Open the dispute from Action Required, click "Take Action", select "Reject & Upload Evidence", then upload supporting documents. Max 20MB per file.' },
+              { id: 5, cat: 'disputes', q: 'Can I view closed disputes?', a: 'Yes. Navigate to the Closed tab. All resolved cases are visible with their final status. Click the eye icon for full details.' },
+              { id: 6, cat: 'disputes', q: 'What happens after I submit evidence?', a: 'The dispute moves to Under Review while the acquirer and scheme network examine your submission. The final outcome appears in the Closed tab.' },
+              { id: 7, cat: 'merchants', q: 'How do I view merchant details?', a: 'Go to "Merchant Details" in the sidebar. Search by name or MID, and click "View" to see the full profile and business information.' },
+              { id: 8, cat: 'merchants', q: 'Can I onboard new merchants?', a: 'Merchant onboarding is handled through the admin portal. Contact your ISU account manager to register new merchants.' },
+              { id: 9, cat: 'documents', q: 'What documents are needed for evidence?', a: 'Upload proof of delivery, signed agreements, communication records, transaction receipts, or refund proof as applicable.' },
+              { id: 10, cat: 'documents', q: 'What file formats are accepted?', a: 'PDF, JPEG, PNG. Max 20MB each. Up to 3 documents per dispute response.' },
+              { id: 11, cat: 'sla', q: 'What is the TAT for partner actions?', a: 'Each dispute has a response deadline. Chargebacks: 20-45 days. Pre-Arbitration: 10-15 days. Missing the deadline = automatic loss.' },
+              { id: 12, cat: 'account', q: 'How do I contact support?', a: 'Email support@isu-disputes.com or contact your ISU relationship manager. Include the Case ID for faster resolution.' },
+            ];
+            const cats = [
+              { key: 'all', label: 'All Topics' },
+              { key: 'getting-started', label: 'Getting Started' },
+              { key: 'disputes', label: 'Disputes' },
+              { key: 'merchants', label: 'Merchants' },
+              { key: 'documents', label: 'Documents' },
+              { key: 'sla', label: 'TAT & SLA' },
+              { key: 'account', label: 'Account' },
+            ];
+            const filtered = FAQS.filter(f => {
+              const matchCat = faqCategory === 'all' || f.cat === faqCategory;
+              const matchSearch = !faqSearch || f.q.toLowerCase().includes(faqSearch.toLowerCase());
+              return matchCat && matchSearch;
+            });
+            const grouped = cats.filter(c => c.key !== 'all').map(c => ({ ...c, items: filtered.filter(f => f.cat === c.key) })).filter(c => c.items.length > 0);
+            return (
+              <div className="page active">
+                <div className="page-inner">
+                  <div className="faq-page">
+                    <div className="faq-hero">
+                      <div className="faq-hero-icon">{String.fromCodePoint(0x2753)}</div>
+                      <div>
+                        <h1>FAQ & Help Center</h1>
+                        <p>Answers to common questions about managing disputes through the ISU Partner Portal.</p>
+                      </div>
+                    </div>
+                    <div className="faq-search">
+                      <span className="faq-search-icon">{String.fromCodePoint(0x1F50D)}</span>
+                      <input type="text" placeholder="Search your question..." value={faqSearch} onChange={e => setFaqSearch(e.target.value)} />
+                    </div>
+                    <div className="faq-categories">
+                      {cats.map(c => (
+                        <button key={c.key} className={'faq-cat-btn ' + (faqCategory === c.key ? 'active' : '')} onClick={() => setFaqCategory(c.key)}>{c.label}</button>
+                      ))}
+                    </div>
+                    {faqCategory === 'all' ? (
+                      grouped.map(grp => (
+                        <div className="faq-section" key={grp.key}>
+                          <div className="faq-section-title">{grp.label}</div>
+                          {grp.items.map(f => (
+                            <div key={f.id} className={'faq-item ' + (faqOpenItem === f.id ? 'open' : '')}>
+                              <div className="faq-q" onClick={() => setFaqOpenItem(faqOpenItem === f.id ? null : f.id)}>
+                                <span className="faq-q-text">{f.q}</span>
+                                <span className="faq-q-icon">{String.fromCodePoint(0x25BC)}</span>
+                              </div>
+                              <div className="faq-answer">{f.a}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="faq-section">
+                        {filtered.map(f => (
+                          <div key={f.id} className={'faq-item ' + (faqOpenItem === f.id ? 'open' : '')}>
+                            <div className="faq-q" onClick={() => setFaqOpenItem(faqOpenItem === f.id ? null : f.id)}>
+                              <span className="faq-q-text">{f.q}</span>
+                              <span className="faq-q-icon">{String.fromCodePoint(0x25BC)}</span>
+                            </div>
+                            <div className="faq-answer">{f.a}</div>
+                          </div>
+                        ))}
+                        {filtered.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No results found. Try a different search or category.</div>}
+                      </div>
+                    )}
+                    <div className="faq-cta">
+                      <h3>Still need help?</h3>
+                      <p>Our support team is available Monday-Friday, 9 AM - 6 PM IST.</p>
+                      <div className="faq-cta-btns">
+                        <button className="btn btn-primary" onClick={() => showToast('Support request sent! Our team will contact you shortly.', 'success')}>Email Support</button>
+                        <button className="btn btn-outline" onClick={() => { setShowTour(true); setTourStep(0); setActivePage('p-dashboard'); }}>Restart Portal Tour</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
         </main>
       </div>
+
+      {/* Partner Onboarding Tour Overlay */}
+      {showTour && (() => {
+        const STEPS = [
+          { title: 'Welcome to Partner Portal', body: 'This quick tour shows you how to manage disputes on behalf of your merchants. Click "Skip Tour" anytime to dismiss.' },
+          { title: 'Portfolio Analytics', body: 'Your home dashboard displays live stats: total disputes, evidence submitted, won & lost counts, and SLA alerts across all your merchants.' },
+          { title: 'Dispute Management', body: 'View and manage disputes here. Use the Action Required, Under Review, and Closed tabs to track each case lifecycle.' },
+          { title: 'Merchant Details', body: 'Browse your onboarded merchants, view their profiles, MIDs, TIDs, and business information from a single place.' },
+          { title: 'FAQ & Help', body: 'Find answers to common partner questions, document requirements, and TAT guidelines in the FAQ section.' },
+          { title: 'All set!', body: 'Your partner portal is ready. Monitor your merchants disputes and respond before TAT deadlines. Good luck!' },
+        ];
+        const step = STEPS[tourStep];
+        const isLast = tourStep === STEPS.length - 1;
+        const skipTour = () => { sessionStorage.setItem('partner_tour_done', '1'); setShowTour(false); };
+        const nextStep = () => { if (isLast) { skipTour(); } else { setTourStep(tourStep + 1); } };
+        return (
+          <div className="tour-overlay" style={{ pointerEvents: 'all' }}>
+            <div className="tour-backdrop" onClick={skipTour} />
+            <div className="tour-popover" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+              <div className="tour-popover-header">
+                <h3>{step.title}</h3>
+                <span className="tour-popover-step">{tourStep + 1} / {STEPS.length}</span>
+              </div>
+              <div className="tour-popover-body"><p>{step.body}</p></div>
+              <div className="tour-popover-footer">
+                <button className="tour-btn-skip" onClick={skipTour}>Skip Tour</button>
+                <div className="tour-dots">
+                  {STEPS.map((_, i) => <span key={i} className={'tour-dot ' + (i === tourStep ? 'active' : '')} />)}
+                </div>
+                <button className={'tour-btn-next ' + (isLast ? 'tour-btn-finish' : '')} onClick={nextStep}>
+                  {isLast ? 'Done' : 'Next'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }
@@ -5684,6 +6037,73 @@ function DonutChart({ dataSegments, darkMode }) {
         <circle cx={cx} cy={cy} r={r - 10} fill={darkMode ? '#121220' : '#ffffff'} />
         <text x={cx} y={cy + 5} textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--text)">Total</text>
         <text x={cx} y={cy + 20} textAnchor="middle" fontSize="14" fontWeight="800" fill="var(--brand)">{total}</text>
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginLeft: '20px', textAlign: 'left' }}>
+        {dataSegments.map((segment, idx) => {
+          const pct = total > 0 ? Math.round((segment.value / total) * 100) : 0;
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }} key={idx}>
+              <span style={{ width: '12px', height: '12px', background: segment.color, borderRadius: '3px', display: 'inline-block' }}></span>
+              <span style={{ fontWeight: '500', color: 'var(--text)' }}>{segment.label}:</span>
+              <span style={{ color: 'var(--text-muted)' }}>{segment.value} ({pct}%)</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PieChart({ dataSegments, darkMode }) {
+  const total = dataSegments.reduce((sum, s) => sum + s.value, 0);
+  if (total === 0) {
+    return <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: '500', textAlign: 'center', width: '100%' }}>No data matches reports filter</div>;
+  }
+
+  const r = 50;
+  const cx = 80;
+  const cy = 80;
+  const circumference = 2 * Math.PI * r;
+
+  const getStrokeOffset = (index) => {
+    let offset = 0;
+    for (let i = 0; i < index; i++) {
+      const seg = dataSegments[i];
+      if (seg.value > 0) {
+        const percentage = seg.value / total;
+        const dashArray = percentage * circumference;
+        offset -= dashArray;
+      }
+    }
+    return offset;
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '10px' }}>
+      <svg width="180" height="160" viewBox="0 0 160 160" style={{ overflow: 'visible' }}>
+        {dataSegments.map((segment, idx) => {
+          if (segment.value === 0) return null;
+          const percentage = segment.value / total;
+          const dashArray = percentage * circumference;
+          const strokeDash = `${dashArray} ${circumference}`;
+          const strokeOffset = getStrokeOffset(idx);
+
+          return (
+            <circle 
+              key={idx}
+              cx={cx} 
+              cy={cy} 
+              r={r/2} 
+              fill="transparent" 
+              stroke={segment.color} 
+              strokeWidth={r} 
+              strokeDasharray={strokeDash} 
+              strokeDashoffset={strokeOffset} 
+              transform={`rotate(-90 ${cx} ${cy})`}
+              style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+            />
+          );
+        })}
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginLeft: '20px', textAlign: 'left' }}>
         {dataSegments.map((segment, idx) => {
