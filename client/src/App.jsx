@@ -101,6 +101,39 @@ const isClosedDispute = (cb) => {
   );
 };
 
+const getPresetDates = (preset) => {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  switch (preset) {
+    case 'today':
+      return { from: todayStr, to: todayStr };
+    case '7days': {
+      const d = new Date(); d.setDate(d.getDate() - 7);
+      return { from: d.toISOString().split('T')[0], to: todayStr };
+    }
+    case '30days': {
+      const d = new Date(); d.setDate(d.getDate() - 30);
+      return { from: d.toISOString().split('T')[0], to: todayStr };
+    }
+    case '6months': {
+      const d = new Date(); d.setDate(d.getDate() - 180);
+      return { from: d.toISOString().split('T')[0], to: todayStr };
+    }
+    default:
+      return null;
+  }
+};
+
+const getPresetLabel = (preset) => {
+  switch (preset) {
+    case 'today': return 'Today';
+    case '7days': return 'Last 7 Days';
+    case '30days': return 'Last 30 Days';
+    case '6months': return 'Last 6 Months';
+    default: return 'Custom Range';
+  }
+};
+
 export default function App() {
   const isInitialized = useRef(false);
   const [showTour, setShowTour] = useState(() => {
@@ -637,7 +670,17 @@ function MerchantPortal({
   const [dashFilterTo, setDashFilterTo] = useState(TODAY_STR);
   const [respondFilter, setRespondFilter] = useState({ from: DEFAULT_FROM, to: TODAY_STR, rrn: '', txnId: '', status: '', subStatus: '', disputeType: '', scheme: '' });
   const [raisedFilter, setRaisedFilter] = useState({ from: DEFAULT_FROM, to: TODAY_STR, rrn: '', txnId: '', status: '', subStatus: '', disputeType: '', scheme: '' });
-  const [reportFilter, setReportFilter] = useState({ from: DEFAULT_FROM, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' });
+  
+  const SIX_MONTHS_AGO = (() => {
+    let d = new Date(); d.setDate(d.getDate() - 180); return d.toISOString().split('T')[0];
+  })();
+  const [dateRangePreset, setDateRangePreset] = useState('6months');
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [tempFrom, setTempFrom] = useState(SIX_MONTHS_AGO);
+  const [tempTo, setTempTo] = useState(TODAY_STR);
+
+  const [reportFilter, setReportFilter] = useState({ from: SIX_MONTHS_AGO, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' });
   const [reportTab, setReportTab] = useState('doc-pending'); // 'dispute-mgmt' | 'doc-pending' | 'doc-verification' | 'closed'
   const [merchantSearchFocused, setMerchantSearchFocused] = useState(false);
 
@@ -1804,135 +1847,7 @@ function MerchantPortal({
                       <button className="rb-send" onClick={sendReply}>➤</button>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Reports and Analytics Page */}
-          {activePage === 'reports' && (
-            <div className="page active" id="m-reports">
-              <div className="page-inner">
-                <div className="page-hdr">
-                  <div>
-                    <h1>📋 All Disputes</h1>
-                    <p>Monitor, respond to, and resolve your dispute cases</p>
-                  </div>
-                </div>
-
-                {/* Search Panel — matches reference image */}
-                <div style={{ background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
-                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
-                    <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
-                  <div className="search-panel-grid">
-                    <div className="sp-field">
-                      <label>📅 From Date</label>
-                      <input type="date" className="sp-input" value={reportFilter.from}
-                        onChange={(e) => setReportFilter(prev => ({ ...prev, from: e.target.value }))} />
-                    </div>
-                    <div className="sp-field">
-                      <label>📅 To Date</label>
-                      <input type="date" className="sp-input" value={reportFilter.to}
-                        onChange={(e) => setReportFilter(prev => ({ ...prev, to: e.target.value }))} />
-                    </div>
-                    <div className="sp-field">
-                      <label>Dispute Type</label>
-                      <select className="sp-input" value={reportFilter.disputeType}
-                        onChange={(e) => setReportFilter(prev => ({ ...prev, disputeType: e.target.value }))}>
-                        <option value="">Select All</option>
-                        <option value="Chargeback">Chargeback</option>
-                        <option value="Pre-Arbitration">Pre-Arbitration</option>
-                        <option value="Retrieval Request">Retrieval Request</option>
-                        <option value="Arbitration">Arbitration</option>
-                      </select>
-                    </div>
-
-                    <div className="sp-field">
-                      <label>Scheme</label>
-                      <select className="sp-input" value={reportFilter.scheme}
-                        onChange={(e) => setReportFilter(prev => ({ ...prev, scheme: e.target.value }))}>
-                        <option value="">Select All</option>
-                        <option value="Visa">Visa</option>
-                      </select>
-                    </div>
-                    <div className="sp-field">
-                      <label>Dispute Status</label>
-                      <select className="sp-input" value={reportFilter.disputeStatus}
-                        onChange={(e) => setReportFilter(prev => ({ ...prev, disputeStatus: e.target.value }))}>
-                        <option value="">Select All</option>
-                        <option value="Dispute Won Partially">Dispute Won Partially</option>
-                        <option value="Dispute Won Fully">Dispute Won Fully</option>
-                        <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
-                        <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
-                        <option value="Document Rejected">Document Rejected</option>
-                        <option value="Chargeback In Progress">Chargeback In Progress</option>
-                        <option value="Chargeback Resubmit">Chargeback Resubmit</option>
-                      </select>
-                    </div>
-                    <div className="sp-field">
-                      <label>Search By</label>
-                      <select className="sp-input" value={reportFilter.searchBy}
-                        onChange={(e) => setReportFilter(prev => ({ ...prev, searchBy: e.target.value }))}>
-                        <option value="">Select All</option>
-                        <option value="Txn ID">Transaction ID (Txn ID)</option>
-                        <option value="RRN">RRN</option>
-                        <option value="TID">TID</option>
-                        <option value="MID">MID</option>
-                        <option value="Case ID">Case ID</option>
-                      </select>
-                    </div>
-                     {reportFilter.searchBy && (
-                      <div className="sp-field" style={{ position: 'relative' }}>
-                        <label>Search {reportFilter.searchBy}</label>
-                        <input type="text" className="sp-input" placeholder={`Enter ${reportFilter.searchBy}`}
-                          value={reportFilter.searchText}
-                          onChange={(e) => setReportFilter(prev => ({ ...prev, searchText: e.target.value }))}
-                          onFocus={() => setMerchantSearchFocused(true)}
-                          onBlur={() => setTimeout(() => setMerchantSearchFocused(false), 200)}
-                          style={{ width: '100%' }} />
-                        {merchantSearchFocused && reportFilter.searchText && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, maxHeight: '180px', overflowY: 'auto' }}>
-                            {merchantDisputes
-                              .map(cb => {
-                                if (reportFilter.searchBy === 'Txn ID') return cb.txnId;
-                                if (reportFilter.searchBy === 'RRN') return cb.rrn;
-                                if (reportFilter.searchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
-                                if (reportFilter.searchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
-                                if (reportFilter.searchBy === 'Case ID') return cb.caseId || cb.id;
-                                return '';
-                              })
-                              .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(reportFilter.searchText.toLowerCase()))
-                              .slice(0, 5)
-                              .map(val => (
-                                <div
-                                  key={val}
-                                  onMouseDown={() => {
-                                    setReportFilter(prev => ({ ...prev, searchText: val }));
-                                  }}
-                                  style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#333', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
-                                  onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
-                                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                                >
-                                  🔍 {val}
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="sp-field" style={{ visibility: 'hidden' }}></div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                    <button style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: 'transparent', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => setReportFilter({ from: DEFAULT_FROM, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' })}>
-                      Reset
-                    </button>
-                    <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Reports filtered!')}>
-                      Search
-                    </button>
-                  </div>
-                </fieldset>
-
-                <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
+                    <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
                     style={{ padding: '12px 0', color: reportTab === 'doc-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: reportTab === 'doc-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => setReportTab('doc-pending')}
@@ -1985,42 +1900,295 @@ function MerchantPortal({
                 </div>
 
                 {/* Toolbar with dropdowns and export */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <input 
-                      type="date" 
-                      value={reportFilter.from} 
-                      onChange={(e) => setReportFilter({...reportFilter, from: e.target.value})}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    />
-                    <input 
-                      type="date" 
-                      value={reportFilter.to} 
-                      onChange={(e) => setReportFilter({...reportFilter, to: e.target.value})}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    />
-                    <select 
-                      value={reportFilter.disputeStatus}
-                      onChange={(e) => setReportFilter({...reportFilter, disputeStatus: e.target.value})}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    >
-                      <option value="">Select All</option>
-                      <option value="New">New</option>
-                      <option value="Progress">Progress</option>
-                      <option value="Hold">Hold</option>
-                      <option value="Lost">Lost</option>
-                      <option value="Won">Won</option>
-                      <option value="Success">Success</option>
-                    </select>
-                    <select 
-                      value={reportFilter.scheme}
-                      onChange={(e) => setReportFilter({...reportFilter, scheme: e.target.value})}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    >
-                      <option value="">Select All</option>
-                      <option value="visa">Visa</option>
-                      <option value="mastercard">Mastercard</option>
-                    </select>
+                    {/* Date Range Dropdown */}
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <button 
+                        onClick={() => { setDateDropdownOpen(!dateDropdownOpen); setFilterDropdownOpen(false); }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          padding: '8px 16px',
+                          border: '1.5px solid var(--border-input, #e0e0e0)',
+                          borderRadius: '8px',
+                          background: 'var(--card, #fff)',
+                          color: 'var(--text, #757575)',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          height: '42px',
+                          minWidth: '160px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        <span>📅 {getPresetLabel(dateRangePreset)}</span>
+                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                      </button>
+
+                      {dateDropdownOpen && (
+                        <>
+                          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'transparent' }} onClick={() => setDateDropdownOpen(false)} />
+                          <div style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: '0',
+                            background: 'var(--card, #fff)',
+                            border: '1px solid var(--border, #e0e0e0)',
+                            borderRadius: '8px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                            zIndex: 1000,
+                            minWidth: '220px',
+                            padding: '8px 0',
+                            display: 'flex',
+                            flexDirection: 'column',
+                          }}>
+                            {['today', '7days', '30days', '6months'].map(preset => (
+                              <button
+                                key={preset}
+                                onClick={() => {
+                                  setDateRangePreset(preset);
+                                  const dates = getPresetDates(preset);
+                                  if (dates) {
+                                    setReportFilter(prev => ({ ...prev, from: dates.from, to: dates.to }));
+                                    setTempFrom(dates.from);
+                                    setTempTo(dates.to);
+                                  }
+                                  setDateDropdownOpen(false);
+                                }}
+                                style={{
+                                  padding: '10px 16px',
+                                  cursor: 'pointer',
+                                  fontSize: '13px',
+                                  color: dateRangePreset === preset ? '#4a148c' : 'var(--text, #333)',
+                                  fontWeight: dateRangePreset === preset ? '600' : '500',
+                                  textAlign: 'left',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  transition: 'background 0.2s',
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = 'var(--bg-body, #f5f5f5)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                              >
+                                {getPresetLabel(preset)}
+                              </button>
+                            ))}
+                            <div style={{ borderTop: '1px solid var(--border, #eee)', margin: '4px 0' }} />
+                            <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#78909c' }}>CUSTOM RANGE</span>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <div style={{ flex: 1 }}>
+                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>From</span>
+                                  <input 
+                                    type="date" 
+                                    value={tempFrom} 
+                                    onChange={(e) => setTempFrom(e.target.value)} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>To</span>
+                                  <input 
+                                    type="date" 
+                                    value={tempTo} 
+                                    onChange={(e) => setTempTo(e.target.value)} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  />
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setReportFilter(prev => ({ ...prev, from: tempFrom, to: tempTo }));
+                                  setDateRangePreset('custom');
+                                  setDateDropdownOpen(false);
+                                }}
+                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              >
+                                Apply Custom
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Search & Filter Dropdown */}
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <button 
+                        onClick={() => { setFilterDropdownOpen(!filterDropdownOpen); setDateDropdownOpen(false); }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          padding: '8px 16px',
+                          border: '1.5px solid var(--border-input, #e0e0e0)',
+                          borderRadius: '8px',
+                          background: 'var(--card, #fff)',
+                          color: 'var(--text, #757575)',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          height: '42px',
+                          minWidth: '160px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        <span>🔍 Search & Filter</span>
+                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                      </button>
+
+                      {filterDropdownOpen && (
+                        <>
+                          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'transparent' }} onClick={() => setFilterDropdownOpen(false)} />
+                          <div style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: '0',
+                            background: 'var(--card, #fff)',
+                            border: '1px solid var(--border, #e0e0e0)',
+                            borderRadius: '12px',
+                            boxShadow: '0 15px 35px rgba(0,0,0,0.15)',
+                            zIndex: 1000,
+                            width: '380px',
+                            padding: '20px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                          }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Type</label>
+                                <select 
+                                  value={reportFilter.disputeType}
+                                  onChange={(e) => setReportFilter(prev => ({ ...prev, disputeType: e.target.value }))}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Chargeback">Chargeback</option>
+                                  <option value="Pre-Arbitration">Pre-Arbitration</option>
+                                  <option value="Retrieval Request">Retrieval Request</option>
+                                  <option value="Arbitration">Arbitration</option>
+                                </select>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Scheme</label>
+                                <select 
+                                  value={reportFilter.scheme}
+                                  onChange={(e) => setReportFilter(prev => ({ ...prev, scheme: e.target.value }))}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Visa">Visa</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Status</label>
+                              <select 
+                                value={reportFilter.disputeStatus}
+                                onChange={(e) => setReportFilter(prev => ({ ...prev, disputeStatus: e.target.value }))}
+                                style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                              >
+                                <option value="">Select All</option>
+                                <option value="Dispute Won Partially">Dispute Won Partially</option>
+                                <option value="Dispute Won Fully">Dispute Won Fully</option>
+                                <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
+                                <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
+                                <option value="Document Rejected">Document Rejected</option>
+                                <option value="Chargeback In Progress">Chargeback In Progress</option>
+                                <option value="Chargeback Resubmit">Chargeback Resubmit</option>
+                              </select>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search By</label>
+                                <select 
+                                  value={reportFilter.searchBy}
+                                  onChange={(e) => setReportFilter(prev => ({ ...prev, searchBy: e.target.value }))}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Txn ID">Transaction ID (Txn ID)</option>
+                                  <option value="RRN">RRN</option>
+                                  <option value="TID">TID</option>
+                                  <option value="MID">MID</option>
+                                  <option value="Case ID">Case ID</option>
+                                </select>
+                              </div>
+                              {reportFilter.searchBy && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}>
+                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search Value</label>
+                                  <input 
+                                    type="text" 
+                                    value={reportFilter.searchText}
+                                    onChange={(e) => setReportFilter(prev => ({ ...prev, searchText: e.target.value }))}
+                                    onFocus={() => setMerchantSearchFocused(true)}
+                                    onBlur={() => setTimeout(() => setMerchantSearchFocused(false), 200)}
+                                    placeholder={`Enter ${reportFilter.searchBy}`}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  />
+                                  {merchantSearchFocused && reportFilter.searchText && (
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
+                                      {merchantDisputes
+                                        .map(cb => {
+                                          if (reportFilter.searchBy === 'Txn ID') return cb.txnId;
+                                          if (reportFilter.searchBy === 'RRN') return cb.rrn;
+                                          if (reportFilter.searchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
+                                          if (reportFilter.searchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
+                                          if (reportFilter.searchBy === 'Case ID') return cb.caseId || cb.id;
+                                          return '';
+                                        })
+                                        .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(reportFilter.searchText.toLowerCase()))
+                                        .slice(0, 5)
+                                        .map(val => (
+                                          <div
+                                            key={val}
+                                            onMouseDown={() => setReportFilter(prev => ({ ...prev, searchText: val }))}
+                                            style={{ padding: '6px 10px', cursor: 'pointer', fontSize: '12px', color: '#333', borderBottom: '1px solid #eee', textAlign: 'left' }}
+                                            onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                          >
+                                            🔍 {val}
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
+                              <button 
+                                onClick={() => {
+                                  setReportFilter({ from: SIX_MONTHS_AGO, to: TODAY_STR, provider: '', disputeType: '', scheme: '', disputeStatus: '', searchBy: '', searchText: '' });
+                                  setDateRangePreset('6months');
+                                  setTempFrom(SIX_MONTHS_AGO);
+                                  setTempTo(TODAY_STR);
+                                  setFilterDropdownOpen(false);
+                                }}
+                                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #e0e0e0', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: 'var(--text)' }}
+                              >
+                                Reset
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  setFilterDropdownOpen(false);
+                                  showToast('Filters applied!');
+                                }}
+                                style={{ padding: '6px 12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                              >
+                                Apply Filters
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => exportToCSV('raised')}>
                     Export
@@ -3023,12 +3191,19 @@ function AdminPortal({
   const [filterMid, setFilterMid] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterSubStatus, setFilterSubStatus] = useState('');
+  const [filterScheme, setFilterScheme] = useState('');
   
   const TODAY_STR = new Date().toISOString().split('T')[0];
-  const DEFAULT_FROM = (() => {
-    let d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0];
+  const SIX_MONTHS_AGO = (() => {
+    let d = new Date(); d.setDate(d.getDate() - 180); return d.toISOString().split('T')[0];
   })();
-  const [filterFrom, setFilterFrom] = useState(DEFAULT_FROM);
+  const [dateRangePreset, setDateRangePreset] = useState('6months');
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [tempFrom, setTempFrom] = useState(SIX_MONTHS_AGO);
+  const [tempTo, setTempTo] = useState(TODAY_STR);
+
+  const [filterFrom, setFilterFrom] = useState(SIX_MONTHS_AGO);
   const [filterTo, setFilterTo] = useState(TODAY_STR);
   
   // Dashboard date filters
@@ -3167,6 +3342,7 @@ function AdminPortal({
       }
       if (!matchesDisputeStatusFilter(cb, filterStatus)) return false;
       if (!matchesDisputeTypeFilter(cb, filterSubStatus)) return false;
+      if (filterScheme && cb.product?.toLowerCase() !== filterScheme.toLowerCase()) return false;
       if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
       if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
       return true;
@@ -4260,125 +4436,6 @@ function AdminPortal({
                 <span className="vc-breadcrumb">Dispute Management / <span>View Dispute History</span></span>
               </div>
               <div className="page-inner" style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
-                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
-                    <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                      {/* Col 1 */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>From Date</label>
-                          <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#50BDC9' }}>📅</span>
-                            <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="From Date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Aggregator</label>
-                          <input type="text" value="PayerMax" readOnly style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#888', outline: 'none', background: '#f5f5f5', cursor: 'not-allowed' }} />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Status</label>
-                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                            <option value="">Select All</option>
-                            <option value="Dispute Won Partially">Dispute Won Partially</option>
-                            <option value="Dispute Won Fully">Dispute Won Fully</option>
-                            <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
-                            <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
-                            <option value="Document Rejected">Document Rejected</option>
-                            <option value="Chargeback In Progress">Chargeback In Progress</option>
-                            <option value="Chargeback Resubmit">Chargeback Resubmit</option>
-                          </select>
-                        </div>
-                      </div>
-                      {/* Col 2 */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>To Date</label>
-                          <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#50BDC9' }}>📅</span>
-                            <input type="text" onFocus={(e) => e.target.type = 'date'} onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }} style={{ width: '100%', padding: '10px 10px 10px 36px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder="To Date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Scheme</label>
-                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} defaultValue="">
-                            <option value="">Select All</option>
-                            <option value="Visa">Visa</option>
-                          </select>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search By</label>
-                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
-                            <option value="">Select All</option>
-                            <option value="Txn ID">Transaction ID (Txn ID)</option>
-                            <option value="RRN">RRN</option>
-                            <option value="TID">TID</option>
-                            <option value="MID">MID</option>
-                            <option value="Case ID">Case ID</option>
-                            <option value="Merchant Name">Merchant Name</option>
-                          </select>
-                        </div>
-                      </div>
-                      {/* Col 3 */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Dispute Type</label>
-                          <select style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', appearance: 'auto', background: 'transparent' }} value={filterSubStatus} onChange={(e) => setFilterSubStatus(e.target.value)}>
-                            <option value="">Select All</option>
-                            <option value="Chargeback">Chargeback</option>
-                            <option value="Pre-Arbitration">Pre-Arbitration</option>
-                            <option value="Retrieval Request">Retrieval Request</option>
-                            <option value="Arbitration">Arbitration</option>
-                          </select>
-                        </div>
-                        <div style={{ height: '0px' }}></div>
-                        {filterSearchBy && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}>
-                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#546e7a' }}>Search {filterSearchBy}</label>
-                            <input type="text" style={{ width: '100%', padding: '10px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'transparent' }} placeholder={`Enter ${filterSearchBy}`} value={filterRrn}
-                              onChange={(e) => setFilterRrn(e.target.value)}
-                              onFocus={() => setAdminSearchFocused(true)}
-                              onBlur={() => setTimeout(() => setAdminSearchFocused(false), 200)} />
-                            {adminSearchFocused && filterRrn && (
-                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, maxHeight: '180px', overflowY: 'auto' }}>
-                                {chargebacks
-                                  .map(cb => {
-                                    if (filterSearchBy === 'Txn ID') return cb.txnId;
-                                    if (filterSearchBy === 'RRN') return cb.rrn;
-                                    if (filterSearchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
-                                    if (filterSearchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
-                                    if (filterSearchBy === 'Case ID') return cb.caseId || cb.id;
-                                    if (filterSearchBy === 'Merchant Name') return cb.userName;
-                                    return '';
-                                  })
-                                  .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(filterRrn.toLowerCase()))
-                                  .slice(0, 5)
-                                  .map(val => (
-                                    <div
-                                      key={val}
-                                      onMouseDown={() => {
-                                        setFilterRrn(val);
-                                      }}
-                                      style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#333', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
-                                      onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
-                                      onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                                    >
-                                      🔍 {val}
-                                    </div>
-                                  ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                      <button style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: 'transparent', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={resetAdminCb}>Reset</button>
-                      <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={filterAdminCb}>Search</button>
-                    </div>
-                  </fieldset>
-
                 <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
                     style={{ padding: '12px 0', color: adminTab === 'verification-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'verification-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
@@ -4396,7 +4453,6 @@ function AdminPortal({
                     style={{ padding: '12px 0', color: adminTab === 'management' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: adminTab === 'management' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
                     onClick={() => { setAdminTab('management'); setAVcPage(1); }}
                   >All Disputes ({chargebacks.length})</div>
-                </div>
                 </div>
 
                 {/* Summary Cards */}
@@ -4432,42 +4488,316 @@ function AdminPortal({
                 </div>
 
                 {/* Toolbar with dropdowns and export */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <input 
-                      type="date" 
-                      value={filterFrom} 
-                      onChange={(e) => setFilterFrom(e.target.value)}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    />
-                    <input 
-                      type="date" 
-                      value={filterTo} 
-                      onChange={(e) => setFilterTo(e.target.value)}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    />
-                    <select 
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    >
-                      <option value="">Select All</option>
-                      <option value="New">New</option>
-                      <option value="Progress">Progress</option>
-                      <option value="Hold">Hold</option>
-                      <option value="Lost">Lost</option>
-                      <option value="Won">Won</option>
-                      <option value="Success">Success</option>
-                    </select>
-                    <select 
-                      value={filterScheme}
-                      onChange={(e) => setFilterScheme(e.target.value)}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    >
-                      <option value="">Select All</option>
-                      <option value="visa">Visa</option>
-                      <option value="mastercard">Mastercard</option>
-                    </select>
+                    {/* Date Range Dropdown */}
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <button 
+                        onClick={() => { setDateDropdownOpen(!dateDropdownOpen); setFilterDropdownOpen(false); }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          padding: '8px 16px',
+                          border: '1.5px solid var(--border-input, #e0e0e0)',
+                          borderRadius: '8px',
+                          background: 'var(--card, #fff)',
+                          color: 'var(--text, #757575)',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          height: '42px',
+                          minWidth: '160px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        <span>📅 {getPresetLabel(dateRangePreset)}</span>
+                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                      </button>
+
+                      {dateDropdownOpen && (
+                        <>
+                          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'transparent' }} onClick={() => setDateDropdownOpen(false)} />
+                          <div style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: '0',
+                            background: 'var(--card, #fff)',
+                            border: '1px solid var(--border, #e0e0e0)',
+                            borderRadius: '8px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                            zIndex: 1000,
+                            minWidth: '220px',
+                            padding: '8px 0',
+                            display: 'flex',
+                            flexDirection: 'column',
+                          }}>
+                            {['today', '7days', '30days', '6months'].map(preset => (
+                              <button
+                                key={preset}
+                                onClick={() => {
+                                  setDateRangePreset(preset);
+                                  const dates = getPresetDates(preset);
+                                  if (dates) {
+                                    setFilterFrom(dates.from);
+                                    setFilterTo(dates.to);
+                                    setTempFrom(dates.from);
+                                    setTempTo(dates.to);
+                                  }
+                                  setDateDropdownOpen(false);
+                                }}
+                                style={{
+                                  padding: '10px 16px',
+                                  cursor: 'pointer',
+                                  fontSize: '13px',
+                                  color: dateRangePreset === preset ? '#4a148c' : 'var(--text, #333)',
+                                  fontWeight: dateRangePreset === preset ? '600' : '500',
+                                  textAlign: 'left',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  transition: 'background 0.2s',
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = 'var(--bg-body, #f5f5f5)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                              >
+                                {getPresetLabel(preset)}
+                              </button>
+                            ))}
+                            <div style={{ borderTop: '1px solid var(--border, #eee)', margin: '4px 0' }} />
+                            <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#78909c' }}>CUSTOM RANGE</span>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <div style={{ flex: 1 }}>
+                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>From</span>
+                                  <input 
+                                    type="date" 
+                                    value={tempFrom} 
+                                    onChange={(e) => setTempFrom(e.target.value)} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>To</span>
+                                  <input 
+                                    type="date" 
+                                    value={tempTo} 
+                                    onChange={(e) => setTempTo(e.target.value)} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  />
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setFilterFrom(tempFrom);
+                                  setFilterTo(tempTo);
+                                  setDateRangePreset('custom');
+                                  setDateDropdownOpen(false);
+                                }}
+                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              >
+                                Apply Custom
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Search & Filter Dropdown */}
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <button 
+                        onClick={() => { setFilterDropdownOpen(!filterDropdownOpen); setDateDropdownOpen(false); }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          padding: '8px 16px',
+                          border: '1.5px solid var(--border-input, #e0e0e0)',
+                          borderRadius: '8px',
+                          background: 'var(--card, #fff)',
+                          color: 'var(--text, #757575)',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          height: '42px',
+                          minWidth: '160px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        <span>🔍 Search & Filter</span>
+                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                      </button>
+
+                      {filterDropdownOpen && (
+                        <>
+                          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'transparent' }} onClick={() => setFilterDropdownOpen(false)} />
+                          <div style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: '0',
+                            background: 'var(--card, #fff)',
+                            border: '1px solid var(--border, #e0e0e0)',
+                            borderRadius: '12px',
+                            boxShadow: '0 15px 35px rgba(0,0,0,0.15)',
+                            zIndex: 1000,
+                            width: '380px',
+                            padding: '20px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                          }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Type</label>
+                                <select 
+                                  value={filterSubStatus}
+                                  onChange={(e) => setFilterSubStatus(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Chargeback">Chargeback</option>
+                                  <option value="Pre-Arbitration">Pre-Arbitration</option>
+                                  <option value="Retrieval Request">Retrieval Request</option>
+                                  <option value="Arbitration">Arbitration</option>
+                                </select>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Scheme</label>
+                                <select 
+                                  value={filterScheme}
+                                  onChange={(e) => setFilterScheme(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Visa">Visa</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Status</label>
+                                <select 
+                                  value={filterStatus}
+                                  onChange={(e) => setFilterStatus(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Dispute Won Partially">Dispute Won Partially</option>
+                                  <option value="Dispute Won Fully">Dispute Won Fully</option>
+                                  <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
+                                  <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
+                                  <option value="Document Rejected">Document Rejected</option>
+                                  <option value="Chargeback In Progress">Chargeback In Progress</option>
+                                  <option value="Chargeback Resubmit">Chargeback Resubmit</option>
+                                </select>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Aggregator</label>
+                                <input 
+                                  type="text" 
+                                  value="PayerMax" 
+                                  readOnly 
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }} 
+                                />
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search By</label>
+                                <select 
+                                  value={filterSearchBy}
+                                  onChange={(e) => setFilterSearchBy(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Txn ID">Transaction ID (Txn ID)</option>
+                                  <option value="RRN">RRN</option>
+                                  <option value="TID">TID</option>
+                                  <option value="MID">MID</option>
+                                  <option value="Case ID">Case ID</option>
+                                  <option value="Merchant Name">Merchant Name</option>
+                                </select>
+                              </div>
+                              {filterSearchBy && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}>
+                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search Value</label>
+                                  <input 
+                                    type="text" 
+                                    value={filterRrn}
+                                    onChange={(e) => setFilterRrn(e.target.value)}
+                                    onFocus={() => setAdminSearchFocused(true)}
+                                    onBlur={() => setTimeout(() => setAdminSearchFocused(false), 200)}
+                                    placeholder={`Enter ${filterSearchBy}`}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  />
+                                  {adminSearchFocused && filterRrn && (
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
+                                      {chargebacks
+                                        .map(cb => {
+                                          if (filterSearchBy === 'Txn ID') return cb.txnId;
+                                          if (filterSearchBy === 'RRN') return cb.rrn;
+                                          if (filterSearchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
+                                          if (filterSearchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
+                                          if (filterSearchBy === 'Case ID') return cb.caseId || cb.id;
+                                          if (filterSearchBy === 'Merchant Name') return cb.userName;
+                                          return '';
+                                        })
+                                        .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(filterRrn.toLowerCase()))
+                                        .slice(0, 5)
+                                        .map(val => (
+                                          <div
+                                            key={val}
+                                            onMouseDown={() => setFilterRrn(val)}
+                                            style={{ padding: '6px 10px', cursor: 'pointer', fontSize: '12px', color: '#333', borderBottom: '1px solid #eee', textAlign: 'left' }}
+                                            onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                          >
+                                            🔍 {val}
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
+                              <button 
+                                onClick={() => {
+                                  setFilterFrom(SIX_MONTHS_AGO);
+                                  setFilterTo(TODAY_STR);
+                                  setFilterStatus('');
+                                  setFilterSubStatus('');
+                                  setFilterScheme('');
+                                  setFilterSearchBy('');
+                                  setFilterRrn('');
+                                  setDateRangePreset('6months');
+                                  setTempFrom(SIX_MONTHS_AGO);
+                                  setTempTo(TODAY_STR);
+                                  setFilterDropdownOpen(false);
+                                }}
+                                style={{ padding: '6px 12px', background: 'transparent', border: '1px solid #e0e0e0', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', color: 'var(--text)' }}
+                              >
+                                Reset
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  setFilterDropdownOpen(false);
+                                  showToast('Filters applied!');
+                                }}
+                                style={{ padding: '6px 12px', background: '#50BDC9', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}
+                              >
+                                Apply Filters
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => exportExcel('admin')}>
                     Export
@@ -5300,8 +5630,16 @@ function PartnerPortal({
   const [faqCategory, setFaqCategory] = useState('all');
 
   const TODAY_STR = new Date().toISOString().split('T')[0];
-  const DEFAULT_FROM = (() => { let d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0]; })();
-  const [filterFrom, setFilterFrom] = useState(DEFAULT_FROM);
+  const SIX_MONTHS_AGO = (() => {
+    let d = new Date(); d.setDate(d.getDate() - 180); return d.toISOString().split('T')[0];
+  })();
+  const [dateRangePreset, setDateRangePreset] = useState('6months');
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [tempFrom, setTempFrom] = useState(SIX_MONTHS_AGO);
+  const [tempTo, setTempTo] = useState(TODAY_STR);
+
+  const [filterFrom, setFilterFrom] = useState(SIX_MONTHS_AGO);
   const [filterTo, setFilterTo] = useState(TODAY_STR);
   const [dashDateRangeType, setDashDateRangeType] = useState('7days');
   const [dashFilterFrom, setDashFilterFrom] = useState(() => { let d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; });
@@ -5396,7 +5734,7 @@ function PartnerPortal({
     }
     if (!matchesDisputeStatusFilter(cb, filterStatus)) return false;
     if (filterMerchant && !cb.userName?.toLowerCase().includes(filterMerchant.toLowerCase())) return false;
-    if (filterScheme && cb.product !== filterScheme) return false;
+    if (filterScheme && cb.product?.toLowerCase() !== filterScheme.toLowerCase()) return false;
     if (!matchesDisputeTypeFilter(cb, filterDisputeType)) return false;
     if (filterFrom && cb.createdDate && cb.createdDate < filterFrom) return false;
     if (filterTo && cb.createdDate && cb.createdDate > filterTo) return false;
@@ -5580,112 +5918,6 @@ function PartnerPortal({
                   <div><h1>Dispute Reports</h1><p>Search and track all disputes across all merchants</p></div>
                 </div>
 
-                <div style={{ background: 'var(--bg-body, #fff)', paddingTop: '16px', paddingBottom: '8px', margin: '0 -32px', paddingLeft: '32px', paddingRight: '32px' }}>
-                  <fieldset style={{ border: '1px solid #d1c4e9', borderRadius: '8px', padding: '24px', marginBottom: '24px', position: 'relative', background: '#fff' }}>
-                    <legend style={{ padding: '0 8px', color: '#50BDC9', fontWeight: '600', fontSize: '15px', marginLeft: '12px' }}>Search</legend>
-                  <div className="search-panel-grid">
-                    <div className="sp-field">
-                      <label>📅 From Date</label>
-                      <input type="date" className="sp-input" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} />
-                    </div>
-                    <div className="sp-field">
-                      <label>📅 To Date</label>
-                      <input type="date" className="sp-input" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} />
-                    </div>
-                    <div className="sp-field">
-                      <label>Dispute Type</label>
-                      <select className="sp-input" value={filterDisputeType} onChange={(e) => setFilterDisputeType(e.target.value)}>
-                        <option value="">Select All</option>
-                        <option value="Chargeback">Chargeback</option>
-                        <option value="Pre-Arbitration">Pre-Arbitration</option>
-                        <option value="Retrieval Request">Retrieval Request</option>
-                        <option value="Arbitration">Arbitration</option>
-                      </select>
-                    </div>
-                    <div className="sp-field">
-                      <label>Merchant</label>
-                      <input type="text" className="sp-input" placeholder="Enter Merchant ID/Name" value={filterMerchant} onChange={(e) => setFilterMerchant(e.target.value)} />
-                    </div>
-
-                    <div className="sp-field">
-                      <label>Scheme</label>
-                      <select className="sp-input" value={filterScheme} onChange={(e) => setFilterScheme(e.target.value)}>
-                        <option value="">Select All</option>
-                        <option value="Visa">Visa</option>
-                      </select>
-                    </div>
-                    <div className="sp-field">
-                      <label>Dispute Status</label>
-                      <select className="sp-input" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                        <option value="">Select All</option>
-                        <option value="Dispute Won Partially">Dispute Won Partially</option>
-                        <option value="Dispute Won Fully">Dispute Won Fully</option>
-                        <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
-                        <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
-                        <option value="Document Rejected">Document Rejected</option>
-                        <option value="Chargeback In Progress">Chargeback In Progress</option>
-                        <option value="Chargeback Resubmit">Chargeback Resubmit</option>
-                      </select>
-                    </div>
-                    <div className="sp-field">
-                      <label>Search By</label>
-                      <select className="sp-input" value={filterSearchBy} onChange={(e) => setFilterSearchBy(e.target.value)}>
-                        <option value="">Select Field...</option>
-                        <option value="Txn ID">Transaction ID (Txn ID)</option>
-                        <option value="RRN">RRN</option>
-                        <option value="TID">TID</option>
-                        <option value="MID">MID</option>
-                        <option value="Case ID">Case ID</option>
-                        <option value="ARN">ARN Number</option>
-                      </select>
-                    </div>
-                    {filterSearchBy && (
-                      <div className="sp-field" style={{ position: 'relative' }}>
-                        <label>Search {filterSearchBy}</label>
-                        <input type="text" className="sp-input" placeholder={`Enter ${filterSearchBy}`} value={filterSearchText}
-                          onChange={(e) => setFilterSearchText(e.target.value)}
-                          onFocus={() => setPartnerSearchFocused(true)}
-                          onBlur={() => setTimeout(() => setPartnerSearchFocused(false), 200)}
-                          style={{ width: '100%' }} />
-                        {partnerSearchFocused && filterSearchText && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, maxHeight: '180px', overflowY: 'auto' }}>
-                            {allDisputes
-                              .map(cb => {
-                                if (filterSearchBy === 'Txn ID') return cb.txnId;
-                                if (filterSearchBy === 'RRN') return cb.rrn;
-                                if (filterSearchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
-                                if (filterSearchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
-                                if (filterSearchBy === 'Case ID') return cb.caseId || cb.id;
-                                if (filterSearchBy === 'ARN') return cb.arn || cb.rrn;
-                                return '';
-                              })
-                              .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(filterSearchText.toLowerCase()))
-                              .slice(0, 5)
-                              .map(val => (
-                                <div
-                                  key={val}
-                                  onMouseDown={() => {
-                                    setFilterSearchText(val);
-                                  }}
-                                  style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#333', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
-                                  onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
-                                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                                >
-                                  🔍 {val}
-                                </div>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="sp-field" style={{ visibility: 'hidden' }}></div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                    <button style={{ padding: '8px 24px', border: '1px solid #50BDC9', background: 'transparent', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => { setFilterFrom(DEFAULT_FROM); setFilterTo(TODAY_STR); setFilterStatus(''); setFilterScheme(''); setFilterDisputeType(''); setFilterSearchBy(''); setFilterSearchText(''); setFilterMerchant(''); }}>Reset</button>
-                    <button style={{ padding: '8px 24px', border: 'none', background: '#50BDC9', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Disputes filtered!')}>Search</button>
-                  </div>
-                </fieldset>
-                </div>
                 <div style={{ display: 'flex', borderBottom: '1px solid #f0f0f0', marginBottom: '20px', gap: '32px' }}>
                   <div 
                     style={{ padding: '12px 0', color: partnerTab === 'merchant-pending' ? '#4a148c' : '#9e9e9e', fontWeight: '700', fontSize: '15px', borderBottom: partnerTab === 'merchant-pending' ? '3px solid #4a148c' : 'none', cursor: 'pointer' }}
@@ -5738,42 +5970,332 @@ function PartnerPortal({
                 </div>
 
                 {/* Toolbar with dropdowns and export */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative' }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
-                    <input 
-                      type="date" 
-                      value={filterFrom} 
-                      onChange={(e) => setFilterFrom(e.target.value)}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    />
-                    <input 
-                      type="date" 
-                      value={filterTo} 
-                      onChange={(e) => setFilterTo(e.target.value)}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    />
-                    <select 
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    >
-                      <option value="">Select All</option>
-                      <option value="New">New</option>
-                      <option value="Progress">Progress</option>
-                      <option value="Hold">Hold</option>
-                      <option value="Lost">Lost</option>
-                      <option value="Won">Won</option>
-                      <option value="Success">Success</option>
-                    </select>
-                    <select 
-                      value={filterScheme}
-                      onChange={(e) => setFilterScheme(e.target.value)}
-                      style={{ padding: '8px 12px', border: '1px solid #e0e0e0', borderRadius: '4px', color: '#757575', outline: 'none', background: 'var(--card)', fontSize: '13px' }}
-                    >
-                      <option value="">Select All</option>
-                      <option value="visa">Visa</option>
-                      <option value="mastercard">Mastercard</option>
-                    </select>
+                    {/* Date Range Dropdown */}
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <button 
+                        onClick={() => { setDateDropdownOpen(!dateDropdownOpen); setFilterDropdownOpen(false); }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          padding: '8px 16px',
+                          border: '1.5px solid var(--border-input, #e0e0e0)',
+                          borderRadius: '8px',
+                          background: 'var(--card, #fff)',
+                          color: 'var(--text, #757575)',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          height: '42px',
+                          minWidth: '160px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        <span>📅 {getPresetLabel(dateRangePreset)}</span>
+                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                      </button>
+
+                      {dateDropdownOpen && (
+                        <>
+                          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'transparent' }} onClick={() => setDateDropdownOpen(false)} />
+                          <div style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: '0',
+                            background: 'var(--card, #fff)',
+                            border: '1px solid var(--border, #e0e0e0)',
+                            borderRadius: '8px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                            zIndex: 1000,
+                            minWidth: '220px',
+                            padding: '8px 0',
+                            display: 'flex',
+                            flexDirection: 'column',
+                          }}>
+                            {['today', '7days', '30days', '6months'].map(preset => (
+                              <button
+                                key={preset}
+                                onClick={() => {
+                                  setDateRangePreset(preset);
+                                  const dates = getPresetDates(preset);
+                                  if (dates) {
+                                    setFilterFrom(dates.from);
+                                    setFilterTo(dates.to);
+                                    setTempFrom(dates.from);
+                                    setTempTo(dates.to);
+                                  }
+                                  setDateDropdownOpen(false);
+                                }}
+                                style={{
+                                  padding: '10px 16px',
+                                  cursor: 'pointer',
+                                  fontSize: '13px',
+                                  color: dateRangePreset === preset ? '#4a148c' : 'var(--text, #333)',
+                                  fontWeight: dateRangePreset === preset ? '600' : '500',
+                                  textAlign: 'left',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  transition: 'background 0.2s',
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = 'var(--bg-body, #f5f5f5)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                              >
+                                {getPresetLabel(preset)}
+                              </button>
+                            ))}
+                            <div style={{ borderTop: '1px solid var(--border, #eee)', margin: '4px 0' }} />
+                            <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#78909c' }}>CUSTOM RANGE</span>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <div style={{ flex: 1 }}>
+                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>From</span>
+                                  <input 
+                                    type="date" 
+                                    value={tempFrom} 
+                                    onChange={(e) => setTempFrom(e.target.value)} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <span style={{ fontSize: '10px', color: '#9e9e9e', display: 'block', marginBottom: '2px' }}>To</span>
+                                  <input 
+                                    type="date" 
+                                    value={tempTo} 
+                                    onChange={(e) => setTempTo(e.target.value)} 
+                                    style={{ width: '100%', padding: '6px', fontSize: '12px', border: '1px solid #e0e0e0', borderRadius: '4px', background: 'var(--card)', color: 'var(--text)' }} 
+                                  />
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setFilterFrom(tempFrom);
+                                  setFilterTo(tempTo);
+                                  setDateRangePreset('custom');
+                                  setDateDropdownOpen(false);
+                                }}
+                                style={{ width: '100%', padding: '8px', fontSize: '12px', background: '#4a148c', border: 'none', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                              >
+                                Apply Custom
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Search & Filter Dropdown */}
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <button 
+                        onClick={() => { setFilterDropdownOpen(!filterDropdownOpen); setDateDropdownOpen(false); }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                          padding: '8px 16px',
+                          border: '1.5px solid var(--border-input, #e0e0e0)',
+                          borderRadius: '8px',
+                          background: 'var(--card, #fff)',
+                          color: 'var(--text, #757575)',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          height: '42px',
+                          minWidth: '160px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        <span>🔍 Search & Filter</span>
+                        <span style={{ fontSize: '10px', color: '#9e9e9e' }}>▼</span>
+                      </button>
+
+                      {filterDropdownOpen && (
+                        <>
+                          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'transparent' }} onClick={() => setFilterDropdownOpen(false)} />
+                          <div style={{
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            left: '0',
+                            background: 'var(--card, #fff)',
+                            border: '1px solid var(--border, #e0e0e0)',
+                            borderRadius: '12px',
+                            boxShadow: '0 15px 35px rgba(0,0,0,0.15)',
+                            zIndex: 1000,
+                            width: '380px',
+                            padding: '20px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px',
+                          }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Type</label>
+                                <select 
+                                  value={filterDisputeType}
+                                  onChange={(e) => setFilterDisputeType(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Chargeback">Chargeback</option>
+                                  <option value="Pre-Arbitration">Pre-Arbitration</option>
+                                  <option value="Retrieval Request">Retrieval Request</option>
+                                  <option value="Arbitration">Arbitration</option>
+                                </select>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Scheme</label>
+                                <select 
+                                  value={filterScheme}
+                                  onChange={(e) => setFilterScheme(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="visa">Visa</option>
+                                  <option value="mastercard">Mastercard</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Dispute Status</label>
+                                <select 
+                                  value={filterStatus}
+                                  onChange={(e) => setFilterStatus(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select All</option>
+                                  <option value="Dispute Won Partially">Dispute Won Partially</option>
+                                  <option value="Dispute Won Fully">Dispute Won Fully</option>
+                                  <option value="Dispute Lost – TAT Expired">Dispute Lost – TAT Expired</option>
+                                  <option value="Dispute Lost – Accepted">Dispute Lost – Accepted</option>
+                                  <option value="Document Rejected">Document Rejected</option>
+                                  <option value="Chargeback In Progress">Chargeback In Progress</option>
+                                  <option value="Chargeback Resubmit">Chargeback Resubmit</option>
+                                </select>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Merchant</label>
+                                <input 
+                                  type="text" 
+                                  value={filterMerchant} 
+                                  onChange={(e) => setFilterMerchant(e.target.value)}
+                                  placeholder="Merchant ID/Name"
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }} 
+                                />
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search By</label>
+                                <select 
+                                  value={filterSearchBy}
+                                  onChange={(e) => setFilterSearchBy(e.target.value)}
+                                  style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                >
+                                  <option value="">Select Field...</option>
+                                  <option value="Txn ID">Transaction ID (Txn ID)</option>
+                                  <option value="RRN">RRN</option>
+                                  <option value="TID">TID</option>
+                                  <option value="MID">MID</option>
+                                  <option value="Case ID">Case ID</option>
+                                  <option value="ARN">ARN Number</option>
+                                </select>
+                              </div>
+                              {filterSearchBy && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}>
+                                  <label style={{ fontSize: '11px', fontWeight: 'bold', color: '#546e7a', textAlign: 'left' }}>Search Value</label>
+                                  <input 
+                                    type="text" 
+                                    value={filterSearchText}
+                                    onChange={(e) => setFilterSearchText(e.target.value)}
+                                    onFocus={() => setPartnerSearchFocused(true)}
+                                    onBlur={() => setTimeout(() => setPartnerSearchFocused(false), 200)}
+                                    placeholder={`Enter ${filterSearchBy}`}
+                                    style={{ width: '100%', padding: '8px', border: '1px solid #e0e0e0', borderRadius: '4px', fontSize: '13px', background: 'var(--card)', color: 'var(--text)' }}
+                                  />
+                                  {partnerSearchFocused && filterSearchText && (
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #ddd', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1001, maxHeight: '120px', overflowY: 'auto' }}>
+                                      {allDisputes
+                                        .map(cb => {
+                                          if (filterSearchBy === 'Txn ID') return cb.txnId;
+                                          if (filterSearchBy === 'RRN') return cb.rrn;
+                                          if (filterSearchBy === 'TID') return cb.tid || 'TID-' + (cb.userId || cb.userName || '9999').substring(0,4).toUpperCase();
+                                          if (filterSearchBy === 'MID') return cb.userId || 'ISU-' + (cb.userName || '9999').substring(0,4).toUpperCase();
+                                          if (filterSearchBy === 'Case ID') return cb.caseId || cb.id;
+                                          if (filterSearchBy === 'ARN') return cb.arn || cb.rrn;
+                                          return '';
+                                        })
+                                        .filter((val, index, self) => val && self.indexOf(val) === index && val.toLowerCase().includes(filterSearchText.toLowerCase()))
+                                        .slice(0, 5)
+                                        .map(val => (
+                                          <div
+                                            key={val}
+                                            onMouseDown={() => {
+                                              setFilterSearchText(val);
+                                            }}
+                                            style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#333', borderBottom: '1px solid #eee', transition: 'background 0.2s' }}
+                                            onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                          >
+                                            🔍 {val}
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+                              <button 
+                                onClick={() => {
+                                  setFilterStatus('');
+                                  setFilterScheme('');
+                                  setFilterDisputeType('');
+                                  setFilterSearchBy('');
+                                  setFilterSearchText('');
+                                  setFilterMerchant('');
+                                  setFilterDropdownOpen(false);
+                                }}
+                                style={{
+                                  padding: '8px 16px',
+                                  fontSize: '12px',
+                                  background: 'transparent',
+                                  border: '1px solid #ccc',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  color: 'var(--text, #333)',
+                                }}
+                              >
+                                Reset
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  setFilterDropdownOpen(false);
+                                  showToast('Filters applied!');
+                                }}
+                                style={{
+                                  padding: '8px 16px',
+                                  fontSize: '12px',
+                                  background: '#4a148c',
+                                  border: 'none',
+                                  color: '#fff',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Search
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <button style={{ padding: '8px 24px', border: 'none', background: '#4a148c', color: '#fff', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }} onClick={() => showToast('Export functionality coming soon')}>
                     Export
