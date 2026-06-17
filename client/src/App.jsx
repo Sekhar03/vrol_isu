@@ -983,6 +983,7 @@ function MerchantPortal({
   const [commentText, setCommentText] = useState('');
   const [guidedTourStep, setGuidedTourStep] = useState(null);
   const [hoveredIcon, setHoveredIcon] = useState(null);
+  const [hoveredRowAction, setHoveredRowAction] = useState(null);
 
   useEffect(() => {
     if (guidedTourStep === 2 || guidedTourStep === 3) {
@@ -1668,6 +1669,9 @@ function MerchantPortal({
                 <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Dispute Status</th>
                 <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>TXN Ref. Number</th>
                 <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b' }}>Responded By</th>
+                {reportTab === 'doc-verification' && (
+                  <th style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F3F5', padding: '10px 8px', fontWeight: '700', color: '#1e293b', textAlign: 'center' }}>Actions</th>
+                )}
               </tr>
             </thead>
           )}
@@ -1814,6 +1818,151 @@ function MerchantPortal({
                     {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Responded By</div>}
                     <span style={getRespondByStyle(cb.respondByDate)}>{formatRespondByOnlyDate(cb.respondByDate)}</span>
                   </td>
+                  {reportTab === 'doc-verification' && (
+                    <td 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                      style={{
+                        padding: targetDisputeId ? '4px 0' : '10px 8px',
+                        display: targetDisputeId ? 'inline-block' : 'table-cell',
+                        flex: targetDisputeId ? '1 1 90%' : 'none',
+                        textAlign: 'center',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      {targetDisputeId && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Actions</div>}
+                      <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Upload More Evidence Icon Button */}
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <button
+                            onClick={() => {
+                              setTargetDisputeId(cb.id);
+                              setActiveModal('contest');
+                            }}
+                            style={{
+                              background: '#f1f5f9',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '50%',
+                              width: '32px',
+                              height: '32px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => { 
+                              e.currentTarget.style.background = '#e2e8f0'; 
+                              setHoveredRowAction({ id: cb.id, type: 'upload' });
+                            }}
+                            onMouseLeave={(e) => { 
+                              e.currentTarget.style.background = '#f1f5f9'; 
+                              setHoveredRowAction(null);
+                            }}
+                          >
+                            📤
+                          </button>
+                          {hoveredRowAction?.id === cb.id && hoveredRowAction?.type === 'upload' && (
+                            <div style={{
+                              position: 'absolute',
+                              bottom: '100%',
+                              left: '50%',
+                              transform: 'translateX(-50%) translateY(-6px)',
+                              background: '#1e293b',
+                              color: '#fff',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: '600',
+                              whiteSpace: 'nowrap',
+                              pointerEvents: 'none',
+                              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                              zIndex: 100
+                            }}>
+                              Upload More Evidence
+                              <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                borderWidth: '4px',
+                                borderStyle: 'solid',
+                                borderColor: '#1e293b transparent transparent transparent',
+                                width: 0,
+                                height: 0
+                              }} />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Comment Icon Button */}
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <button
+                            onClick={() => {
+                              setTargetDisputeId(cb.id);
+                              setActiveModal('merchantComment');
+                            }}
+                            style={{
+                              background: '#f1f5f9',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '50%',
+                              width: '32px',
+                              height: '32px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => { 
+                              e.currentTarget.style.background = '#e2e8f0'; 
+                              setHoveredRowAction({ id: cb.id, type: 'comment' });
+                            }}
+                            onMouseLeave={(e) => { 
+                              e.currentTarget.style.background = '#f1f5f9'; 
+                              setHoveredRowAction(null);
+                            }}
+                          >
+                            💬
+                          </button>
+                          {hoveredRowAction?.id === cb.id && hoveredRowAction?.type === 'comment' && (
+                            <div style={{
+                              position: 'absolute',
+                              bottom: '100%',
+                              left: '50%',
+                              transform: 'translateX(-50%) translateY(-6px)',
+                              background: '#1e293b',
+                              color: '#fff',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: '600',
+                              whiteSpace: 'nowrap',
+                              pointerEvents: 'none',
+                              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                              zIndex: 100
+                            }}>
+                              Comment
+                              <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                borderWidth: '4px',
+                                borderStyle: 'solid',
+                                borderColor: '#1e293b transparent transparent transparent',
+                                width: 0,
+                                height: 0
+                              }} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })}
