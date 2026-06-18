@@ -24,7 +24,7 @@ Feature: Visa Chargeback Dispute Management Workflow
     Given I am logged into the Merchant Portal
     And there is a "Dispute_Received" dispute in the "Action Required" tab
     When I click to view the dispute
-    And I click "Upload Evidence"
+    And I click "Contest / Submit Evidence" in the preview split pane
     And I attach supporting documents and submit
     Then the dispute status should change to "Representment_Submitted"
     And the dispute should move to the Acquirer's queue to forward to the Issuer
@@ -33,14 +33,14 @@ Feature: Visa Chargeback Dispute Management Workflow
     Given I am logged into the Merchant Portal
     And there is a "Dispute_Received" dispute in the "Action Required" tab
     When I click to view the dispute
-    And I click "Accept Loss"
+    And I click "Accept Liability" in the preview split pane
     Then the dispute status should change to "Merchant_Accepted"
     And the dispute should be settled and closed
 
   Scenario: Merchant reviews Pre-Arbitration and concedes
     Given I am logged into the Merchant Portal
     And the Issuer has filed Pre-Arbitration providing counter-evidence
-    When I navigate to the "Documents Pending for Verification" tab
+    When I navigate to the "Under Review" tab
     And I click to view the dispute
     And I click "Accept Issuer Evidence"
     Then the dispute status should change to "Merchant_Accepted_Pre_Arb"
@@ -49,12 +49,75 @@ Feature: Visa Chargeback Dispute Management Workflow
   Scenario: Merchant contests Pre-Arbitration with final evidence
     Given I am logged into the Merchant Portal
     And the Issuer has filed Pre-Arbitration
-    When I navigate to the "Documents Pending for Verification" tab
+    When I navigate to the "Under Review" tab
     And I click to view the dispute
     And I click "Contest Pre-Arbitration"
     And I provide my final mandatory remarks and evidence
     Then the dispute status should change to "Pre_Arbitration_Response_Submitted"
     And the dispute should move to the Acquirer for final Visa submission
+
+  # ---------------------------------------------------------
+  # NEW ENHANCED MERCHANT PORTAL FLOWS
+  # ---------------------------------------------------------
+  Scenario: Sidebar collapses and hides navigation on case selection
+    Given I am logged into the Merchant Portal
+    When I click to view a dispute case from the list
+    Then the sidebar should transition to collapsed state
+    And the navigation items "Dashboard", "Dispute Management", and "FAQ & Help" should be hidden
+    When I click the SLA card or deselect the active case
+    Then the sidebar should expand back to normal state
+    And the navigation items should be visible again
+
+  Scenario: Help links toggle non-blocking floating FAQ widget
+    Given I am logged into the Merchant Portal
+    When I click the "FAQ & Help" sidebar item or the "?" floating button in the bottom-right corner
+    Then a floating FAQ widget should open in the lower-right corner of the viewport
+    And the background dashboard or reports content should remain fully visible and interactive
+    When I click on other pages like "Dashboard" or "Dispute Management"
+    Then the floating FAQ widget should close
+
+  Scenario: SLA Card click filters list and scrolls smoothly to table section
+    Given I am logged into the Merchant Portal
+    And I am on the "Action Required" tab showing SLA summary cards
+    When I click on the "Due Today" SLA card
+    Then the disputes table should filter to only display cases due today
+    And the active tab should remain "Action Required"
+    And the viewport should scroll smoothly to the table container section
+    And the summary cards row should remain frozen sticky at the top of the container
+
+  Scenario: Selected case preview displays split layout and prominent SLA
+    Given I am logged into the Merchant Portal
+    When I click to view a dispute case details preview
+    Then the split vertical preview pane should slide in from the right
+    And the header should display the dispute amount and the SLA remaining days in red
+    And the SLA days pending text size should be larger than the dispute amount text size
+    And the preview pane body should show a split layout:
+      | Left Column | Contest/Accept buttons, Evidence documents list, and Timeline |
+      | Right Column | Transaction details, Dispute info, and cardholder info |
+
+  Scenario: Under Review tab inline row actions and tooltips
+    Given I am logged into the Merchant Portal
+    When I switch to the "Under Review" tab
+    Then every dispute row in the table should show inline action buttons for Upload ("📤") and Comment ("💬")
+    When I hover the mouse over the Upload button
+    Then a custom centered dark tooltip displaying "Upload More Evidence" should appear above the button
+    When I click the inline Comment button
+    Then the corresponding dispute case should get selected and the Comment modal should open
+
+  Scenario: Closed tab displays four statistics cards
+    Given I am logged into the Merchant Portal
+    When I click on the "Closed" tab
+    Then I should see a statistics header displaying four cards:
+      | Card 1 | Total Disputes |
+      | Card 2 | Won Disputes |
+      | Card 3 | Lost Disputes |
+      | Card 4 | Representment Win Ratio |
+
+  Scenario: Exporting filtered dispute list as CSV
+    Given I am logged into the Merchant Portal
+    And I have filtered disputes by date, search query, or status preset
+    When I click the "Export" button in the toolbar
+    Then the downloaded CSV file should contain only the filtered subset of disputes
 
   # ---------------------------------------------------------
   # ISSUER / ACQUIRER PORTAL FLOWS (Pre-Arbitration Phase)
@@ -85,8 +148,11 @@ Feature: Visa Chargeback Dispute Management Workflow
   # ---------------------------------------------------------
   # PARTNER PORTAL FLOWS
   # ---------------------------------------------------------
-  Scenario: Partner manages disputes for their merchants
+  Scenario: Partner manages disputes and uses floating help widget
     Given I am logged into the Partner Portal
     When I navigate to the disputes dashboard
     Then I should see all disputes associated with my merchants
     And I can perform bulk uploads to create multiple disputes at once
+    When I click the "FAQ & Help" sidebar item or the "?" floating button
+    Then the floating FAQ widget should open in the lower-right corner
+    And the background analytics dashboard should remain fully visible and interactive
