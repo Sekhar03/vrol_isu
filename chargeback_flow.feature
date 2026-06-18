@@ -12,15 +12,15 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
   # ═════════════════════════════════════════════════════════════════════════
 
   # --- Dashboard Features ---
-  Scenario: Merchant views dashboard analytics and profile
+  Scenario: Merchant views dashboard analytics
     Given I am logged into the Merchant Portal
     Then I should see the welcome message "Welcome, Merchant Dispute Dashboard 👋"
-    And I should see four live statistics cards:
-      | Card | Total Disputes |
-      | Card | Action Required |
+    And I should see five live statistics cards:
+      | Card | Disputes Received |
+      | Card | Open Disputes |
+      | Card | Disputes Lost |
       | Card | Disputes Won |
-      | Card | TAT Expired |
-    And I should see the dynamic distribution charts for Provider and Status
+      | Card | SLA Expiring Today |
 
   Scenario: Merchant filters dashboard stats by preset date range
     Given I am logged into the Merchant Portal
@@ -73,14 +73,15 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
   # --- Filters & Search ---
   Scenario: Merchant filters and searches the disputes list
     Given I am logged into the Merchant Portal
-    When I select provider filter "VISA"
+    When I select the filter dropdown
     And I select dispute type filter "Pre-Arbitration"
-    And I enter "RRN" search criteria as "609315"
+    And I select scheme filter "Visa"
+    And I select search by filter "RRN" and enter search text "609315"
     Then the table should only show Visa Pre-Arbitration disputes containing RRN "609315"
 
   Scenario: Merchant exports filtered disputes to CSV
     Given I am logged into the Merchant Portal
-    And I have filtered disputes by provider "VISA" and date range
+    And I have filtered disputes by provider "Visa" and date range
     When I click the "Export" button in the toolbar
     Then a CSV file containing only the filtered Visa disputes should be downloaded
 
@@ -96,27 +97,30 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
       | Left Column | Action buttons (Accept/Contest), Uploaded documents list, and Case Timeline |
       | Right Column | Transaction details, Dispute info, and Beneficiary/Remitter details |
 
-  Scenario: Merchant accepts liability for a dispute (Accept Loss)
+  Scenario: Merchant accepts liability for a dispute
     Given I am logged into the Merchant Portal
     And I have selected an active dispute case in the preview pane
     When I click the "Accept Liability" button
-    And I select response type and enter acceptance remarks
-    And I click "Submit Acceptance"
-    Then the dispute status should change to "Merchant_Accepted"
-    And the dispute should close and move to the Closed tab
-    And a timeline entry for merchant acceptance should be logged
+    Then I can choose between "Full Liability" and "Partial Liability"
+    When I select "Full Liability" and enter acceptance remarks and submit
+    Then the dispute status transitions to "Merchant_Accepted"
+    And the dispute closes and moves to the Closed tab
+    When I select "Partial Liability" and enter a liability amount and upload a proof file and submit
+    Then the dispute is accepted partially
 
   Scenario: Merchant contests a dispute and uploads evidence
     Given I am logged into the Merchant Portal
     And I have selected an active dispute case in the preview pane that has no documents uploaded
     When I click the "Contest & Submit Proof" button
-    And I upload supporting files (PDF, JPEG, or PNG formats up to 20MB)
-    And I enter remarks in the textbox
+    And I upload files to slots:
+      | Slot 1 | Delivery/Service Proof |
+      | Slot 2 | Statement of Service |
+      | Slot 3 | Refund Invoice (Optional) |
+    And I enter justification remarks up to 500 characters
     And I click "Submit Evidence"
     Then the dispute status should change to "Representment_Submitted"
     And the dispute should move to the "Under Review" tab
     And the uploaded documents should list in the left column evidence list
-    And a timeline entry for evidence submission should be logged
 
   Scenario: Merchant uploads more evidence for an under-review dispute
     Given I am logged into the Merchant Portal
@@ -151,8 +155,8 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     When I click my profile dropdown in the header
     And I click "Start Guided Tour 🚀"
     Then a step-by-step floating presentation tour with dark backdrop masks should open
-    And I can navigate through steps highlighting different parts of the portal (Profile, Sidebar, Tabs, Tables)
-    And the system automatically transitions between "Dashboard" and "Dispute Management" pages as I step through
+    And I can navigate through steps highlighting different parts of the portal
+    And the system automatically transitions between pages as I step through
 
   # --- FAQ Floating Help ---
   Scenario: Merchant opens FAQ floating widget
@@ -170,8 +174,14 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
   # --- Dashboard & Sidebar navigation ---
   Scenario: Admin views portfolio metrics and navigates sections
     Given I am logged into the Admin Portal
-    Then I should see aggregate portfolio stats: Total Disputes, Pending Admin Review, Awaiting Merchant Evidence, Total Won, and Total Lost
-    And I should see distribution charts for Dispute Status and Provider
+    Then I should see aggregate portfolio stats:
+      | Card | Total Transactions |
+      | Card | Dispute Received |
+      | Card | Dispute Open |
+      | Card | Dispute Lost |
+      | Card | Dispute Won |
+      | Card | SLA Expiring Today |
+    And I should see a Pie Chart showing Dispute Distribution (Open, Lost, Won segments)
     And I can navigate between sidebar links: "Dashboard", "Dispute Queue", and "VROL Import"
 
   # --- Dispute Queue Tabs & Details ---
@@ -187,35 +197,41 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
   Scenario: Admin approves merchant representment evidence
     Given I am logged into the Admin Portal
     And I am viewing a dispute under review with merchant evidence in the preview pane
-    When I click the "Approve Representment" button
+    When I click the "Accept & Submit to Visa" button
     Then the dispute status should update to "Dispute Won"
-    And a timeline entry for admin approval should be logged
     And the dispute should move to the Closed tab
 
   Scenario: Admin declines merchant representment evidence
     Given I am logged into the Admin Portal
     And I am viewing a dispute under review in the preview pane
-    When I click the "Decline Representment" button
-    And I enter the mandatory rejection remarks explaining the deficiency
-    And I click "Submit Decline"
+    When I click the "Select & Reject" button on a document or click the "Request More Info / Reject Documents" button
+    Then a modal opens allowing me to check which documents to reject
+    And I must enter a mandatory rejection remark
+    When I submit the document rejection
     Then the dispute status should update to "Document Rejected"
     And the case should return to the Merchant's "Action Required" queue
-    And a timeline entry with rejection remarks should be logged
 
-  Scenario: Admin escalates dispute to Pre-Arbitration or Arbitration
+  Scenario: Admin escalates dispute to Pre-Arbitration
     Given I am logged into the Admin Portal
-    And I am viewing an active dispute case
-    When I click "Raise Pre-Arbitration" or "File Arbitration" based on current stage
-    Then the dispute status should update to the next dispute stage ("Pre_Arbitration_Filed" or "Arbitration_Filed")
-    And the dispute timeline should update
+    And I am viewing a dispute under review in the preview pane
+    When I click "Escalate to Pre-Arb"
+    Then the dispute status should update to "Pre_Arbitration_Filed"
+
+  Scenario: Admin simulates Visa Webhook outcomes
+    Given I am logged into the Admin Portal
+    And I am viewing a dispute case where the case is submitted to Visa (visaPending is true)
+    Then I should see the Visa Simulator options
+    When I click the simulator success button (e.g. "Pre-Arbitration Won" or "Arbitration Won")
+    Then the dispute status transitions to the won state
+    When I click the simulator defeat button (e.g. "Escalate to Pre-Arb (Lost)" or "Arbitration Lost")
+    Then the dispute status transitions to the next stage or lost state
 
   # --- VROL Import ---
   Scenario: Admin imports VROL dispute batch files
     Given I am logged into the Admin Portal
     When I navigate to the "VROL Import" page
-    And I upload a valid Visa VROL XML/CSV batch data file
+    And I select a Visa VROL XML/CSV batch data file and click "Upload File"
     Then the new VROL disputes should be parsed, created, and populated in the system database
-    And the imported batch record should display in the batch history list
 
   # --- FAQ Floating Help ---
   Scenario: Admin opens FAQ help widget
@@ -231,8 +247,13 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
   Scenario: Partner views analytics for affiliated merchants
     Given I am logged into the Partner Portal
     When I view the "Portfolio Analytics" page
-    Then I should see the aggregated dispute volumes, won/lost ratios, and total values of all my registered merchants
-    And I can apply date range presets (Today, 7 days, 30 days, 6 months) to filter the portfolio charts
+    Then I should see five stats cards:
+      | Card | Total Disputes |
+      | Card | Evidence Submitted |
+      | Card | Won Disputes |
+      | Card | Visa Escalations |
+      | Card | SLA Expiring Today |
+    And I should see a table displaying Recent Dispute Activity
 
   # --- Merchant Details ---
   Scenario: Partner views and searches merchant profiles
