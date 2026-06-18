@@ -9542,28 +9542,15 @@ function PieChart({ dataSegments, darkMode }) {
             />
           );
         })}
-        {/* Inner Donut cutout circle */}
-        <circle 
-          cx={cx} 
-          cy={cy} 
-          r={30} 
-          fill={darkMode ? '#1e293b' : '#ffffff'} 
-          style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.05))' }}
-        />
-        <text x={cx} y={cy - 4} textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text-muted)" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total</text>
-        <text x={cx} y={cy + 15} textAnchor="middle" fontSize="18" fontWeight="800" fill="var(--text)">{total}</text>
       </svg>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginLeft: '32px', textAlign: 'left', minWidth: '180px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginLeft: '32px', textAlign: 'left' }}>
         {dataSegments.map((segment, idx) => {
           const pct = total > 0 ? Math.round((segment.value / total) * 100) : 0;
           return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', transition: 'all 0.2s ease' }} key={idx}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ width: '10px', height: '10px', background: segment.color, borderRadius: '50%', display: 'inline-block' }}></span>
-                <span style={{ fontWeight: '600', color: 'var(--text)', fontSize: '13px' }}>{segment.label}</span>
-              </div>
-              <span style={{ fontWeight: '700', color: 'var(--text)', fontSize: '13px', marginLeft: '12px' }}>
-                {segment.value} <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '500' }}>({pct}%)</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }} key={idx}>
+              <span style={{ width: '12px', height: '12px', background: segment.color, borderRadius: '3px', display: 'inline-block' }}></span>
+              <span style={{ fontWeight: '600', color: 'var(--text)' }}>
+                {segment.label}: <span style={{ fontWeight: '500', color: 'var(--text-muted)', marginLeft: '4px' }}>{segment.value} ({pct}%)</span>
               </span>
             </div>
           );
