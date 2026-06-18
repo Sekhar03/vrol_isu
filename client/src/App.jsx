@@ -140,11 +140,30 @@ const matchesDisputeStatusFilter = (cb, filterValue) => {
 
 const ensureTodaySLA = (list) => {
   const TODAY_STR = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const TOMORROW_STR = tomorrow.toISOString().split('T')[0];
+
   return list.map(cb => {
-    let updated = cb;
-    if (['CB010', 'CB024', 'CB_PEND_1', 'CB_PEND_2', 'CB_PEND_3', 'CB_PEND_4'].includes(cb.id)) {
-      updated = { ...updated, respondByDate: TODAY_STR };
+    let updated = { ...cb };
+    
+    // 1. Force Due Today cases (Urgent)
+    if (['CB010', 'CB_PEND_1', 'CB_PEND_3'].includes(cb.id)) {
+      updated.respondByDate = TODAY_STR;
     }
+    
+    // 2. Force Due Tomorrow cases (Critical)
+    if (['CB001', 'CB002', 'CB_PEND_2', 'CB_PEND_4'].includes(cb.id)) {
+      updated.respondByDate = TOMORROW_STR;
+    }
+
+    // 3. Force Under Review cases
+    if (['CB_PEND_1', 'CB_PEND_2', 'CB_PEND_3', 'CB_PEND_4', 'CB_PEND_5', 'CB_PEND_6', 'CB005'].includes(cb.id)) {
+      updated.merchantAction = 'evidence';
+      updated.acquirerAction = null;
+      updated.mSubStatus = 'Chargeback In Progress';
+    }
+
 
     // Automatically populate document journey if missing but status implies evidence was uploaded
     if (!updated.documents || updated.documents.length === 0) {
@@ -2838,7 +2857,7 @@ function MerchantPortal({
                         }}
                       >
                         {tab.label}
-                        {tab.key === 'doc-pending' && (
+                        {(tab.key === 'doc-pending' || tab.key === 'doc-verification') && (
                           <span style={{
                             background: isActive ? '#6B38FB' : '#E2E8F0',
                             color: isActive ? '#FFFFFF' : '#6B38FB',
