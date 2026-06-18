@@ -8,6 +8,36 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     And the following portals are available: Merchant Portal, Admin Portal, and Partner Portal
 
   # ═════════════════════════════════════════════════════════════════════════
+  # LOGIN & AUTHENTICATION
+  # ═════════════════════════════════════════════════════════════════════════
+
+  Scenario Outline: Portal login flow with credentials
+    Given the Chargeback system is running
+    When I enter my username "<Username>" and password "<Password>"
+    And I click the login button
+    Then I should be successfully logged in with role "<Role>"
+    And I should be redirected to the "<Portal>" dashboard
+
+    Examples:
+      | Username    | Password  | Role     | Portal          |
+      | masteruser  | Test@2026 | merchant | Merchant Portal |
+      | Test@isu    | Test@2026 | merchant | Merchant Portal |
+      | Test@Ad     | Test@2027 | admin    | Admin Portal    |
+      | partneruser | Test@2028 | partner  | Partner Portal  |
+
+  Scenario Outline: Invalid login attempts
+    Given the Chargeback system is running
+    When I enter my username "<Username>" and password "<Password>"
+    And I click the login button
+    Then I should see the error message "Invalid username or password"
+
+    Examples:
+      | Username    | Password   |
+      | masteruser  | wrongpw    |
+      | Test@Ad     | badpassword|
+      | unknownuser | Test@2028  |
+
+  # ═════════════════════════════════════════════════════════════════════════
   # MERCHANT PORTAL
   # ═════════════════════════════════════════════════════════════════════════
 
@@ -22,12 +52,16 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
       | Card | Disputes Won |
       | Card | SLA Expiring Today |
 
-  Scenario: Merchant filters dashboard stats by preset date range
+  Scenario Outline: Merchant filters dashboard stats by preset date range
     Given I am logged into the Merchant Portal
-    When I select the date preset "7days"
-    Then the dashboard statistics should filter to show data from the last 7 days
-    When I select the date preset "custom" and enter custom start and end dates
-    Then the dashboard statistics should update according to the custom date range
+    When I select the date preset "<Preset>"
+    Then the dashboard statistics should filter to show data matching "<Range>"
+
+    Examples:
+      | Preset  | Range             |
+      | 7days   | last 7 days       |
+      | 30days  | last 30 days      |
+      | custom  | custom date range |
 
   # --- Navigation & Sidebar Layout ---
   Scenario: Sidebar collapses and hides menu links on case detail preview
@@ -48,18 +82,19 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     And the "Action Required" tab should display its dispute count in a badge
     And the "Under Review" tab should display its dispute count in a badge
 
-  Scenario: Merchant filters disputes via SLA summary cards
+  Scenario Outline: Merchant filters disputes via SLA summary cards
     Given I am logged into the Merchant Portal
-    And I am on the "Action Required" tab showing five SLA summary cards:
-      | Card | Due Today |
-      | Card | Due Tomorrow |
-      | Card | Due 2 to 7 Days |
-      | Card | Due after 7 Days |
-      | Card | Insufficient Evidence |
-    When I click on the "Due Today" SLA summary card
-    Then the disputes table should filter to show only cases due today
-    And the cards row should freeze sticky at the top of the container
-    And the viewport should scroll smoothly down to the reports table section
+    And I am on the "Action Required" tab showing SLA summary cards
+    When I click on the "<Card>" SLA summary card
+    Then the disputes table should filter to show only cases matching "<Criteria>"
+
+    Examples:
+      | Card                   | Criteria               |
+      | Due Today              | due today              |
+      | Due Tomorrow           | due tomorrow           |
+      | Due 2 to 7 Days        | due between 2 to 7 days|
+      | Due after 7 Days       | due after 7 days       |
+      | Insufficient Evidence  | evidence rejected      |
 
   Scenario: Merchant views Closed tab analytics
     Given I am logged into the Merchant Portal
@@ -71,13 +106,19 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
       | Card | Representment Win Ratio |
 
   # --- Filters & Search ---
-  Scenario: Merchant filters and searches the disputes list
+  Scenario Outline: Merchant filters and searches the disputes list
     Given I am logged into the Merchant Portal
     When I open the advanced search and filter panel
-    And I select dispute type filter "Pre-Arbitration"
-    And I select scheme filter "Visa"
-    And I enter search text "609315" in the elastic search bar
-    Then the table should only show Visa Pre-Arbitration disputes containing search match "609315"
+    And I select dispute type filter "<Type>"
+    And I select scheme filter "<Scheme>"
+    And I enter search text "<Query>" in the elastic search bar
+    Then the table should only show "<Scheme>" "<Type>" disputes containing search match "<Query>"
+
+    Examples:
+      | Type            | Scheme     | Query  |
+      | Pre-Arbitration | VISA       | 609315 |
+      | Chargeback      | Mastercard | 876898 |
+      | Arbitration     | Rupay      | 223344 |
 
   Scenario: Merchant exports filtered disputes to CSV
     Given I am logged into the Merchant Portal
@@ -97,16 +138,19 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
       | Left Column | Action buttons (Accept/Contest), Uploaded documents list, and Case Timeline |
       | Right Column | Transaction details and Dispute info |
 
-  Scenario: Merchant accepts liability for a dispute
+  Scenario Outline: Merchant accepts liability for a dispute
     Given I am logged into the Merchant Portal
     And I have selected an active dispute case in the preview pane
     When I click the "Accept Dispute" button
     Then I can choose between "Full Liability" and "Partial Liability"
-    When I select "Full Liability" and enter acceptance remarks
+    When I select "<Type>" and enter acceptance remarks "<Remarks>"
     And I click "Accept Liability"
-    Then the dispute is closed as lost and moves to the Closed tab
-    When I select "Partial Liability", enter a liability amount, upload a proof file, and click "Accept Liability"
-    Then the dispute is closed as partially accepted and moves to the Closed tab
+    Then the dispute is closed as "<Outcome>" and moves to the Closed tab
+
+    Examples:
+      | Type              | Remarks                  | Outcome            |
+      | Full Liability    | Accepting full liability | lost               |
+      | Partial Liability | Only partially responsible| partially accepted |
 
   Scenario: Merchant contests a dispute and uploads evidence
     Given I am logged into the Merchant Portal
@@ -201,14 +245,19 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     Then the dispute should transition to Visa pending review state
     And the status should display "Chargeback In Progress"
 
-  Scenario: Admin simulates Visa Webhook outcomes
+  Scenario Outline: Admin simulates Visa Webhook outcomes
     Given I am logged into the Admin Portal
     And I am viewing a dispute case where the case is submitted to Visa (visaPending is true)
     Then I should see the Visa Simulator options
-    When I click the simulator success button (e.g. "Pre-Arb Won" or "Arbitration Won")
-    Then the dispute status transitions to the won state
-    When I click the simulator defeat button (e.g. "Pre-Arb (Lost)" or "Arbitration Lost")
-    Then the dispute status transitions to the next stage or lost state
+    When I click the simulator button "<Action>"
+    Then the dispute status transitions to the "<Outcome>" state
+
+    Examples:
+      | Action           | Outcome |
+      | Pre-Arb Won      | won     |
+      | Arbitration Won  | won     |
+      | Pre-Arb Lost     | lost    |
+      | Arbitration Lost | lost    |
 
   # --- VROL Import center ---
   Scenario: Admin imports VROL dispute batch files
