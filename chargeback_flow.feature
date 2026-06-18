@@ -305,3 +305,44 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     And the background analytics dashboard remains visible and interactive
     When I click "Portfolio Analytics"
     Then the floating FAQ widget closes
+
+  # ═════════════════════════════════════════════════════════════════════════
+  # END-TO-END DISPUTE ACTION LIFE CYCLE FLOW
+  # ═════════════════════════════════════════════════════════════════════════
+
+  Scenario Outline: End-to-End dispute lifecycle flow across all portals
+    Given a new dispute case "<CaseID>" is raised in the system database
+    
+    # 1. Merchant Action Flow: Contest the dispute
+    When I log into the Merchant Portal as "<MerchantUser>" with password "<MerchantPass>"
+    And I go to the Dispute Management page
+    And I contest the dispute "<CaseID>" by uploading evidence documents
+    Then the dispute status transitions to "Chargeback In Progress" under the Merchant "Under Review" tab
+    And a timeline entry "Remarks Updated by <MerchantUser>" is appended to the audit log
+
+    # 2. Admin Action Flow: Accept representment and submit to Visa
+    When I log into the Admin Portal as "<AdminUser>" with password "<AdminPass>"
+    And I select the dispute "<CaseID>" under the Admin "Action Required" queue
+    And I verify the merchant uploaded documents
+    And I click the "✓ Accept & Submit to Visa" button
+    Then the dispute status remains "Chargeback In Progress" with visa pending review (visaPending is true)
+    And a timeline entry "Submitted to Visa" is appended to the audit log
+
+    # 3. Visa Simulator Webhook Flow: Resolve dispute
+    When I trigger the Visa Simulator webhook outcome "<VisaResult>" for case "<CaseID>"
+    Then the dispute status transitions to "<FinalStatus>" under the Admin "Closed" queue
+    And a timeline entry "<FinalStatus>" is appended to the audit log
+
+    # 4. Partner Action Flow: Audit the case outcome
+    When I log into the Partner Portal as "<PartnerUser>" with password "<PartnerPass>"
+    And I navigate to the "Portfolio Analytics" dashboard
+    Then the "Won Disputes" and "Lost Disputes" aggregate stats are updated accordingly
+    And I can search for case "<CaseID>" in the Recent Dispute Activity table
+    And I should see the complete "Timeline" containing all action entries: Dispute Raised, Merchant Evidence, Submitted to Visa, and Final Settlement
+
+    Examples:
+      | CaseID | MerchantUser | MerchantPass | AdminUser | AdminPass | VisaResult      | FinalStatus     | PartnerUser | PartnerPass |
+      | CB001  | masteruser   | Test@2026    | Test@Ad   | Test@2027 | Pre-Arb Won     | Chargeback Won  | partneruser | Test@2028   |
+      | CB002  | Test@isu     | Test@2026    | Test@Ad   | Test@2027 | Pre-Arb Lost    | Chargeback Lost | partneruser | Test@2028   |
+      | CB005  | masteruser   | Test@2026    | Test@Ad   | Test@2027 | Arbitration Won | Chargeback Won  | partneruser | Test@2028   |
+      | CB024  | Test@isu     | Test@2026    | Test@Ad   | Test@2027 | Arbitration Lost| Chargeback Lost | partneruser | Test@2028   |
