@@ -1,5 +1,5 @@
 Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Partner Portals
-  As a user of the Chargeback platform (Merchant, Admin, or Partner)
+  As a portal user (Merchant, Admin, or Partner)
   I want to access my respective portal features, view dashboards, filter datasets, manage dispute lifecycles, and perform actions
   So that chargebacks are systematically handled and audited between all portals.
 
@@ -12,10 +12,9 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
   # ═════════════════════════════════════════════════════════════════════════
 
   # --- Dashboard Features ---
-  Scenario: Merchant views dashboard analytics and wallet balance
+  Scenario: Merchant views dashboard analytics and profile
     Given I am logged into the Merchant Portal
-    Then I should see my wallet balance in the header
-    And I should see the welcome message "Welcome, Merchant Dispute Dashboard 👋"
+    Then I should see the welcome message "Welcome, Merchant Dispute Dashboard 👋"
     And I should see four live statistics cards:
       | Card | Total Disputes |
       | Card | Action Required |
@@ -104,7 +103,6 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     And I select response type and enter acceptance remarks
     And I click "Submit Acceptance"
     Then the dispute status should change to "Merchant_Accepted"
-    And my wallet balance should be debited by the dispute amount
     And the dispute should close and move to the Closed tab
     And a timeline entry for merchant acceptance should be logged
 
@@ -162,7 +160,7 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     When I click the "FAQ & Help" sidebar item or the "?" floating button in the bottom-right corner
     Then a fixed floating FAQ card should open in the bottom-right corner of the page
     And the background content should remain visible and fully interactive
-    When I click on other pages in the sidebar
+    When I navigate to the "Dashboard"
     Then the floating FAQ widget should automatically close
 
   # ═════════════════════════════════════════════════════════════════════════
@@ -186,12 +184,11 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     Then the split vertical details preview panel should slide in from the right
 
   # --- Dispute Actions ---
-  Scenario: Admin accepts merchant representment evidence
+  Scenario: Admin approves merchant representment evidence
     Given I am logged into the Admin Portal
     And I am viewing a dispute under review with merchant evidence in the preview pane
     When I click the "Approve Representment" button
     Then the dispute status should update to "Dispute Won"
-    And the merchant's wallet balance should be credited by the dispute amount
     And a timeline entry for admin approval should be logged
     And the dispute should move to the Closed tab
 
@@ -241,14 +238,16 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
   Scenario: Partner views and searches merchant profiles
     Given I am logged into the Partner Portal
     When I click the "Merchant Details" sidebar link
-    Then I should see a list of my affiliated merchants displaying their Name, MID, Registration Date, and current Wallet Balance
-    And I can use the search bar to filter merchants by MID or username
+    Then I should see a list of my affiliated merchants displaying their Name, MID, and Status
+    And I can use the search bar to filter merchants by MID or name
+    When I click "View" on a merchant row
+    Then a profile modal opens displaying Merchant Name, MID, TID, Status, Role, Onboarding Date, and Business Information (Business Type, Contact Email, Contact Phone, Address)
 
   # --- FAQ Floating Help ---
-  Scenario: Partner opens FAQ help widget
+  Scenario: Partner accesses floating FAQ help widget
     Given I am logged into the Partner Portal
-    When I click the "FAQ & Help" sidebar item or the "?" floating button in the bottom-right corner
-    Then the fixed floating FAQ card should open in the bottom-right corner
-    And the background dashboard or merchant lists should remain visible and interactive
-    When I switch pages to "Portfolio Analytics" or "Merchant Details"
-    Then the floating FAQ widget should automatically close
+    When I click "FAQ & Help" in the sidebar or the "?" button
+    Then the floating FAQ widget opens in the bottom-right corner
+    And the background analytics dashboard remains visible and interactive
+    When I click "Portfolio Analytics"
+    Then the floating FAQ widget closes
