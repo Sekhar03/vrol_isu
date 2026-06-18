@@ -73,11 +73,11 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
   # --- Filters & Search ---
   Scenario: Merchant filters and searches the disputes list
     Given I am logged into the Merchant Portal
-    When I select the filter dropdown
+    When I open the advanced search and filter panel
     And I select dispute type filter "Pre-Arbitration"
     And I select scheme filter "Visa"
-    And I select search by filter "RRN" and enter search text "609315"
-    Then the table should only show Visa Pre-Arbitration disputes containing RRN "609315"
+    And I enter search text "609315" in the elastic search bar
+    Then the table should only show Visa Pre-Arbitration disputes containing search match "609315"
 
   Scenario: Merchant exports filtered disputes to CSV
     Given I am logged into the Merchant Portal
@@ -95,18 +95,18 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
     And the SLA text size should be 17px and weight 800, which is larger than the dispute amount text size
     And the body of the pane should show a split layout:
       | Left Column | Action buttons (Accept/Contest), Uploaded documents list, and Case Timeline |
-      | Right Column | Transaction details, Dispute info, and Beneficiary/Remitter details |
+      | Right Column | Transaction details and Dispute info |
 
   Scenario: Merchant accepts liability for a dispute
     Given I am logged into the Merchant Portal
     And I have selected an active dispute case in the preview pane
-    When I click the "Accept Liability" button
+    When I click the "Accept Dispute" button
     Then I can choose between "Full Liability" and "Partial Liability"
-    When I select "Full Liability" and enter acceptance remarks and submit
-    Then the dispute status transitions to "Merchant_Accepted"
-    And the dispute closes and moves to the Closed tab
-    When I select "Partial Liability" and enter a liability amount and upload a proof file and submit
-    Then the dispute is accepted partially
+    When I select "Full Liability" and enter acceptance remarks
+    And I click "Accept Liability"
+    Then the dispute is closed as lost and moves to the Closed tab
+    When I select "Partial Liability", enter a liability amount, upload a proof file, and click "Accept Liability"
+    Then the dispute is closed as partially accepted and moves to the Closed tab
 
   Scenario: Merchant contests a dispute and uploads evidence
     Given I am logged into the Merchant Portal
@@ -118,23 +118,23 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
       | Slot 3 | Refund Invoice (Optional) |
     And I enter justification remarks up to 500 characters
     And I click "Submit Evidence"
-    Then the dispute status should change to "Representment_Submitted"
+    Then the dispute status should show "Chargeback In Progress"
     And the dispute should move to the "Under Review" tab
     And the uploaded documents should list in the left column evidence list
 
-  Scenario: Merchant uploads more evidence for an under-review dispute
+  Scenario: Merchant uploads more evidence for a dispute
     Given I am logged into the Merchant Portal
-    And I have selected a dispute case that already has uploaded documents
+    When I have selected a dispute case under "Action Required" that already has uploaded documents
     Then the Accept and Contest actions should be replaced by a single "Upload More Evidence" button
     When I click "Upload More Evidence"
-    And I attach additional files and submit
-    Then the new files should be appended to the documents list
+    And I attach additional files in the Contest modal and click "Submit Evidence"
+    Then the new files should be appended to the evidence documents list
 
   Scenario: Merchant adds comments to case timeline
     Given I am logged into the Merchant Portal
-    And I have selected a dispute case in the preview pane
-    When I click the "Comment" icon button
-    And I enter comment text in the dialog and submit
+    And I have selected a dispute case in the preview pane under the "Under Review" tab
+    When I click the inline Comment icon button "💬"
+    And I enter comment text in the dialog and click submit
     Then a comment entry with my username and timestamp should append to the case timeline
 
   # --- Under Review Inline Actions & Tooltips ---
@@ -182,55 +182,39 @@ Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Pa
       | Card | Dispute Won |
       | Card | SLA Expiring Today |
     And I should see a Pie Chart showing Dispute Distribution (Open, Lost, Won segments)
-    And I can navigate between sidebar links: "Dashboard", "Dispute Queue", and "VROL Import"
+    And I can navigate between sidebar links: "Dashboard", "Dispute Management", and "VROL Import Center"
 
   # --- Dispute Queue Tabs & Details ---
   Scenario: Admin reviews dispute queue tabs and count brackets
     Given I am logged into the Admin Portal
-    When I open the "Dispute Queue" page
+    When I open the "Dispute Management" page
     Then I should see four queue tabs: "Action Required", "Under Review", "Closed", and "All Disputes"
     And each tab label should display its count in brackets, e.g. "Action Required (count)"
-    When I click a dispute case from the queue list
+    When I click a dispute case from the dispute list
     Then the split vertical details preview panel should slide in from the right
 
   # --- Dispute Actions ---
   Scenario: Admin approves merchant representment evidence
     Given I am logged into the Admin Portal
-    And I am viewing a dispute under review with merchant evidence in the preview pane
-    When I click the "Accept & Submit to Visa" button
-    Then the dispute status should update to "Dispute Won"
-    And the dispute should move to the Closed tab
-
-  Scenario: Admin declines merchant representment evidence
-    Given I am logged into the Admin Portal
-    And I am viewing a dispute under review in the preview pane
-    When I click the "Select & Reject" button on a document or click the "Request More Info / Reject Documents" button
-    Then a modal opens allowing me to check which documents to reject
-    And I must enter a mandatory rejection remark
-    When I submit the document rejection
-    Then the dispute status should update to "Document Rejected"
-    And the case should return to the Merchant's "Action Required" queue
-
-  Scenario: Admin escalates dispute to Pre-Arbitration
-    Given I am logged into the Admin Portal
-    And I am viewing a dispute under review in the preview pane
-    When I click "Escalate to Pre-Arb"
-    Then the dispute status should update to "Pre_Arbitration_Filed"
+    And I am viewing a dispute under "Action Required" that has merchant evidence
+    When I click the "✓ Accept & Submit to Visa" button
+    Then the dispute should transition to Visa pending review state
+    And the status should display "Chargeback In Progress"
 
   Scenario: Admin simulates Visa Webhook outcomes
     Given I am logged into the Admin Portal
     And I am viewing a dispute case where the case is submitted to Visa (visaPending is true)
     Then I should see the Visa Simulator options
-    When I click the simulator success button (e.g. "Pre-Arbitration Won" or "Arbitration Won")
+    When I click the simulator success button (e.g. "Pre-Arb Won" or "Arbitration Won")
     Then the dispute status transitions to the won state
-    When I click the simulator defeat button (e.g. "Escalate to Pre-Arb (Lost)" or "Arbitration Lost")
+    When I click the simulator defeat button (e.g. "Pre-Arb (Lost)" or "Arbitration Lost")
     Then the dispute status transitions to the next stage or lost state
 
-  # --- VROL Import ---
+  # --- VROL Import center ---
   Scenario: Admin imports VROL dispute batch files
     Given I am logged into the Admin Portal
-    When I navigate to the "VROL Import" page
-    And I select a Visa VROL XML/CSV batch data file and click "Upload File"
+    When I navigate to the "VROL Import Center" page
+    And I select a Visa VROL CSV/XLSX batch data file and click "Upload File"
     Then the new VROL disputes should be parsed, created, and populated in the system database
 
   # --- FAQ Floating Help ---

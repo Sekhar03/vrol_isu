@@ -6975,13 +6975,8 @@ function AdminPortal({
                                     <button type="button" className="btn btn-sm btn-success" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleVisaAccept(cb.id)}>
                                       ✓ Accept &amp; Submit to Visa
                                     </button>
-                                    <button type="button" className="btn btn-sm btn-danger" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleDeclineClick(cb.id)}>
-                                      ✕ Request Info / Reject
-                                    </button>
-                                    <button type="button" className="btn btn-sm" style={{ background: '#0288d1', color: '#fff', padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleAdminEscalate(cb.id)}>
-                                      Pre-Arb
-                                    </button>
                                   </>
+
                                 ) : (
                                   <>
                                     {cb.visaPending && (
@@ -7008,11 +7003,9 @@ function AdminPortal({
                                         <button type="button" className="btn btn-sm btn-success" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleVisaAccept(cb.id)}>
                                           Accept &amp; Submit to Visa
                                         </button>
-                                        <button type="button" className="btn btn-sm btn-danger" style={{ padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => handleDeclineClick(cb.id)}>
-                                          Request Info
-                                        </button>
                                       </>
                                     )}
+
                                     {cb.mStatus.includes('Arbitration') && !cb.acquirerAction && (
                                       <button type="button" className="btn btn-sm" style={{ background: 'var(--purple)', color: '#fff', padding: '6px 12px', borderRadius: '6px', height: '36px', fontSize: '12px' }} onClick={() => { setActiveModal('arbitration'); }}>
                                         Arb Decision
@@ -7249,15 +7242,10 @@ function AdminPortal({
                         <button type="button" className="btn btn-sm btn-success" onClick={() => handleVisaAccept(cb.id)}>
                           ✓ Accept &amp; Submit to Visa
                         </button>
-                        <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDeclineClick(cb.id)}>
-                          ✕ Request More Info / Reject Documents
-                        </button>
-                        <button type="button" className="btn btn-sm" style={{ background: '#0288d1', color: '#fff' }} onClick={() => handleAdminEscalate(cb.id)}>
-                          Escalate to Pre-Arb
-                        </button>
                       </div>
                       <button type="button" onClick={() => setActiveModal(null)} style={{ padding: '6px 16px', border: '1px solid #50BDC9', background: '#fff', color: '#50BDC9', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Close</button>
                     </>
+
                   ) : (
                     <>
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -7285,11 +7273,9 @@ function AdminPortal({
                             <button type="button" className="btn btn-sm btn-success" onClick={() => handleVisaAccept(cb.id)}>
                               Accept &amp; Submit to Visa
                             </button>
-                            <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDeclineClick(cb.id)}>
-                              Request More Info
-                            </button>
                           </>
                         )}
+
                         {cb.mStatus.includes('Arbitration') && !cb.acquirerAction && (
                           <button type="button" className="btn btn-sm" style={{ background: 'var(--purple)', color: '#fff' }} onClick={() => { setActiveModal('arbitration'); }}>
                             Arb Decision
@@ -7405,9 +7391,9 @@ function AdminPortal({
                   ) : isPendingVerification(cb) ? (
                     <>
                       <button type="button" style={{ flex: 1, padding: '12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => handleArbitrationLost(cb.id)}>Accept Loss (Send to Visa)</button>
-                      <button type="button" style={{ flex: 1, padding: '12px', background: '#eab308', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => handleDeclineClick(cb.id)}>Decline & Send to Merchant</button>
                       <button type="button" style={{ padding: '12px 24px', background: '#fff', border: '1px solid #ddd', color: '#333', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setActiveModal(null)}>Cancel</button>
                     </>
+
                   ) : (
                     <button type="button" style={{ flex: 1, padding: '12px', background: '#fff', border: '1px solid #ddd', color: '#333', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setActiveModal(null)}>Close</button>
                   )}
