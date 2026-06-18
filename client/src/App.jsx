@@ -9498,47 +9498,68 @@ function PieChart({ dataSegments, darkMode }) {
     return <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: '500', textAlign: 'center', width: '100%' }}>No data matches reports filter</div>;
   }
 
-  const r = 40;
+  const r = 68;
   const cx = 80;
   const cy = 80;
-  const circumference = 2 * Math.PI * r;
 
-  const getStrokeOffset = (index) => {
-    let offset = 0;
-    for (let i = 0; i < index; i++) {
-      const seg = dataSegments[i];
-      if (seg.value > 0) {
-        const percentage = seg.value / total;
-        const dashArray = percentage * circumference;
-        offset -= dashArray;
-      }
-    }
-    return offset;
+  const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+    const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+    return {
+      x: centerX + (radius * Math.cos(angleInRadians)),
+      y: centerY + (radius * Math.sin(angleInRadians))
+    };
   };
+
+  const getSectorPath = (x, y, radius, startAngle, endAngle) => {
+    const start = polarToCartesian(x, y, radius, endAngle);
+    const end = polarToCartesian(x, y, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+      "M", x, y,
+      "L", start.x, start.y,
+      "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+      "Z"
+    ].join(" ");
+  };
+
+  let currentAngle = 0;
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '10px' }}>
       <svg width="160" height="160" viewBox="0 0 160 160" style={{ overflow: 'visible' }}>
         {dataSegments.map((segment, idx) => {
           if (segment.value === 0) return null;
+
+          if (segment.value === total) {
+            return (
+              <circle 
+                key={idx}
+                cx={cx} 
+                cy={cy} 
+                r={r} 
+                fill={segment.color} 
+                stroke="#ffffff" 
+                strokeWidth="2" 
+              />
+            );
+          }
+
           const percentage = segment.value / total;
-          const dashArray = percentage * circumference;
-          const strokeDash = `${dashArray} ${circumference}`;
-          const strokeOffset = getStrokeOffset(idx);
+          const angleRange = percentage * 360;
+          const startAngle = currentAngle;
+          const endAngle = currentAngle + angleRange;
+          currentAngle = endAngle;
+
+          const pathData = getSectorPath(cx, cy, r, startAngle, endAngle);
 
           return (
-            <circle 
+            <path 
               key={idx}
-              cx={cx} 
-              cy={cy} 
-              r={r} 
-              fill="transparent" 
-              stroke={segment.color} 
-              strokeWidth={20} 
-              strokeDasharray={strokeDash} 
-              strokeDashoffset={strokeOffset} 
-              transform={`rotate(-90 ${cx} ${cy})`}
-              style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              d={pathData} 
+              fill={segment.color} 
+              stroke="#ffffff" 
+              strokeWidth="2"
+              style={{ transition: 'all 0.5s ease' }}
             />
           );
         })}
