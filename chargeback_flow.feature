@@ -1,149 +1,254 @@
-Feature: Visa Chargeback Dispute Management Workflow
-  As a portal user (Merchant, Admin, or Partner)
-  I want to raise, track, manage, and resolve chargeback disputes
-  So that chargebacks are handled efficiently between all stakeholders.
+Feature: Visa Chargeback Dispute Management Workflow for Merchant, Admin, and Partner Portals
+  As a user of the Chargeback platform (Merchant, Admin, or Partner)
+  I want to access my respective portal features, view dashboards, filter datasets, manage dispute lifecycles, and perform actions
+  So that chargebacks are systematically handled and audited between all portals.
 
   Background:
     Given the Chargeback system is running
-    And the following portals are active: Merchant Portal, Admin Portal, and Partner Portal
+    And the following portals are available: Merchant Portal, Admin Portal, and Partner Portal
 
-  # ---------------------------------------------------------
-  # MERCHANT PORTAL FLOWS
-  # ---------------------------------------------------------
+  # ═════════════════════════════════════════════════════════════════════════
+  # MERCHANT PORTAL
+  # ═════════════════════════════════════════════════════════════════════════
 
-  Scenario: Merchant views dashboard and filters disputes
+  # --- Dashboard Features ---
+  Scenario: Merchant views dashboard analytics and wallet balance
     Given I am logged into the Merchant Portal
-    When I view the dashboard stats
-    And I apply date range filters
-    Then the dispute counts and SLA counts should update accordingly
+    Then I should see my wallet balance in the header
+    And I should see the welcome message "Welcome, Merchant Dispute Dashboard 👋"
+    And I should see four live statistics cards:
+      | Card | Total Disputes |
+      | Card | Action Required |
+      | Card | Disputes Won |
+      | Card | TAT Expired |
+    And I should see the dynamic distribution charts for Provider and Status
 
-  Scenario: Merchant clicks Action Required SLA card to filter and scroll
+  Scenario: Merchant filters dashboard stats by preset date range
     Given I am logged into the Merchant Portal
-    When I click the "Due Today" SLA card under "Action Required" tab
-    Then the dispute list is filtered to cases due today on the same tab
-    And the cards row remains sticky at the top
-    And the page scrolls smoothly down to the reports table
+    When I select the date preset "7days"
+    Then the dashboard statistics should filter to show data from the last 7 days
+    When I select the date preset "custom" and enter custom start and end dates
+    Then the dashboard statistics should update according to the custom date range
 
-  Scenario: Merchant opens dispute details to view split layout
+  # --- Navigation & Sidebar Layout ---
+  Scenario: Sidebar collapses and hides menu links on case detail preview
     Given I am logged into the Merchant Portal
-    When I click on a dispute case to view its details
-    Then the sidebar collapses and navigation links are hidden
-    And a vertical split preview panel slides in from the right
-    And the header displays the dispute amount and SLA pending days in red (with SLA font larger)
-    And the left column displays the action buttons, uploaded documents, and timeline
-    And the right column displays transaction details and dispute info
+    And I am on the Dispute Management page
+    When I select a dispute case to view its details
+    Then the sidebar should transition to the collapsed state
+    And the menu options "Dashboard", "Dispute Management", and "FAQ & Help" should be hidden
+    When I click the close button on the preview pane or click the active SLA card to reset
+    Then the sidebar should expand to its normal width
+    And the menu options should be visible again
 
-  Scenario: Merchant accepts liability for a dispute
+  # --- Dispute Management Tabs & Statistics ---
+  Scenario: Merchant navigates tabs and views count badges
     Given I am logged into the Merchant Portal
-    And I am viewing details of an active dispute case
-    When I click "Accept Liability" in the split preview panel
-    Then the dispute status transitions to "Merchant_Accepted"
-    And the dispute is closed
+    When I go to the Dispute Management page
+    Then I should see four tabs: "Action Required", "Under Review", "Closed", and "All Disputes"
+    And the "Action Required" tab should display its dispute count in a badge
+    And the "Under Review" tab should display its dispute count in a badge
 
-  Scenario: Merchant contests a dispute by uploading evidence
+  Scenario: Merchant filters disputes via SLA summary cards
     Given I am logged into the Merchant Portal
-    And I am viewing details of an active dispute case with no documents uploaded
-    When I click "Contest & Submit Proof" in the split preview panel
-    And I attach supporting documents and submit
-    Then the dispute status transitions to "Representment_Submitted"
-    And the case moves to "Under Review" tab
+    And I am on the "Action Required" tab showing five SLA summary cards:
+      | Card | Due Today |
+      | Card | Due Tomorrow |
+      | Card | Due 2 to 7 Days |
+      | Card | Due after 7 Days |
+      | Card | Insufficient Evidence |
+    When I click on the "Due Today" SLA summary card
+    Then the disputes table should filter to show only cases due today
+    And the cards row should freeze sticky at the top of the container
+    And the viewport should scroll smoothly down to the reports table section
 
-  Scenario: Merchant uploads more evidence for a pending dispute
+  Scenario: Merchant views Closed tab analytics
     Given I am logged into the Merchant Portal
-    And I am viewing details of a dispute that already has documents uploaded
-    When I click the "Upload More Evidence" button
+    When I click on the "Closed" tab
+    Then the summary cards section should show four closed statistics cards:
+      | Card | Total Disputes |
+      | Card | Won Disputes |
+      | Card | Lost Disputes |
+      | Card | Representment Win Ratio |
+
+  # --- Filters & Search ---
+  Scenario: Merchant filters and searches the disputes list
+    Given I am logged into the Merchant Portal
+    When I select provider filter "VISA"
+    And I select dispute type filter "Pre-Arbitration"
+    And I enter "RRN" search criteria as "609315"
+    Then the table should only show Visa Pre-Arbitration disputes containing RRN "609315"
+
+  Scenario: Merchant exports filtered disputes to CSV
+    Given I am logged into the Merchant Portal
+    And I have filtered disputes by provider "VISA" and date range
+    When I click the "Export" button in the toolbar
+    Then a CSV file containing only the filtered Visa disputes should be downloaded
+
+  # --- Dispute Case Preview & Actions ---
+  Scenario: Merchant reviews selected case details split layout
+    Given I am logged into the Merchant Portal
+    When I click on a dispute case to view details
+    Then a split vertical preview pane should slide in from the right
+    And the header should show the transaction amount as "Dispute Amount: <amount>"
+    And the red SLA pending days label (e.g. "SLA: <days> days pending") should display directly below the amount
+    And the SLA text size should be 17px and weight 800, which is larger than the dispute amount text size
+    And the body of the pane should show a split layout:
+      | Left Column | Action buttons (Accept/Contest), Uploaded documents list, and Case Timeline |
+      | Right Column | Transaction details, Dispute info, and Beneficiary/Remitter details |
+
+  Scenario: Merchant accepts liability for a dispute (Accept Loss)
+    Given I am logged into the Merchant Portal
+    And I have selected an active dispute case in the preview pane
+    When I click the "Accept Liability" button
+    And I select response type and enter acceptance remarks
+    And I click "Submit Acceptance"
+    Then the dispute status should change to "Merchant_Accepted"
+    And my wallet balance should be debited by the dispute amount
+    And the dispute should close and move to the Closed tab
+    And a timeline entry for merchant acceptance should be logged
+
+  Scenario: Merchant contests a dispute and uploads evidence
+    Given I am logged into the Merchant Portal
+    And I have selected an active dispute case in the preview pane that has no documents uploaded
+    When I click the "Contest & Submit Proof" button
+    And I upload supporting files (PDF, JPEG, or PNG formats up to 20MB)
+    And I enter remarks in the textbox
+    And I click "Submit Evidence"
+    Then the dispute status should change to "Representment_Submitted"
+    And the dispute should move to the "Under Review" tab
+    And the uploaded documents should list in the left column evidence list
+    And a timeline entry for evidence submission should be logged
+
+  Scenario: Merchant uploads more evidence for an under-review dispute
+    Given I am logged into the Merchant Portal
+    And I have selected a dispute case that already has uploaded documents
+    Then the Accept and Contest actions should be replaced by a single "Upload More Evidence" button
+    When I click "Upload More Evidence"
     And I attach additional files and submit
-    Then the new files are added to the evidence list
+    Then the new files should be appended to the documents list
 
-  Scenario: Merchant uses inline row actions and tooltips in Under Review tab
+  Scenario: Merchant adds comments to case timeline
+    Given I am logged into the Merchant Portal
+    And I have selected a dispute case in the preview pane
+    When I click the "Comment" icon button
+    And I enter comment text in the dialog and submit
+    Then a comment entry with my username and timestamp should append to the case timeline
+
+  # --- Under Review Inline Actions & Tooltips ---
+  Scenario: Merchant triggers inline row actions under the Under Review tab
     Given I am logged into the Merchant Portal
     When I switch to the "Under Review" tab
-    Then each dispute row displays inline "Upload More Evidence" (📤) and "Comment" (💬) icons
+    Then each dispute row in the table should render inline action buttons: Upload ("📤") and Comment ("💬")
     When I hover over the Upload icon
-    Then a custom tooltip "Upload More Evidence" appears
-    When I click the Comment icon
-    Then the case is selected and the Add Comment modal opens
+    Then a custom centered dark tooltip "Upload More Evidence" should appear above the icon
+    When I hover over the Comment icon
+    Then a custom centered dark tooltip "Comment" should appear above the icon
+    When I click the inline Comment icon
+    Then the case row should automatically get selected and the Comment modal should open
 
-  Scenario: Merchant views Closed tab stats
+  # --- Guided Website Tour ---
+  Scenario: Merchant starts interactive guided portal tour
     Given I am logged into the Merchant Portal
-    When I switch to the "Closed" tab
-    Then the cards panel displays four stats: Total Disputes, Won, Lost, and Representment Win Ratio
+    When I click my profile dropdown in the header
+    And I click "Start Guided Tour 🚀"
+    Then a step-by-step floating presentation tour with dark backdrop masks should open
+    And I can navigate through steps highlighting different parts of the portal (Profile, Sidebar, Tabs, Tables)
+    And the system automatically transitions between "Dashboard" and "Dispute Management" pages as I step through
 
-  Scenario: Merchant exports filtered list to CSV
+  # --- FAQ Floating Help ---
+  Scenario: Merchant opens FAQ floating widget
     Given I am logged into the Merchant Portal
-    When I apply search filters and click "Export"
-    Then the downloaded CSV contains only the filtered dispute records
+    When I click the "FAQ & Help" sidebar item or the "?" floating button in the bottom-right corner
+    Then a fixed floating FAQ card should open in the bottom-right corner of the page
+    And the background content should remain visible and fully interactive
+    When I click on other pages in the sidebar
+    Then the floating FAQ widget should automatically close
 
-  Scenario: Merchant accesses floating FAQ help widget
-    Given I am logged into the Merchant Portal
-    When I click the "FAQ & Help" sidebar item or the circular "?" button
-    Then a floating FAQ widget opens in the bottom-right corner
-    And the background content remains fully visible and interactive
-    When I navigate to the "Dashboard"
-    Then the floating FAQ widget closes
+  # ═════════════════════════════════════════════════════════════════════════
+  # ADMIN PORTAL
+  # ═════════════════════════════════════════════════════════════════════════
 
-  # ---------------------------------------------------------
-  # ADMIN PORTAL FLOWS
-  # ---------------------------------------------------------
-
-  Scenario: Admin reviews dashboard analytics
+  # --- Dashboard & Sidebar navigation ---
+  Scenario: Admin views portfolio metrics and navigates sections
     Given I am logged into the Admin Portal
-    When I view the dashboard
-    Then I see portfolio-wide dispute stats and visual charts (donut, pie, bar)
+    Then I should see aggregate portfolio stats: Total Disputes, Pending Admin Review, Awaiting Merchant Evidence, Total Won, and Total Lost
+    And I should see distribution charts for Dispute Status and Provider
+    And I can navigate between sidebar links: "Dashboard", "Dispute Queue", and "VROL Import"
 
-  Scenario: Admin views disputes queue with tab counts
+  # --- Dispute Queue Tabs & Details ---
+  Scenario: Admin reviews dispute queue tabs and count brackets
     Given I am logged into the Admin Portal
-    When I switch between tabs (Action Required, Under Review, Closed, All Disputes)
-    Then each tab displays its respective dispute count in brackets next to the label
+    When I open the "Dispute Queue" page
+    Then I should see four queue tabs: "Action Required", "Under Review", "Closed", and "All Disputes"
+    And each tab label should display its count in brackets, e.g. "Action Required (count)"
+    When I click a dispute case from the queue list
+    Then the split vertical details preview panel should slide in from the right
 
-  Scenario: Admin approves merchant representment evidence
+  # --- Dispute Actions ---
+  Scenario: Admin accepts merchant representment evidence
     Given I am logged into the Admin Portal
-    And there is a dispute under review with merchant evidence
-    When I select the dispute and click "Approve Representment"
-    Then the dispute transitions to NPCI grid/VROL queue
-    And the merchant is notified
+    And I am viewing a dispute under review with merchant evidence in the preview pane
+    When I click the "Approve Representment" button
+    Then the dispute status should update to "Dispute Won"
+    And the merchant's wallet balance should be credited by the dispute amount
+    And a timeline entry for admin approval should be logged
+    And the dispute should move to the Closed tab
 
   Scenario: Admin declines merchant representment evidence
     Given I am logged into the Admin Portal
-    And there is a dispute under review with merchant evidence
-    When I select the dispute and click "Decline Representment"
-    And I enter the mandatory rejection remarks
-    Then the dispute status reverts to "Document Rejected"
-    And it returns to the Merchant's Action Required queue
+    And I am viewing a dispute under review in the preview pane
+    When I click the "Decline Representment" button
+    And I enter the mandatory rejection remarks explaining the deficiency
+    And I click "Submit Decline"
+    Then the dispute status should update to "Document Rejected"
+    And the case should return to the Merchant's "Action Required" queue
+    And a timeline entry with rejection remarks should be logged
 
-  Scenario: Admin imports VROL disputes
+  Scenario: Admin escalates dispute to Pre-Arbitration or Arbitration
     Given I am logged into the Admin Portal
-    When I navigate to "VROL Import"
-    And I upload a valid Visa VROL dispute batch file
-    Then the new disputes are created and populated in the system
+    And I am viewing an active dispute case
+    When I click "Raise Pre-Arbitration" or "File Arbitration" based on current stage
+    Then the dispute status should update to the next dispute stage ("Pre_Arbitration_Filed" or "Arbitration_Filed")
+    And the dispute timeline should update
 
-  Scenario: Admin accesses floating help
+  # --- VROL Import ---
+  Scenario: Admin imports VROL dispute batch files
     Given I am logged into the Admin Portal
-    When I click the circular "?" button in the bottom-right corner
-    Then the floating FAQ widget opens in the bottom-right corner
+    When I navigate to the "VROL Import" page
+    And I upload a valid Visa VROL XML/CSV batch data file
+    Then the new VROL disputes should be parsed, created, and populated in the system database
+    And the imported batch record should display in the batch history list
 
-  # ---------------------------------------------------------
-  # PARTNER PORTAL FLOWS
-  # ---------------------------------------------------------
+  # --- FAQ Floating Help ---
+  Scenario: Admin opens FAQ help widget
+    Given I am logged into the Admin Portal
+    When I click the circular "?" floating button in the bottom-right corner
+    Then the fixed floating FAQ card should open in the bottom-right corner
 
-  Scenario: Partner reviews portfolio stats and merchant details
+  # ═════════════════════════════════════════════════════════════════════════
+  # PARTNER PORTAL
+  # ═════════════════════════════════════════════════════════════════════════
+
+  # --- Dashboard Aggregation ---
+  Scenario: Partner views analytics for affiliated merchants
     Given I am logged into the Partner Portal
-    When I view "Portfolio Analytics"
-    Then I see the aggregated stats of all my onboarded merchants
-    When I click "Merchant Details"
-    Then I can view and search profiles of my affiliated merchants
+    When I view the "Portfolio Analytics" page
+    Then I should see the aggregated dispute volumes, won/lost ratios, and total values of all my registered merchants
+    And I can apply date range presets (Today, 7 days, 30 days, 6 months) to filter the portfolio charts
 
-  Scenario: Partner uploads bulk disputes
+  # --- Merchant Details ---
+  Scenario: Partner views and searches merchant profiles
     Given I am logged into the Partner Portal
-    When I go to Dispute Management
-    And I click "Bulk Upload"
-    And I upload a dispute spreadsheet template
-    Then multiple disputes are created under the respective merchants
+    When I click the "Merchant Details" sidebar link
+    Then I should see a list of my affiliated merchants displaying their Name, MID, Registration Date, and current Wallet Balance
+    And I can use the search bar to filter merchants by MID or username
 
-  Scenario: Partner accesses floating FAQ help widget
+  # --- FAQ Floating Help ---
+  Scenario: Partner opens FAQ help widget
     Given I am logged into the Partner Portal
-    When I click "FAQ & Help" in the sidebar or the "?" button
-    Then the floating FAQ widget opens in the bottom-right corner
-    And the background analytics dashboard remains visible and interactive
-    When I click "Portfolio Analytics"
-    Then the floating FAQ widget closes
+    When I click the "FAQ & Help" sidebar item or the "?" floating button in the bottom-right corner
+    Then the fixed floating FAQ card should open in the bottom-right corner
+    And the background dashboard or merchant lists should remain visible and interactive
+    When I switch pages to "Portfolio Analytics" or "Merchant Details"
+    Then the floating FAQ widget should automatically close
