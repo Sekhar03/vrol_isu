@@ -78,36 +78,42 @@ const getDaysDifference = (d1, d2) => {
   return Math.round(diffTime / (1000 * 60 * 60 * 24));
 };
 
-const isClosedDispute = (cb) => {
-  if (!cb) return false;
-  const status = cb.mSubStatus || cb.mStatus || '';
-  const statusLower = status.toLowerCase();
-  return (
-    status === 'Dispute Won Partially' ||
-    status === 'Dispute Won Fully' ||
-    status === 'Dispute Lost – TAT Expired' ||
-    status === 'Dispute Lost – Accepted' ||
-    status === 'Chargeback Lost' ||
-    status === 'Arbitration Lost' ||
-    status === 'Dispute Lost' ||
-    statusLower.includes('lost') ||
-    statusLower.includes('won') ||
+const getDisputeCategory = (cb) => {
+  if (!cb) return 'open';
+  const status = (cb.mSubStatus || cb.mStatus || '').toLowerCase();
+  if (status.includes('won') || status.includes('success')) {
+    return 'won';
+  }
+  if (
+    status.includes('lost') || 
+    status.includes('expired') || 
+    status.includes('accepted') || 
+    status.includes('declined') ||
     cb.resolution === 'Lost' ||
     cb.merchantAction === 'accepted'
-  );
+  ) {
+    return 'lost';
+  }
+  return 'open';
+};
+
+const isClosedDispute = (cb) => {
+  const cat = getDisputeCategory(cb);
+  return cat === 'won' || cat === 'lost';
 };
 
 const matchesDisputeStatusFilter = (cb, filterValue) => {
   if (!filterValue) return true;
   const TODAY_STR = new Date().toISOString().split('T')[0];
+  const cat = getDisputeCategory(cb);
   if (filterValue === 'open') {
-    return cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold') || cb.mSubStatus.includes('Pending') || cb.mSubStatus.includes('Flight');
+    return cat === 'open';
   }
   if (filterValue === 'lost') {
-    return cb.mSubStatus.includes('Lost') || cb.mSubStatus.includes('Expired') || cb.mSubStatus.includes('Accepted') || cb.mSubStatus.includes('Declined') || cb.mSubStatus.includes('rejected');
+    return cat === 'lost';
   }
   if (filterValue === 'won') {
-    return cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success');
+    return cat === 'won';
   }
   if (filterValue === 'evidence') {
     return cb.merchantAction === 'evidence';
@@ -116,24 +122,24 @@ const matchesDisputeStatusFilter = (cb, filterValue) => {
     return !!cb.visaPending;
   }
   if (filterValue === 'sla_today' || filterValue === 'due_today') {
-    return cb.respondByDate === TODAY_STR && !isClosedDispute(cb);
+    return cb.respondByDate === TODAY_STR && cat === 'open';
   }
   if (filterValue === 'due_tomorrow') {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const TOMORROW_STR = tomorrow.toISOString().split('T')[0];
-    return cb.respondByDate === TOMORROW_STR && !isClosedDispute(cb);
+    return cb.respondByDate === TOMORROW_STR && cat === 'open';
   }
   if (filterValue === 'due_2_7') {
     const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
-    return diff >= 2 && diff <= 7 && !isClosedDispute(cb);
+    return diff >= 2 && diff <= 7 && cat === 'open';
   }
   if (filterValue === 'due_over_7') {
     const diff = getDaysDifference(cb.respondByDate, TODAY_STR);
-    return diff > 7 && !isClosedDispute(cb);
+    return diff > 7 && cat === 'open';
   }
   if (filterValue === 'insufficient_evidence') {
-    return cb.merchantAction === 'rejected' && !isClosedDispute(cb);
+    return cb.merchantAction === 'rejected' && cat === 'open';
   }
   return cb.mSubStatus === filterValue;
 };
@@ -1101,13 +1107,13 @@ function MerchantPortal({
     const totalAmt = list.reduce((sum, c) => sum + c.txnAmt, 0);
     const totalCount = list.length;
     
-    const openList = list.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold'));
+    const openList = list.filter(cb => getDisputeCategory(cb) === 'open');
     const openAmt = openList.reduce((sum, c) => sum + c.txnAmt, 0);
     
-    const lostList = list.filter(cb => cb.mSubStatus.includes('Lost'));
+    const lostList = list.filter(cb => getDisputeCategory(cb) === 'lost');
     const lostAmt = lostList.reduce((sum, c) => sum + c.txnAmt, 0);
     
-    const wonList = list.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success'));
+    const wonList = list.filter(cb => getDisputeCategory(cb) === 'won');
     const wonAmt = wonList.reduce((sum, c) => sum + c.txnAmt, 0);
 
     const slaList = list.filter(cb => matchesDisputeStatusFilter(cb, 'sla_today'));
@@ -1546,14 +1552,14 @@ function MerchantPortal({
     const mcCount = filtered.filter(cb => cb.product === 'Mastercard').length;
     const rupayCount = filtered.filter(cb => cb.product === 'Rupay').length;
 
-    const wonCount = filtered.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).length;
-    const lostCount = filtered.filter(cb => cb.mSubStatus.includes('Lost')).length;
-    const openCount = filtered.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold')).length;
+    const wonCount = filtered.filter(cb => getDisputeCategory(cb) === 'won').length;
+    const lostCount = filtered.filter(cb => getDisputeCategory(cb) === 'lost').length;
+    const openCount = filtered.filter(cb => getDisputeCategory(cb) === 'open').length;
 
     const totalAmt = filtered.reduce((sum, c) => sum + c.txnAmt, 0);
-    const openAmt = filtered.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold')).reduce((sum, c) => sum + c.txnAmt, 0);
-    const wonAmt = filtered.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).reduce((sum, c) => sum + c.txnAmt, 0);
-    const lostAmt = filtered.filter(cb => cb.mSubStatus.includes('Lost')).reduce((sum, c) => sum + c.txnAmt, 0);
+    const openAmt = filtered.filter(cb => getDisputeCategory(cb) === 'open').reduce((sum, c) => sum + c.txnAmt, 0);
+    const wonAmt = filtered.filter(cb => getDisputeCategory(cb) === 'won').reduce((sum, c) => sum + c.txnAmt, 0);
+    const lostAmt = filtered.filter(cb => getDisputeCategory(cb) === 'lost').reduce((sum, c) => sum + c.txnAmt, 0);
 
     return {
       filtered,
@@ -3236,7 +3242,7 @@ function MerchantPortal({
 
                     {/* Card 2: Won Disputes */}
                     {(() => {
-                      const wonList = closedDisputes.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success'));
+                      const wonList = closedDisputes.filter(cb => getDisputeCategory(cb) === 'won');
                       const wonCount = wonList.length;
                       const wonAmount = wonList.reduce((sum, cb) => sum + cb.txnAmt, 0);
                       return (
@@ -3283,7 +3289,7 @@ function MerchantPortal({
 
                     {/* Card 3: Lost Disputes */}
                     {(() => {
-                      const lostList = closedDisputes.filter(cb => cb.mSubStatus.includes('Lost'));
+                      const lostList = closedDisputes.filter(cb => getDisputeCategory(cb) === 'lost');
                       const lostCount = lostList.length;
                       const lostAmount = lostList.reduce((sum, cb) => sum + cb.txnAmt, 0);
                       return (
@@ -3331,8 +3337,8 @@ function MerchantPortal({
                     {/* Card 4: Representment Win Ratio */}
                     {(() => {
                       const totalClosedCount = closedDisputes.length;
-                      const wonCount = closedDisputes.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success')).length;
-                      const lostCount = closedDisputes.filter(cb => cb.mSubStatus.includes('Lost')).length;
+                      const wonCount = closedDisputes.filter(cb => getDisputeCategory(cb) === 'won').length;
+                      const lostCount = closedDisputes.filter(cb => getDisputeCategory(cb) === 'lost').length;
                       const winRatio = totalClosedCount > 0 ? ((wonCount / totalClosedCount) * 100).toFixed(1) + '%' : '0.0%';
                       return (
                         <div
@@ -5069,13 +5075,13 @@ function AdminPortal({
     const totalCount = list.length;
     const totalAmt = list.reduce((sum, c) => sum + c.txnAmt, 0);
 
-    const openList = list.filter(cb => cb.mSubStatus.includes('New') || cb.mSubStatus.includes('Progress') || cb.mSubStatus.includes('Resubmit') || cb.mSubStatus.includes('Hold'));
+    const openList = list.filter(cb => getDisputeCategory(cb) === 'open');
     const openAmt = openList.reduce((sum, c) => sum + c.txnAmt, 0);
 
-    const lostList = list.filter(cb => cb.mSubStatus.includes('Lost'));
+    const lostList = list.filter(cb => getDisputeCategory(cb) === 'lost');
     const lostAmt = lostList.reduce((sum, c) => sum + c.txnAmt, 0);
 
-    const wonList = list.filter(cb => cb.mSubStatus.includes('Won') || cb.mSubStatus.includes('Success'));
+    const wonList = list.filter(cb => getDisputeCategory(cb) === 'won');
     const wonAmt = wonList.reduce((sum, c) => sum + c.txnAmt, 0);
 
     const slaList = list.filter(cb => matchesDisputeStatusFilter(cb, 'sla_today'));
@@ -6056,64 +6062,106 @@ function AdminPortal({
                   </div>
                 </div>
 
-                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px', padding: '10px 0' }}>
+                <div className="stats-grid" id="adminDashStats" style={{ gridTemplateColumns: 'repeat(6, 1fr)', gap: '14px', padding: '12px 0' }}>
                   {/* Total Transactions Card */}
-                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #6B38FB', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Transactions</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
-                      <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text)', lineHeight: '1' }}>{stats.totalCount}</div>
-                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.totalAmt)}</div>
+                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} 
+                    style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #6B38FB', borderRadius: '12px', padding: '16px 18px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Transactions</div>
+                      <span style={{ fontSize: '15px' }}>💳</span>
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text)', lineHeight: '1.2' }}>{stats.totalCount}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginTop: '2px' }}>{formatINR(stats.totalAmt)}</div>
                     </div>
                   </div>
 
                   {/* Dispute Received Card */}
-                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #f97316', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Received</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
-                      <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text)', lineHeight: '1' }}>{stats.totalCount}</div>
-                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.totalAmt)}</div>
+                  <div className="stat-card received" onClick={() => navigateToAdminReport('')} 
+                    style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #f97316', borderRadius: '12px', padding: '16px 18px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Received</div>
+                      <span style={{ fontSize: '15px' }}>📥</span>
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text)', lineHeight: '1.2' }}>{stats.totalCount}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginTop: '2px' }}>{formatINR(stats.totalAmt)}</div>
                     </div>
                   </div>
                   
                   {/* Dispute Open Card */}
-                  <div className="stat-card open" onClick={() => navigateToAdminReport('open')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #3B82F6', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Open</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
-                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#3B82F6', lineHeight: '1' }}>{stats.openCount}</div>
-                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.openAmt)}</div>
+                  <div className="stat-card open" onClick={() => navigateToAdminReport('open')} 
+                    style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #3B82F6', borderRadius: '12px', padding: '16px 18px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Open</div>
+                      <span style={{ fontSize: '15px' }}>🔄</span>
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: '#3B82F6', lineHeight: '1.2' }}>{stats.openCount}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginTop: '2px' }}>{formatINR(stats.openAmt)}</div>
                     </div>
                   </div>
                   
                   {/* Dispute Lost Card */}
-                  <div className="stat-card lost" onClick={() => navigateToAdminReport('lost')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #EF4444', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Lost</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
-                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#EF4444', lineHeight: '1' }}>
+                  <div className="stat-card lost" onClick={() => navigateToAdminReport('lost')} 
+                    style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #EF4444', borderRadius: '12px', padding: '16px 18px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Lost</div>
+                      <span style={{ fontSize: '15px' }}>❌</span>
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: '#EF4444', lineHeight: '1.2', display: 'flex', alignItems: 'baseline' }}>
                         {stats.lostCount}
-                        {stats.totalCount > 0 && <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px', fontWeight: '600' }}>({Math.round((stats.lostCount / stats.totalCount) * 100)}%)</span>}
+                        {stats.totalCount > 0 && <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '4px', fontWeight: '600' }}>({Math.round((stats.lostCount / stats.totalCount) * 100)}%)</span>}
                       </div>
-                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.lostAmt)}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginTop: '2px' }}>{formatINR(stats.lostAmt)}</div>
                     </div>
                   </div>
                   
                   {/* Dispute Won Card */}
-                  <div className="stat-card won" onClick={() => navigateToAdminReport('won')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #10B981', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Won</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
-                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#10B981', lineHeight: '1' }}>
+                  <div className="stat-card won" onClick={() => navigateToAdminReport('won')} 
+                    style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #10B981', borderRadius: '12px', padding: '16px 18px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispute Won</div>
+                      <span style={{ fontSize: '15px' }}>✅</span>
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: '#10B981', lineHeight: '1.2', display: 'flex', alignItems: 'baseline' }}>
                         {stats.wonCount}
-                        {stats.totalCount > 0 && <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px', fontWeight: '600' }}>({Math.round((stats.wonCount / stats.totalCount) * 100)}%)</span>}
+                        {stats.totalCount > 0 && <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '4px', fontWeight: '600' }}>({Math.round((stats.wonCount / stats.totalCount) * 100)}%)</span>}
                       </div>
-                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.wonAmt)}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginTop: '2px' }}>{formatINR(stats.wonAmt)}</div>
                     </div>
                   </div>
 
                   {/* SLA Expiring Today Card */}
-                  <div className="stat-card sla" onClick={() => navigateToAdminReport('sla_today')} style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #7C3AED', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>SLA Expiring Today</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
-                      <div style={{ fontSize: '28px', fontWeight: '800', color: '#7C3AED', lineHeight: '1' }}>{stats.slaCount}</div>
-                      <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-muted)' }}>{formatINR(stats.slaAmt)}</div>
+                  <div className="stat-card sla" onClick={() => navigateToAdminReport('sla_today')} 
+                    style={{ background: '#FFFFFF', border: '1px solid var(--border)', borderTop: '3px solid #7C3AED', borderRadius: '12px', padding: '16px 18px', display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow)', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>SLA Expiring Today</div>
+                      <span style={{ fontSize: '15px' }}>⏰</span>
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                      <div style={{ fontSize: '24px', fontWeight: '800', color: '#7C3AED', lineHeight: '1.2' }}>{stats.slaCount}</div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', marginTop: '2px' }}>{formatINR(stats.slaAmt)}</div>
                     </div>
                   </div>
                 </div>
@@ -9470,7 +9518,7 @@ function PieChart({ dataSegments, darkMode }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '10px' }}>
-      <svg width="180" height="160" viewBox="0 0 160 160" style={{ overflow: 'visible' }}>
+      <svg width="160" height="160" viewBox="0 0 160 160" style={{ overflow: 'visible' }}>
         {dataSegments.map((segment, idx) => {
           if (segment.value === 0) return null;
           const percentage = segment.value / total;
@@ -9494,15 +9542,29 @@ function PieChart({ dataSegments, darkMode }) {
             />
           );
         })}
+        {/* Inner Donut cutout circle */}
+        <circle 
+          cx={cx} 
+          cy={cy} 
+          r={30} 
+          fill={darkMode ? '#1e293b' : '#ffffff'} 
+          style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.05))' }}
+        />
+        <text x={cx} y={cy - 4} textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--text-muted)" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total</text>
+        <text x={cx} y={cy + 15} textAnchor="middle" fontSize="18" fontWeight="800" fill="var(--text)">{total}</text>
       </svg>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginLeft: '20px', textAlign: 'left' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginLeft: '32px', textAlign: 'left', minWidth: '180px' }}>
         {dataSegments.map((segment, idx) => {
           const pct = total > 0 ? Math.round((segment.value / total) * 100) : 0;
           return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }} key={idx}>
-              <span style={{ width: '12px', height: '12px', background: segment.color, borderRadius: '3px', display: 'inline-block' }}></span>
-              <span style={{ fontWeight: '500', color: 'var(--text)' }}>{segment.label}:</span>
-              <span style={{ color: 'var(--text-muted)' }}>{segment.value} ({pct}%)</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', transition: 'all 0.2s ease' }} key={idx}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ width: '10px', height: '10px', background: segment.color, borderRadius: '50%', display: 'inline-block' }}></span>
+                <span style={{ fontWeight: '600', color: 'var(--text)', fontSize: '13px' }}>{segment.label}</span>
+              </div>
+              <span style={{ fontWeight: '700', color: 'var(--text)', fontSize: '13px', marginLeft: '12px' }}>
+                {segment.value} <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '500' }}>({pct}%)</span>
+              </span>
             </div>
           );
         })}
